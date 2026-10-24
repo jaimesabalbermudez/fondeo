@@ -100,6 +100,9 @@ def precompute():
         print(f"  bankroll para ruina <= {target:.0%}: ${b:,.0f}")
     for b in BANKROLL_LEVELS:
         simulate(b, n_paths=1500)
+    simulate(3000)                          # cifras de la Guía
+    for months in (3, 6, 12):               # valores por defecto de la página Simulación
+        simulate(2000, months)
     print("  listo")
 
 

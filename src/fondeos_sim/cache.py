@@ -4,6 +4,7 @@ La clave incluye los argumentos, el contenido de todos los planes y el código d
 cualquier cambio de reglas o del motor invalida la caché sin tener que borrarla a mano.
 """
 
+import gzip
 import hashlib
 import pickle
 from pathlib import Path
@@ -26,15 +27,15 @@ def _fingerprint() -> str:
 def cached(name: str, key, fn):
     """Devuelve fn() guardado en disco bajo (name, key, huella de planes y motor)."""
     digest = hashlib.sha256(repr((key, _fingerprint())).encode()).hexdigest()[:20]
-    path = CACHE_DIR / f"{name}-{digest}.pkl"
+    path = CACHE_DIR / f"{name}-{digest}.pkl.gz"
     if path.exists():
         try:
-            return pickle.loads(path.read_bytes())
+            return pickle.loads(gzip.decompress(path.read_bytes()))
         except Exception:   # caché corrupta o de otra versión: se recalcula
             path.unlink(missing_ok=True)
     value = fn()
     CACHE_DIR.mkdir(exist_ok=True)
     tmp = path.with_suffix(".tmp")
-    tmp.write_bytes(pickle.dumps(value))
+    tmp.write_bytes(gzip.compress(pickle.dumps(value), 6))
     tmp.replace(path)
     return value

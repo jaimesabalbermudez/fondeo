@@ -28,3 +28,10 @@ el MLL: todo el valor sale de las pérdidas que absorbe la firma.
 Precios: `eval_price` es el de lista; `code_price` el del mejor código conocido y `code_reusable`
 indica si está verificado que sirve para compras ilimitadas. El dashboard usa por defecto solo los
 códigos reutilizables verificados (TPT NOFEE40 y el cupón de FundedNext).
+
+## Despliegue (Streamlit Community Cloud)
+
+- Punto de entrada: `streamlit_app.py`; dependencias: `requirements.txt`; Python 3.12.
+- `.cache/` se sube al repo con los cálculos precalculados para que la app cargue al instante.
+  Si cambias planes o motor, regenera y vuelve a subirla:
+  `rm -rf .cache && uv run fondeos-precalcular && git add -f .cache`
