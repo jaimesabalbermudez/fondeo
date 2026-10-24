@@ -76,9 +76,10 @@ def bankroll_table():
     return pd.DataFrame(rows)
 
 
-def md(text, **kw):
+def md(text, help=None, **kw):
     """st.markdown con los $ escapados: Streamlit interpreta $...$ como fórmula LaTeX."""
-    st.markdown(text.replace("$", r"\$"), **kw)
+    esc = lambda t: t.replace("$", r"\$")
+    st.markdown(esc(text), help=esc(help) if help else None, **kw)
 
 
 def caption(text):
@@ -102,6 +103,47 @@ def stop_txt(risk, per_point=None, margin=2000):
 
 def name(p):
     return f"{p.firm} · {p.name}"
+
+
+def eval_days(p, es):
+    """Secuencia de la evaluación si todos los trades salen bien (misma lógica que engine.eval_step)."""
+    r, start = p.eval, p.start_balance
+    bal, floor, best, days = start, start - r.mll, 0.0, []
+    lock = start + r.lock_offset if r.lock_offset is not None else float("inf")
+    while len(days) < 30:
+        profit = bal - start
+        need = r.profit_target - profit
+        if r.consistency:
+            need = max(need, best / r.consistency - profit)
+        if need <= 1e-9 and len(days) >= r.min_days:
+            break
+        target = max(min(es.day_target, need), 0.0)
+        margin = bal - floor if es.risk is None else min(es.risk, bal - floor)
+        if r.dll:
+            margin = min(margin, r.dll)            # el DLL corta el día antes que el suelo
+        days.append((target, margin))
+        bal += target
+        best = max(best, target)
+        if r.drawdown != "static":
+            floor = max(floor, min(bal - r.mll, lock))
+    return days, lock
+
+
+def eval_help(p, es, days, lock):
+    r = p.eval
+    txt = ("Cada día un solo trade con su objetivo y su stop. Si sale mal, normalmente la cuenta se quema y se "
+           "empieza otra. Nunca se busca más de lo que falta, así que el último día suele ser más pequeño.")
+    if r.consistency:
+        txt += (f"\n\nConsistencia {r.consistency:.0%}: el mejor día no puede pasar del {r.consistency:.0%} del "
+                f"profit total. Por eso el máximo diario es {money(r.consistency * r.profit_target)} y el último "
+                "día completa lo que falta.")
+    if lock != float("inf") and r.drawdown != "static":
+        txt += (f"\n\nEl suelo sube con el balance hasta fijarse en {money(lock)}; desde ahí el margen crece y "
+                "el último trade es más fácil.")
+    if any(t == 0 for t, _ in days):
+        txt += f"\n\nDías con +$0: solo para cumplir el mínimo de {r.min_days} días (sin arriesgar)."
+    txt += "\n\nRiesgo máximo cada día (suelo, stop o DLL): " + " · ".join(money(m) for _, m in days)
+    return txt
 
 
 def step(n, title, text):
@@ -174,7 +216,10 @@ def page_guide():
                 if es is None:
                     md("- Sin evaluación: directo a funded.")
                 else:
-                    md(f"- Cada día busca **+{money(es.day_target)}** (≈{pts(es.day_target, NQ)})\n"
+                    days, lock = eval_days(p, es)
+                    md("- Día a día si todo sale bien: **" + " · ".join(f"+{money(t)}" for t, _ in days) + "**",
+                       help=eval_help(p, es, days, lock))
+                    md(f"- Máximo diario **+{money(es.day_target)}** (≈{pts(es.day_target, NQ)})\n"
                                 f"- Stop: **{stop_txt(es.risk, NQ, p.eval.mll)}**\n"
                                 f"- Objetivo total {money(p.eval.profit_target)}"
                                 + (f", consistencia {p.eval.consistency:.0%}" if p.eval.consistency else "")
