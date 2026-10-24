@@ -118,12 +118,12 @@ def page_guide():
     b5, _ = needed(0.05)
     b1, _ = needed(0.01)
     best = max((opt(s.plan_id) for s in CFG.slots), key=lambda r: r.ev_attempt)
-    r3 = sim(3000, 6)
+    r3 = sim(5000, 12)
     k = st.columns(4)
     k[0].metric("Bankroll recomendado", money(round(b5, -2)), "ruina ≤ 5% en 6 meses", delta_color="off",
                 border=True, help=f"Con {money(round(b1, -2))} la ruina baja al 1%.")
     k[1].metric(f"EV por evaluación ({best.plan.firm})", money(best.ev_attempt), f"ROI {best.roi:+.0%}", border=True)
-    k[2].metric("Beneficio mediano 6 meses", money(np.median(r3.final - 3000)), "empezando con $3.000",
+    k[2].metric("Beneficio mediano 12 meses", money(np.median(r3.final - 5000)), "empezando con $5.000",
                 delta_color="off", border=True)
     k[3].metric("Riesgo de ruina", "2–3 meses", "después casi desaparece", delta_color="off", border=True,
                 help="El 95% de las ruinas ocurre al principio; cuando la caja llega a ~2,5× el bankroll "
@@ -205,7 +205,7 @@ def page_guide():
                                 "- Cobra más a menudo (≈45–50% de las cuentas) aunque cada cuenta valga menos")
 
     st.subheader("Según tu bankroll")
-    b = st.select_slider("Bankroll inicial", rec.BANKROLL_LEVELS, value=3000, format_func=money,
+    b = st.select_slider("Bankroll inicial", rec.BANKROLL_LEVELS, value=5000, format_func=money,
                          label_visibility="collapsed")
     r = sim(b, 6, 1500)
     p = r.final - b
@@ -225,8 +225,8 @@ def page_sim():
     md('<div class="lead">Miles de caminos posibles operando según la guía: compras, aprobados, payouts, '
                 'límites de cada firma y reinversión, día a día.</div>', unsafe_allow_html=True)
     c1, c2, _ = st.columns([1, 1, 2])
-    bankroll = c1.number_input("Bankroll inicial ($)", 100, 1_000_000, 2000, 100)
-    months = c2.segmented_control("Horizonte", [3, 6, 12], default=6, format_func=lambda m: f"{m} meses") or 6
+    bankroll = c1.number_input("Bankroll inicial ($)", 100, 1_000_000, 5000, 100)
+    months = c2.segmented_control("Horizonte", [3, 6, 12], default=12, format_func=lambda m: f"{m} meses") or 12
     res = sim(int(bankroll), int(months))
     profit = res.final - bankroll
 
