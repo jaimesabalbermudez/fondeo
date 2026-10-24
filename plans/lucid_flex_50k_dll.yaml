@@ -1,0 +1,20 @@
+id: lucid_flex_50k_dll
+firm: Lucid Trading
+name: Flex 50K (DLL $1.200, consistencia 40%)
+costs: {eval_price: 115, code_price: 69, code_reusable: true, reset_price: 80, billing: one_time, activation_fee: 0, discount: "Cupón oficial en checkout: $115 -> $69 (lucidtrading.com, captura 2026-10-24); se asume válido en cada compra"}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 100, dll: 1200, consistency: 0.40, min_days: 1}
+funded:
+  mll: 2000
+  drawdown: eod
+  lock_offset: 100
+  dll: 1200
+  dll_scale_pct: 0.6       # LucidScale: por encima del trail inicial ($52.100) DLL = 60% del mayor profit EOD
+  floor_after_payout: 100
+  payout: {split: 0.9, min_green_days: 5, green_min: 150, min_trading_days: 5, min_cycle_profit: 1, min_amount: 500,
+           max_amount: [2000], pct_of_profit: 0.5, max_payouts: 5}
+max_funded_accounts: 5
+firm_max_open: 10          # evaluaciones + funded <= 10 por hogar
+notes: ["Evaluación verificada con captura (2026-10-24): objetivo $3.000, DLL $1.200, MLL $2.000 EOD, consistencia 40%, máx. 4 minis / 40 micros, reset $80, On Demand Payouts",
+        "Funded verificado con captura de lucidtrading.com (2026-10-24): MLL $2.000, DLL $1.200 por debajo del trail inicial, sin consistencia, 5 días de $150, 5 días hasta payout, máx. 4 minis / 40 micros con scaling plan, activación gratis, 5 payouts hasta live",
+        "DLL: pausa diaria, no quema la cuenta. Por encima del trail, LucidScale DLL (60% del mayor profit EOD) según el help center del plan Pro; asumido igual en Flex",
+        "Scaling plan funded (no modelado): profit $0-999 -> 2 minis, $1.000-1.999 -> 3, $2.000+ -> 4"]

@@ -1,0 +1,288 @@
+firm: Tradeify
+as_of: 2026-10-24
+sources:
+  # Official help center (intercom; help.tradeify.co mirrors it but returned 403 to the fetcher)
+  - https://intercom.help/tradeify/en/articles/14369021-tradeify-pricing-reference          # prices, resets, bundles ("Updated this week")
+  - https://intercom.help/tradeify/en/articles/10468265-which-plan-is-right-for-you
+  - https://intercom.help/tradeify/en/articles/12853921-select-evaluation-accounts
+  - https://intercom.help/tradeify/en/articles/12853966-select-flex-and-select-daily-payout-policies
+  - https://intercom.help/tradeify/en/articles/10495915-growth-evaluation-accounts
+  - https://intercom.help/tradeify/en/articles/11083796-growth-funded-account-payout-policy
+  - https://intercom.help/tradeify/en/articles/10495938-lightning-funded-accounts
+  - https://intercom.help/tradeify/en/articles/10495932-lightning-funded-account-payout-policy
+  - https://intercom.help/tradeify/en/articles/10495897-rules-trailing-max-drawdowns
+  - https://intercom.help/tradeify/en/articles/10468321-rules-daily-loss-limit
+  - https://intercom.help/tradeify/en/articles/10468320-rules-consistency-rule
+  - https://intercom.help/tradeify/en/articles/10495868-rules-hedging-correlated-products
+  - https://intercom.help/tradeify/en/articles/10495874-rules-news-trading
+  - https://intercom.help/tradeify/en/articles/10468318-guidelines-for-traders
+  - https://intercom.help/tradeify/en/articles/17069653-risk-compliance-guidelines-faq    # updated 2026-09-15
+  - https://intercom.help/tradeify/en/articles/12268167-essential-trading-rules-overview
+  - https://intercom.help/tradeify/en/articles/12268494-common-faqs
+  - https://intercom.help/tradeify/en/articles/10468251-how-many-simulated-funded-accounts-can-i-have-at-once
+  - https://intercom.help/tradeify/en/articles/10468256-how-do-i-reset-a-failed-evaluation
+  - https://intercom.help/tradeify/en/articles/12969284-tradeify-elite-program
+  # Third-party (used only for cross-checking; not relied on for numbers)
+  - https://blog.traderspost.io/article/tradeify-growth-vs-select
+  - https://proptradingvibes.com/blog/tradeify-payout-rules
+
+common_rules:   # apply to all Tradeify plans unless overridden below
+  billing: one_time            # "All plans are one-time purchases ... no recurring billing" (Pricing Reference)
+  activation_fee_usd: 0        # "Growth, Select, and Lightning accounts have no activation fees." (Common FAQs)
+  mll_mechanics: >-
+    EOD trailing (follows highest end-of-day balance, updated at close) but enforced in real time on
+    net liquidation value: "Hitting the floor intraday fails the account permanently, even if you
+    recover before the close." On Sim Funded accounts the trailing floor locks at start+$100 once EOD
+    balance reaches the lock trigger OR immediately when a payout is requested, whichever first.
+  dll_mechanics: >-
+    Soft breach: trading paused until next session (6:00 PM ET); "does NOT fail your account".
+    Not a hard stop (losses can exceed it). Realized vs unrealized not specified in the article.
+  trading_day: "6:00 PM - 5:00 PM ET; no overnight holding (positions auto-closed at cutoff, no penalty)."
+  microscalping_funded: >-
+    Funded only: to request a payout, >50% of trades AND >50% of profit must come from trades held
+    >10 seconds. Failing it blocks the payout request; it does not fail the account.
+  inactivity: "At least one trade per week (Mon-Fri) per account, eval and funded, or account may be closed after email warning."
+  split_pct: 90               # all sim funded plans; Elite Live = 80/20
+  live_transition: >-
+    Elite Live eligibility after 3 payouts on one account OR 10 total payouts across all plans
+    (minimum thresholds, not automatic). Transition is mandatory once selected. ALL sim funded and
+    eval accounts close at transition; only funded accounts with >=1 payout move to Live; unpaid
+    sim profit since last payout is lost. Elite Live starts at $0 balance, 80/20 split, daily payouts,
+    50K Elite drawdown $2,000 EOD (locks at EOD balance $2,100).
+  account_limits:
+    max_funded_accounts: 5      # per individual and per household; V2 Select 300K funded sit on top (up to 8)
+    max_eval_accounts: "Growth: no limit; Select: max 15 purchases per 30-day period; each Select eval resettable up to 10 times per 30 days"
+    sim_and_live_simultaneous: false
+    funded_activations_per_day: 5   # stated in Growth article
+  strategy_restrictions:
+    max_loss_per_trade: null    # no per-trade loss cap / no negative-P&L rule found in any official article
+    min_rr_or_profit_rules: null
+    min_hold_time / microscalping: "Funded only: >50% of trades and >50% of profit from trades held >10s, else payout blocked"
+    news_trading: allowed       # "News trading is allowed with no restrictions"
+    martingale: "allowed (Common FAQs: 'Be aware that martingale is high-risk - stay within your drawdown and daily loss limits.')"
+    hedging_stacking: >-
+      "Tradeify prohibits hedging." Opposing positions on same instrument or correlated products
+      (same Product Group), including across accounts: "Holding a long position on one account and
+      a short position on another account is a hedging violation." "A hedging violation results in
+      every account involved being set to violation status" (possible profit forfeiture / ban). A
+      10-second grace window exists to close an accidental opposing position. Risk & Compliance FAQ
+      (2026-09-15) also prohibits "arrangements distributing activity across accounts to circumvent
+      Tradeify's rules" and "circumventing household or individual limits". No explicit rule against
+      same-direction multi-account stacking.
+    copy_trading: allowed       # "Yes, as long as the positions are in the same direction. Copy trading is permitted." (own accounts); copying others / team trading prohibited
+    other:
+      - "Algos/bots allowed only if solely owned, not shared with other traders/firms, not HFT."
+      - "Good-faith clause: no exploiting platform/price-display errors or feed delays."
+      - "Payout requests reviewed; 'Submitting a payout request does not guarantee approval' (R&C FAQ). KYT review can withhold payouts."
+
+plans:
+  - plan: Select Flex   # Select Evaluation + 'Flex' (5-day) payout policy chosen after passing (permanent per account)
+    sizes:
+      50K:
+        eval:
+          price_usd: 165
+          price_notes: >-
+            Standard Select (40% consistency). With 50% Consistency Add-on: $205 (reset $135).
+            5-account bundle -5% (25K/50K only), stacks with promo codes; Tradeify's own example uses a
+            40% promo code. Promo codes do not apply to resets.
+          billing: one_time
+          reset_fee_usd: 109
+          activation_fee_usd: 0
+          profit_target_usd: 3000      # accounts bought before new dashboard keep $2,500 target
+          mll:
+            amount_usd: 2000
+            type: eod_trailing
+            lock_balance_usd: 50100    # Select eval article says floor locks at $50,100; see notes (conflict)
+            breach: realtime
+          dll: {amount_usd: null, kind: null}   # no DLL in Select eval
+          consistency_pct: 40          # 50 with paid add-on; best day / total profit
+          min_trading_days: 3          # 2 with 50% add-on
+          max_days: null               # no time limit
+          max_contracts: "4 mini / 40 micro"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}   # lock triggers at EOD balance $52,100 or on first payout request
+          mll_after_payout: >-
+            Requesting a payout immediately locks the floor at $50,100 (start + $100); it never rises
+            again. Payout is deducted from balance, so the cushion after payout = balance - payout - 50,100.
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: null        # "There is no consistency rule for Select accounts in funded mode."
+          payout:
+            cycle_requirement: "5 winning days with >= $150 net profit each; after first payout, net cycle profit must be positive"
+            min_profit_to_request_usd: null
+            min_payout_usd: 250
+            max_payout_per_cycle_usd: 2500     # accounts bought on/after 2026-09-01; $3,000 before
+            max_pct_of_profit: 50              # of total profit (balance - starting balance)
+            buffer_usd: null                   # "Buffer: None", no minimum balance
+            split_pct: 90
+            frequency: "every 5 winning days; one open request at a time"
+          payouts_before_live: "Elite Live eligibility after 3 payouts on one account or 10 total (discretionary, mandatory once selected)"
+          lifetime_payout_cap_usd: null
+          scaling_plan: "Starts 2 mini/20 micro; EOD profit >= $1,500 -> 3/30; >= $2,000 -> 4/40 (applies next day)"
+          inactivity_days: 7           # >=1 trade per Mon-Fri week
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: "15 Select purchases per 30 days"
+        strategy_restrictions: "see common_rules.strategy_restrictions"
+      25K:
+        eval: {price_usd: 109, reset_fee_usd: 75, profit_target_usd: 1500, mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25100, breach: realtime}, consistency_pct: 40, min_trading_days: 3, max_contracts: "1 mini / 10 micro"}
+        funded: {payout: {cycle_requirement: "5 winning days >= $100", max_payout_per_cycle_usd: 1250, max_pct_of_profit: 50, min_payout_usd: 250}, lock_trigger_eod_usd: 26100, scaling_plan: "1/10 -> 2/20 at +$1,500"}
+      100K:
+        eval: {price_usd: 265, reset_fee_usd: 169, profit_target_usd: 6000, mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, consistency_pct: 40, min_trading_days: 3, max_contracts: "8 mini / 80 micro"}
+        funded: {payout: {cycle_requirement: "5 winning days >= $200", max_payout_per_cycle_usd: 3500, max_pct_of_profit: 50, min_payout_usd: 250}, lock_trigger_eod_usd: 103100}
+      150K:
+        eval: {price_usd: 369, reset_fee_usd: 239, profit_target_usd: 9000, mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 150100, breach: realtime}, consistency_pct: 40, min_trading_days: 3, max_contracts: "12 mini / 120 micro"}
+        funded: {payout: {cycle_requirement: "5 winning days >= $250", max_payout_per_cycle_usd: 4500, max_pct_of_profit: 50, min_payout_usd: 250}, lock_trigger_eod_usd: 154600}
+    notes:
+      - "Payout policy (Flex vs Daily) is chosen after passing Select and is permanent for that account."
+      - "Caps for accounts bought before 2026-09-01: 25K $1,250 / 50K $3,000 / 100K $4,000 / 150K $5,000 (Select Flex payout article)."
+      - "CONFLICT on eval lock: Select Evaluation article says 'floor locks at $50,100' once EOD balance exceeds drawdown+$100; 'Rules: Trailing Max Drawdowns' says 'Drawdown only locks on Sim Funded accounts.' Both undated ('Updated this week' / 'over a week ago', seen 2026-10-24). Practically irrelevant for 50K since target $3,000 > $2,100 trigger -> eval ends at 53,000 anyway, but floor would be 50,100 vs 51,000 near pass."
+      - "Select 300K (limited release, V2 $349, no resets, KYC, max 3 lifetime purchases): Flex $750/winning day, 50% of profit, cap $10,000/payout."
+      - "Implication for 'all-in' sim: after first payout floor is fixed at 50,100; with 50% cap, a 50K Flex with $2,000 profit pays $1,000 and is left with $900 cushion."
+      - "Third-party (proptradingvibes) quoted a '$1,250 hard max' for Flex; contradicted by official article - ignored."
+    unknowns:
+      - "Whether 'max payout per cycle' ever increases by payout number for Select Flex (official article lists a single cap)."
+      - "Whether DLL/MLL use realized+unrealized (MLL: net liquidation value, i.e. includes unrealized)."
+      - "Exact lifetime payout cap per sim account (none stated)."
+
+  - plan: Select Daily   # Select Evaluation + 'Daily' payout policy
+    sizes:
+      50K:
+        eval: "identical to Select Flex 50K eval (same purchase; policy chosen after passing)"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}   # lock trigger EOD $52,100 or payout request
+          mll_after_payout: "Floor locked at $50,100 from first payout request onward; never rises again."
+          dll: {amount_usd: 1000, kind: pause}
+          consistency_pct: null
+          payout:
+            cycle_requirement: "None (daily eligibility) once EOD balance above buffer; after first payout, net profit since last payout must be positive"
+            min_profit_to_request_usd: 125     # implied: payout <= 2x profit since last payout, min payout $250
+            min_payout_usd: 250
+            max_payout_per_cycle_usd: 1250     # per request, accounts bought on/after 2026-09-01; $1,000 before
+            max_pct_of_profit: "up to 200% of profit since last payout (2x rule), limited by cap and buffer"
+            buffer_usd: 2100                   # balance must stay above $52,100 (start + 2,100)
+            split_pct: 90
+            frequency: "daily (processed usually within 24h; up to 72h over weekends)"
+          payouts_before_live: "Elite Live eligibility after 3 payouts on one account or 10 total"
+          lifetime_payout_cap_usd: null
+          scaling_plan: "Starts 2/20; +$1,500 -> 3/30; +$2,000 -> 4/40"
+          inactivity_days: 7
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: "15 Select purchases per 30 days"
+        strategy_restrictions: "see common_rules.strategy_restrictions"
+      25K:
+        funded: {mll: {amount_usd: 1000, lock_balance_usd: 25100}, dll: {amount_usd: 500, kind: pause}, payout: {buffer_usd: 1100, max_payout_per_cycle_usd: 600}}
+      100K:
+        funded: {mll: {amount_usd: 2500, lock_balance_usd: 100100}, lock_trigger_eod_usd: 102600, dll: {amount_usd: 1250, kind: pause}, payout: {buffer_usd: 2600, max_payout_per_cycle_usd: 1750}}
+      150K:
+        funded: {mll: {amount_usd: 3500, lock_balance_usd: 150100}, lock_trigger_eod_usd: 153600, dll: {amount_usd: 1750, kind: pause}, payout: {buffer_usd: 3600, max_payout_per_cycle_usd: 2500}}
+    notes:
+      - "Funded drawdown for Select Daily 100K/150K ($2,500/$3,500) is smaller than the Select eval drawdown ($3,000/$4,500)."
+      - "Pre-2026-09-01 Daily caps: 25K $600 / 50K $1,000 / 100K $1,500 / 150K $2,500."
+      - "Article ambiguity: unclear if buffer is measured vs balance or vs starting balance ('more than $500 above the buffer' example)."
+    unknowns:
+      - "Whether the Daily DLL increases with profit (DLL article gives 6%-profit increases only for Growth/Lightning)."
+
+  - plan: Growth
+    sizes:
+      50K:
+        eval:
+          price_usd: 145
+          price_notes: "5-account bundle -5% (25K/50K), stacks with promo codes; promo codes not valid on resets."
+          billing: one_time
+          reset_fee_usd: 95
+          activation_fee_usd: 0
+          profit_target_usd: 3000
+          mll:
+            amount_usd: 2000
+            type: eod_trailing
+            lock_balance_usd: null     # article: locks only on Sim Funded
+            breach: realtime
+          dll: {amount_usd: 1250, kind: pause}
+          consistency_pct: null
+          min_trading_days: 1
+          max_days: null
+          max_contracts: "4 mini / 40 micro"   # 5 minis for accounts bought before 2025-09-12
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}   # lock trigger EOD $52,100 or payout request
+          mll_after_payout: "Floor locked at $50,100 (lock also triggered by payout request). Example: at $53,000 a $1,500 payout leaves $51,500; balance may not fall below $50,100."
+          dll: {amount_usd: 1250, kind: pause}   # rises to $2,000 once balance >= $53,000 (6% profit), next session
+          consistency_pct: 35
+          payout:
+            cycle_requirement: "5 winning days with > $150 profit each; day count resets after each payout"
+            min_profit_to_request_usd: null
+            min_payout_usd: 500
+            max_payout_per_cycle_usd: [1500, 2000, 2500, 3000]   # payout 1,2,3,4+
+            max_pct_of_profit: null
+            buffer_usd: 3000            # minimum balance to qualify: $53,000 (legacy pre-2025-09-12: $52,100)
+            split_pct: 90
+            frequency: "every 5 winning days"
+          payouts_before_live: "Elite Live eligibility after 3 payouts on one account or 10 total"
+          lifetime_payout_cap_usd: null
+          scaling_plan: "None - full size (4/40) from start"
+          inactivity_days: 7
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: null       # "there is no limit on Growth evaluation accounts"
+        strategy_restrictions: "see common_rules.strategy_restrictions"
+      25K:
+        eval: {price_usd: 99, reset_fee_usd: 60, profit_target_usd: 1500, mll: {amount_usd: 1000}, dll: {amount_usd: 600, kind: pause}, max_contracts: "1 mini / 10 micro"}
+        funded: {payout: {min_payout_usd: 250, buffer_usd: 1500, max_payout_per_cycle_usd: 1000, cycle_requirement: "5 days > $100"}, dll_after_6pct: 1000}
+      100K:
+        eval: {price_usd: 255, reset_fee_usd: 169, profit_target_usd: 6000, mll: {amount_usd: 3500}, dll: {amount_usd: 2500, kind: pause}, max_contracts: "8 mini / 80 micro"}
+        funded: {lock_trigger_eod_usd: 103600, payout: {min_payout_usd: 1000, buffer_usd: 4500, max_payout_per_cycle_usd: [2000, 2500, 3000, 4000], cycle_requirement: "5 days > $200"}, dll_after_6pct: 3500}
+      150K:
+        eval: {price_usd: 369, reset_fee_usd: 229, profit_target_usd: 9000, mll: {amount_usd: 5000}, dll: {amount_usd: 3750, kind: pause}, max_contracts: "12 mini / 120 micro"}
+        funded: {lock_trigger_eod_usd: 155100, payout: {min_payout_usd: 1500, buffer_usd: 6500, max_payout_per_cycle_usd: [2500, 3000, 4000, 5000], cycle_requirement: "5 days > $250"}, dll_after_6pct: 5000}
+    notes:
+      - "Funded MLL amount for Growth is not stated explicitly in the Growth payout article; assumed equal to eval drawdown ($2,000 for 50K) based on lock trigger $52,100 -> $50,100 in the Trailing Drawdown article."
+      - "Consistency 35% (funded) only gates payout eligibility; resets after each approved payout."
+      - "Legacy (pre-2025-09-12) Growth 50K caps: 1500/1750/2000/2250/2500/3000; article mentions 'up to $25,000' after payout 6 (scope unclear)."
+    unknowns:
+      - "Max % of profit withdrawable for Growth (not stated; effectively limited by $53,000 min balance and caps)."
+
+  - plan: Lightning   # straight-to-funded, no evaluation
+    sizes:
+      50K:
+        eval: null      # no evaluation
+        price_usd: 492
+        billing: one_time
+        reset_fee_usd: null   # no resets; must buy new account
+        activation_fee_usd: 0
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}   # lock trigger EOD $52,100 or payout request
+          mll_after_payout: "Floor locked at $50,100 from first payout request."
+          dll: {amount_usd: 1250, kind: pause}   # rises to $2,000 at balance >= $53,000 (legacy accounts: DLL removed)
+          consistency_pct: [20, 25, 30]          # payout 1, 2, 3+ (accounts bought after 2025-09-12; before: 20% always)
+          payout:
+            cycle_requirement: "Profit goal since last payout: $3,000 for payout 1, $2,000 for payout 2+; no minimum winning days"
+            min_profit_to_request_usd: [3000, 2000]
+            min_payout_usd: 1000
+            max_payout_per_cycle_usd: [2000, 2000, 2000, 2500]   # payout 1,2,3,4+
+            max_pct_of_profit: null
+            buffer_usd: null
+            split_pct: 90
+            frequency: "whenever profit goal + consistency met"
+          payouts_before_live: "Elite Live eligibility after 3 payouts on one account or 10 total"
+          lifetime_payout_cap_usd: null
+          scaling_plan: "None - full 4/40 from start"
+          inactivity_days: 7
+        account_limits:
+          max_funded_accounts: 5      # counts toward the same 5 cap
+          max_eval_accounts: null
+        strategy_restrictions: "see common_rules.strategy_restrictions"
+      25K: {price_usd: 345, funded: {mll: {amount_usd: 1000}, dll: null, profit_goals: [1500, 1000], max_payout_per_cycle_usd: 1000, min_payout_usd: 1000}}
+      100K: {price_usd: 660, funded: {mll: {amount_usd: 4000}, lock_trigger_eod_usd: 104100, dll: {amount_usd: 2500, after_6pct: 4000}, profit_goals: [6000, 3500], max_payout_per_cycle_usd: [2500, 2500, 2500, 3000]}}
+      150K: {price_usd: 796, funded: {mll: {amount_usd: 5250}, lock_trigger_eod_usd: 155350, dll: {amount_usd: 3000, after_6pct: 5250}, profit_goals: [9000, 4500], max_payout_per_cycle_usd: [3000, 3000, 3000, 3500]}}
+    notes:
+      - "Unpaid profit above cap stays in account for future payouts."
+    unknowns:
+      - "Max % of profit withdrawable per payout (not stated)."
+
+notes:
+  - "All help-center pages show only relative dates ('Updated this week' / 'over a week ago') as seen 2026-10-24; R&C FAQ dated 2026-09-15. Several rules changed for accounts bought on/after 2025-09-12 and 2026-09-01; values above are for NEW purchases."
+  - "Third-party reviews (traderspost, proptradingvibes) disagreed on Select Flex/Daily caps; official article values used."
+  - "No official rule caps loss per trade or forbids risking the whole MLL in one trade; martingale explicitly allowed. Only risks: hedging/cross-account opposing positions, good-faith/KYT discretionary review of payouts."
+unknowns:
+  - "Exact calendar dates of help-center article revisions."
+  - "Whether discretionary 'gambling' review exists in the Terms of Use (Terms not fetched; help center silent)."

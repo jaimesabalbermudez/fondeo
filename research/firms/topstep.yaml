@@ -1,0 +1,215 @@
+firm: Topstep
+as_of: 2026-10-24
+sources:
+  - https://help.topstep.com/en/articles/8284197-trading-combine-parameters          # Combine parameters
+  - https://help.topstep.com/en/articles/8284204-what-is-the-maximum-loss-limit      # MLL (dated 2026-09-18)
+  - https://help.topstep.com/en/articles/8284215-express-funded-account-parameters   # XFA parameters (dated 2026-08-05)
+  - https://help.topstep.com/en/articles/8284233-topstep-payout-policy               # Payout policy ("updated over a week ago")
+  - https://help.topstep.com/en/articles/8284208-consistency-at-topstep              # Consistency (dated 2026-09-17)
+  - https://help.topstep.com/en/articles/10490293-daily-loss-limit-in-the-trading-combine-and-express-funded-account  # DLL (2026-06-30)
+  - https://help.topstep.com/en/articles/14289835-topstep-pricing-and-payment-questions  # Pricing
+  - https://help.topstep.com/en/articles/8284217-express-funded-account-activation
+  - https://help.topstep.com/en/articles/12060405-back2funded-rules-guidelines-and-how-it-works
+  - https://help.topstep.com/en/articles/8284223-what-is-the-scaling-plan            # (2026-07-16; table is an image)
+  - https://help.topstep.com/en/articles/10657969-live-funded-account-parameters
+  - https://help.topstep.com/en/articles/8284099-topstep-program-overview           # (2026-09-10)
+  - https://help.topstep.com/en/articles/10305426-prohibited-trading-strategies-at-topstep  # (2026-06-10)
+  - https://help.topstep.com/en/articles/10296582-prohibited-conduct
+  - https://help.topstep.com/en/articles/13747047-understanding-hedging            # (2026-07-27)
+  - https://help.topstep.com/en/articles/8284128-what-is-a-reset
+  - https://help.topstep.com/en/articles/10370307-reset-purchase-limits            # (2026-06-18)
+  - https://www.futureshive.com/blog/topstep-scaling-plan-explained               # THIRD-PARTY, only for XFA scaling tiers
+  - https://proptradingvibes.com/blog/topstep-scaling-plan                         # THIRD-PARTY, only for XFA scaling tiers
+  - https://www.wethrift.com/topstepx                                              # THIRD-PARTY, discount codes (unverified)
+
+# Structure note: Topstep has ONE Trading Combine; the "plans" below are the choices that change the
+# rules for the sim: (a) XFA payout path chosen at activation (Standard vs Consistency, locked forever),
+# (b) optional Daily Loss Limit chosen at Combine checkout (default = NO DLL), and (c) checkout path
+# (Standard path: low monthly fee + $149 activation; No Activation Fee path: higher monthly fee, $0 activation).
+# (c) is captured in price_notes. Account size of the XFA = buying power; XFA balance STARTS AT $0.
+
+plans:
+  - plan: "Combine -> XFA Standard payout path (no DLL, default)"
+    sizes:
+      50K:
+        eval:
+          price_usd: 49
+          price_notes: "Standard checkout path $49/mo + $149 activation per XFA. No Activation Fee path: $95/mo, $0 activation ($10 off if DLL added at checkout -> $85/mo). Price is a monthly subscription that rebills until pass/cancel; each rebill adds a Reset Credit. Promos are frequent (third-party aggregators list e.g. 25%-30% off up to 5 Combines, $49 off codes; unverified, typically first month only)."
+          billing: monthly
+          reset_fee_usd: 49            # Standard path; NAF path reset = $95. Max 2 resets per account per day.
+          activation_fee_usd: 149      # Standard path; 0 on No Activation Fee path
+          profit_target_usd: 3000
+          mll:
+            amount_usd: 2000
+            type: eod_trailing
+            lock_balance_usd: 50000    # floor stops at starting balance (floor 50,000 once EOD balance >= 52,000)
+            breach: realtime           # "monitored in real time using realized and unrealized P&L"
+          dll: {amount_usd: null, kind: null}   # no DLL by default; optional $1,000 'pause' DLL -> see DLL plan
+          consistency_pct: 55          # best day <= 55% of PROFIT TARGET ($1,650 on 50K); if exceeded, target rises to best_day/0.55 (not a breach)
+          min_trading_days: 2          # no explicit minimum; "can pass in as few as 2 days" because of the 55% consistency target
+          max_days: null               # no time limit (monthly subscription)
+          max_contracts: "5 mini / 50 micro (10:1)"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 0, breach: realtime}
+          # XFA balance starts at $0 -> floor starts at -$2,000 and trails EOD; locks at $0 (i.e. once EOD balance >= +$2,000).
+          # On a 50K-nominal scale this is equivalent to start 50,000 / floor 48,000 / lock 50,000.
+          mll_after_payout: "After ANY payout (incl. the first) MLL is set to $0 permanently, regardless of where it was. Remaining balance becomes the loss buffer; account closes if balance hits $0. Topstep recommends reaching $0 MLL before taking a payout. Consistency/day counts also reset after each payout."
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: null
+          payout:
+            cycle_requirement: "5 winning days (non-consecutive) with >= $150 net P&L each; net profit > $0.01 since last payout (first payout exempt). Day locks at 4:00 PM CT."
+            min_profit_to_request_usd: 250   # derived: min payout $125 and max 50% of balance -> need balance >= $250. Practically 5x$150 = $750+.
+            min_payout_usd: 125
+            max_payout_per_cycle_usd: 2000   # min(50% of balance, $2,000) on 50K Standard; not escalating by payout number
+            max_pct_of_profit: 50            # 50% of account balance (XFA balance = profit since it starts at $0)
+            buffer_usd: null                 # no explicit buffer; implied by 50% cap
+            split_pct: 90                    # legacy-dashboard traders who joined before 2026-01-12 get 100% of first $10K lifetime
+            frequency: "each time 5 qualifying winning days accrue (count restarts after each request); requests Sun 5PM-Fri 5PM CT"
+          payouts_before_live: null          # discretionary call-up by Risk Team; no fixed number
+          lifetime_payout_cap_usd: null      # none stated for XFA
+          scaling_plan: "XFA scaling by balance (official table is an image). Third-party: 50K: <$1,500 -> 2 lots; $1,500-$1,999 -> 3; >= $2,000 -> 5. Applies from next session; a payout can drop you to a lower tier."
+          inactivity_days: 30
+        account_limits:
+          max_funded_accounts: 5            # max 5 active XFAs (mixed sizes allowed); cannot activate XFA while holding an LFA
+          max_eval_accounts: null            # "no limit" on Combines, but "excessive purchases" is listed as prohibited conduct
+        strategy_restrictions:
+          max_loss_per_trade: null           # no per-trade loss limit / no negative-P&L-per-trade rule found
+          min_rr_or_profit_rules: null
+          min_hold_time / microscalping: "No min hold time, but prohibited: 'Running scalping algorithms designed to exploit unrealistic SIM fills', 'Making hundreds of rapid trades to take advantage of preferential queue position in SIM', 'Using tight brackets or auto-breakeven to take advantage of favorable SIM fills'."
+          news_trading: "allowed, except 'Purposefully trading your full Maximum Position Size directly into a scheduled major news event.' (prohibited strategy)"
+          hedging_stacking: "ACCOUNT STACKING (prohibited, Prohibited Trading Strategies, 2026-06-10): 'Repeatedly trading aggressively, hitting the Maximum Loss Limit (MLL) in one account, then switching to another account and repeating. The goal is to run high-risk attempts until a large win occurs. This exploits risk parameters and is not permitted.' Prohibited Conduct: 'repeatedly hitting the Maximum Loss Limit in one account and switching to another to repeat high-risk attempts'. CROSS-ACCOUNT HEDGING: 'Cross-account hedging is prohibited at Topstep' = 'simultaneously going long and short the same or correlated instrument across multiple accounts'; 'Opposing positions are prohibited even if the overlap is brief or unintentional.' Enforced in real time: warning+unhedge window -> liquidation -> day ban -> permanent closure (no payout, non-appealable). Coordinated trading with others ('trade the same or opposite strategy simultaneously') also prohibited."
+          copy_trading: "allowed across own XFAs up to $750K total buying power (= 5x150K); trader responsible if copier causes hedging; copier disabled during payouts and must be re-enabled"
+          other:
+            - "Prohibited: intentionally depleting a Live Funded Account; orders outside best bid/offer; HFT/AI/mass-data-entry that manipulates; 'Any other conduct that Topstep determines, at its sole discretion, is uncommercial, games the market ... is not a viable strategy, or is not responsible trading.'"
+            - "No explicit gambling / all-in / max-risk-per-trade clause, BUT risking the whole MLL in one trade repeatedly across accounts is exactly the 'account stacking' pattern and is discretionary-ban territory."
+            - "Automated strategies allowed in Combine/XFA (not in Live: API only on sim)."
+      100K:
+        eval: {price_usd: 99, billing: monthly, reset_fee_usd: 99, activation_fee_usd: 149, profit_target_usd: 6000, mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100000, breach: realtime}, consistency_pct: 55, max_contracts: "10 mini / 100 micro", price_notes: "NAF path $149/mo, reset $149"}
+        funded: {mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 0, breach: realtime}, payout: {max_payout_per_cycle_usd: 3000, max_pct_of_profit: 50, split_pct: 90, min_payout_usd: 125}}
+      150K:
+        eval: {price_usd: 199, billing: monthly, reset_fee_usd: 199, activation_fee_usd: 149, profit_target_usd: 9000, mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 150000, breach: realtime}, consistency_pct: 55, max_contracts: "15 mini / 150 micro", price_notes: "NAF path $229/mo, reset $229"}
+        funded: {mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 0, breach: realtime}, payout: {max_payout_per_cycle_usd: 5000, max_pct_of_profit: 50, split_pct: 90, min_payout_usd: 125}}
+    notes:
+      - "Combine MLL breach: account liquidated for the rest of the day and ineligible for funding until Reset (or monthly rebill reset credit). XFA MLL breach: account closed; Back2Funded reactivation possible (max 2 per XFA, only if NO payout ever taken, within 30 days; 50K $599, 100K $699, 150K $829; $50 off with DLL). After Back2Funded everything resets: balance $0, MLL -$2,000 (50K)."
+      - "Combine profits do not carry over: XFA starts at $0 balance."
+      - "Payout cap discrepancy: Payout Policy table gives XFA Standard caps 50K $2,000 / 100K $3,000 / 150K $5,000; the XFA Parameters page (2026-08-05) says 'up to $5,000' (Standard) / '$6,000' (Consistency) without size breakdown — these match the 150K row, so the per-size table is used."
+      - "Consistency target history: older third-party sources (2025) cite 50% of total profit; official article dated 2026-09-17 says 55% of PROFIT TARGET, hard line, old buffer removed."
+      - "Live Funded Account (call-up is discretionary by Risk Team): LFA size = average of eligible XFAs (only XFAs with >=1 payout count), rounded up to 50/100/150K; 20% of transferred balance tradable (min $10K), 80% in Reserve, unlocked 25% each time LFA profit target ($3K/50K) is hit. LFA DLL is automatic: $2,000 (50K), $3,000 (100K), $4,500 (150K) — breach deactivates for the day; account liquidated if balance < $1,000 (overview says rule is balance must not reach $0). LFA payouts: 5 winning days >= $150 per cycle, no cap; daily payouts after 30 LFA winning days. All XFAs effectively end with call-up (cannot hold XFA alongside LFA)."
+      - "Payout fees: ACH/Wire $30 per payout; Prop-to-Brokerage, Aeropay, Wise: $0 Topstep fee."
+      - "Trading day: 5:00 PM CT to 3:10 PM CT. MLL is assessed vs EOD balance at session close for trailing purposes, but breach is checked intraday incl. unrealized P&L."
+    unknowns:
+      - "Official XFA Scaling Plan tiers (help article shows them only as an image). Using third-party 2/3/5 lots for 50K; 100K/150K tiers not captured."
+      - "Exact numeric criteria for Live call-up (payouts count, profit) — Topstep states it is discretionary."
+      - "Whether a lifetime payout cap exists for XFA (none mentioned)."
+      - "No current verified promo code for Oct 2026."
+
+  - plan: "Combine -> XFA Consistency payout path (no DLL)"
+    sizes:
+      50K:
+        eval:
+          price_usd: 49
+          price_notes: "Identical Combine to the Standard path; payout path is chosen at XFA activation and cannot be changed. NAF checkout path: $95/mo, $0 activation."
+          billing: monthly
+          reset_fee_usd: 49
+          activation_fee_usd: 149
+          profit_target_usd: 3000
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50000, breach: realtime}
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: 55
+          min_trading_days: 2
+          max_days: null
+          max_contracts: "5 mini / 50 micro"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 0, breach: realtime}   # XFA balance starts at $0
+          mll_after_payout: "Set to $0 permanently after any payout (same as Standard path)."
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: 40          # largest single-day net profit / total net profit since last payout <= 40% (unrounded); blocks payout, not a breach
+          payout:
+            cycle_requirement: "3 trading days with >= 1 trade each + 40% consistency on net profit since last payout (no $/day minimum)"
+            min_profit_to_request_usd: 250   # derived from $125 min payout and 50% cap
+            min_payout_usd: 125
+            max_payout_per_cycle_usd: 3000   # min(50% of balance, $3,000) on 50K
+            max_pct_of_profit: 50
+            buffer_usd: null
+            split_pct: 90
+            frequency: "each time 3 trading days + 40% consistency met; window restarts the trading day after the request"
+          payouts_before_live: null
+          lifetime_payout_cap_usd: null
+          scaling_plan: "Same XFA scaling plan as Standard path (third-party 50K: <$1,500 -> 2; $1,500-1,999 -> 3; >= $2,000 -> 5)."
+          inactivity_days: 30
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: null
+        strategy_restrictions:
+          max_loss_per_trade: null
+          min_rr_or_profit_rules: null
+          min_hold_time / microscalping: "same as Standard path"
+          news_trading: "same as Standard path"
+          hedging_stacking: "same account-stacking and cross-account-hedging prohibitions as Standard path (see above)"
+          copy_trading: "allowed up to $750K buying power"
+          other: []
+      100K:
+        funded: {payout: {max_payout_per_cycle_usd: 4000, max_pct_of_profit: 50, split_pct: 90}}
+      150K:
+        funded: {payout: {max_payout_per_cycle_usd: 6000, max_pct_of_profit: 50, split_pct: 90}}
+    notes:
+      - "XFA Parameters page (2026-08-05) lists the Consistency max payout as '50% of balance, up to $6,000' (150K figure); Payout Policy per-size table: 50K $3,000 / 100K $4,000 / 150K $6,000."
+    unknowns: []
+
+  - plan: "Optional Daily Loss Limit add-on (Responsible Trading option; applies to either payout path)"
+    sizes:
+      50K:
+        eval:
+          price_usd: 49
+          price_notes: "DLL chosen at Combine checkout. Discount only on No Activation Fee path: $10 off (50K) -> $85/mo; Back2Funded $50 off. Limited-time offer since 2026-06-02 3:30 PM CT: DLL added at Combine checkout DOUBLES XFA payout caps after passing (not for DLL added at XFA activation/reactivation or pre-existing DLLs)."
+          billing: monthly
+          reset_fee_usd: 49
+          activation_fee_usd: 149
+          profit_target_usd: 3000
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50000, breach: realtime}
+          dll: {amount_usd: 1000, kind: pause}   # "not a rule violation — it's a forced break for the rest of that session"; positions flattened
+          consistency_pct: 55
+          min_trading_days: 2
+          max_days: null
+          max_contracts: "5 mini / 50 micro"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 0, breach: realtime}
+          mll_after_payout: "Set to $0 permanently after any payout."
+          dll: {amount_usd: 1000, kind: pause}   # purchase-set DLL is fixed and carries into the XFA
+          consistency_pct: null                  # 40% if Consistency path
+          payout:
+            cycle_requirement: "Standard: 5 days >= $150; Consistency: 3 days + 40%"
+            min_profit_to_request_usd: 250
+            min_payout_usd: 125
+            max_payout_per_cycle_usd: 4000   # 50K with DLL promo: Standard $4,000 / Consistency $6,000 (still limited to 50% of balance)
+            max_pct_of_profit: 50
+            buffer_usd: null
+            split_pct: 90
+            frequency: "same as chosen path"
+          payouts_before_live: null
+          lifetime_payout_cap_usd: null
+          scaling_plan: "same as XFA"
+          inactivity_days: 30
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: null
+        strategy_restrictions:
+          max_loss_per_trade: null
+          min_rr_or_profit_rules: null
+          min_hold_time / microscalping: "same as Standard path"
+          news_trading: "same as Standard path"
+          hedging_stacking: "same as Standard path"
+          copy_trading: "allowed up to $750K buying power"
+          other: []
+      100K:
+        eval: {dll: {amount_usd: 2000, kind: pause}}
+        funded: {dll: {amount_usd: 2000, kind: pause}, payout: {max_payout_per_cycle_usd: 6000}}   # Consistency w/ DLL: 8000
+      150K:
+        eval: {dll: {amount_usd: 3000, kind: pause}}
+        funded: {dll: {amount_usd: 3000, kind: pause}, payout: {max_payout_per_cycle_usd: 10000}}  # Consistency w/ DLL: 12000
+    notes:
+      - "DLL is measured on daily Net P&L (5 PM - 3:10 PM CT); on hit, positions flattened, orders cancelled, no trading until next session. Account stays eligible."
+      - "The doubled-cap offer is described as 'limited-time'; end date not stated — verify before simulating."
+    unknowns:
+      - "End date of the DLL doubled-payout-cap promotion."
+      - "Whether DLL breach is evaluated on unrealized P&L in real time (article says Net P&L 'during the trading day' but doesn't explicitly say unrealized)."

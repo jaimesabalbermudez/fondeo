@@ -1,0 +1,182 @@
+firm: Apex Trader Funding
+as_of: 2026-10-24
+# Access note: apextraderfunding.com is behind Cloudflare (HTTP 403 for scripted fetches on 2026-10-24).
+# The official help-center articles were read via Internet Archive snapshots of the official pages
+# (snapshot dates are given per source below). The "4.0" products (EOD + Intraday) replaced the old
+# products on 2026-03-01; the old ones are now "Legacy" (rules such as the 30% MAE, 5:1 RR,
+# 8-day payouts, 30% windfall, 90/10 after $25k, and the 20-account limit on evals all belong to Legacy).
+sources:
+  - https://apextraderfunding.com/help-center/eod-trailing-drawdown-accounts/eod-evaluations/              # snapshot 2026-09-26
+  - https://apextraderfunding.com/help-center/eod-trailing-drawdown-accounts/eod-drawdown-explained/       # snapshot 2026-05-27
+  - https://apextraderfunding.com/help-center/eod-trailing-drawdown-accounts/eod-performance-accounts-pa/   # snapshot 2026-05-27
+  - https://apextraderfunding.com/help-center/eod-trailing-drawdown-accounts/eod-payouts/                  # snapshot 2026-09-26
+  - https://apextraderfunding.com/help-center/evaluation-accounts-ea/intraday-trailing-drawdown-evaluations/ # snapshot 2026-05-27
+  - https://apextraderfunding.com/help-center/intraday-trailing-drawdown-accounts/intraday-trailing-drawdown-explained/ # snapshot 2026-07-14
+  - https://apextraderfunding.com/help-center/intraday-trailing-drawdown-accounts/intraday-trailing-drawdown-performance-accounts-pa/ # snapshot 2026-05-27
+  - https://apextraderfunding.com/help-center/intraday-trailing-drawdown-accounts/intraday-trailing-drawdown-payouts/ # snapshot 2026-09-26
+  - https://apextraderfunding.com/help-center/additional-helpful-items/daily-loss-limit-explained/          # snapshot 2026-07-14
+  - https://apextraderfunding.com/help-center/additional-helpful-items/scaling-levels-pa-explained/        # snapshot 2026-07-14
+  - https://apextraderfunding.com/help-center/additional-helpful-items/50-consistency-requirement/         # snapshot 2026-07-26
+  - https://apextraderfunding.com/help-center/billing/evaluation-plan-fees-and-access-explained/          # snapshot 2026-09-27
+  - https://apextraderfunding.com/help-center/billing/pa-activation-process-deadline-explained/          # snapshot 2026-07-30
+  - https://apextraderfunding.com/help-center/billing/inactivity-policy-on-performance-accounts-pa/       # snapshot 2026-07-13
+  - https://apextraderfunding.com/help-center/uncategorized/no-activation-fee-evaluations/               # snapshot 2026-09-27
+  - https://apextraderfunding.com/help-center/getting-started/prohibited-activities/                     # snapshot 2026-03-25 (latest available)
+  - https://apextraderfunding.com/help-center/legacy-helpful-items/hedging-and-correlated-instruments-rule/ # via search snippet only
+  - https://apextraderfunding.com/help-center/legacy-helpful-items/legacy-30-negative-p-l-rule-mae/      # via search snippet only (Legacy)
+  - https://apextraderfunding.com/help-center/getting-started/apex-live-prop-trading-program-faq/         # snapshot 2026-08-14
+  - https://apextraderfunding.com/help-center/tradovate/tradovate-group-copier/                          # snapshot 2026-07-18
+  - https://apextraderfunding.com/help-center/helpful-items/status-updates/                              # snapshot 2026-07-30 (legacy cut-over 2026-03-01)
+  - https://apextraderfunding.com/  # homepage product-picker JSON (window.productPickerConfig), snapshot 2026-10-10 -> list prices, PA activation fees, promo
+  - https://apextraderfunding.com/help-center/billing/coupon-codes/                                     # snapshot 2026-03-25
+plans:
+  - plan: EOD Trailing Drawdown (Evaluation -> EOD Performance Account)
+    sizes:
+      50K:
+        eval:
+          price_usd: 590              # list price, standard eval (Rithmic/Tradovate/Wealthcharts identical); product picker 2026-10-10
+          price_notes: >-
+            One-time fee for 30 calendar days of access. Variants: 'No Activation Fee' eval $1,190 (PA activation $0);
+            5-pack $2,450 (standard) / $5,450 (no-activation-fee). Apex runs near-permanent coupons: picker promo on
+            2026-10-10 = code SAVENOW, first_month_code '92' (banner 2026-09-26: 'Any Size Evals up to 90% Off |
+            Use code SAVENOW'), expiring 2026-10-12 then typically renewed. Real paid price is therefore usually a small
+            fraction of list. Other sizes (std / no-act-fee): 25K $490/$1,090, 100K $1,190/$1,590, 150K $2,190/$2,490.
+          billing: one_time           # 'not a subscription and does not renew' (Evaluation Plan Fees article)
+          reset_fee_usd: null         # no resets: 'There are no reset fees. If an Evaluation fails, the only way to continue is by purchasing a new one.' (picker JSON still has an internal reset_fee:60 field - legacy artefact)
+          activation_fee_usd: 129     # one-time PA activation fee (picker pa_features.price). 0 on 'No Activation Fee' evals. 25K $109, 100K $129, 150K $159. Must be paid within 7 calendar days of pass.
+          profit_target_usd: 3000
+          mll:
+            amount_usd: 2000
+            type: eod_trailing        # threshold recomputed once/day at 4:59:59 PM ET from closing balance, trails highest EOD balance
+            lock_balance_usd: 53000   # Rithmic & Wealthcharts evals: stops at profit-target balance (reached when EOD high >= 55,000). Tradovate evals: trails indefinitely (no lock). Practically irrelevant: the eval passes at 53,000.
+            breach: realtime          # 'enforced in real time' incl. unrealized P&L; touching threshold = liquidation + fail
+          dll: {amount_usd: 1000, kind: pause}   # EOD evals only; fixed, includes unrealized; liquidates and pauses until 6 PM ET reset; account stays alive
+          consistency_pct: null       # 'Consistency: Not Applied' in eval (picker JSON has internal consistency_rule_percentage:30 / max_eval_daily_profit_percent:30 - not documented, see notes)
+          min_trading_days: 0         # 'No minimum trading days required, may pass in one trading day'
+          max_days: 30                # 30 calendar days access from purchase; no extensions
+          max_contracts: "6 mini / 60 micro (fixed, no scaling in eval)"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}   # PA: threshold stops at start+$100 = 50,100, reached when highest EOD balance = 52,100
+          mll_after_payout: >-
+            Threshold is locked at 50,100 once EOD high reaches 52,100; payouts require balance >= 52,600 so the lock
+            is always reached before the first payout, and withdrawals do not move the floor (it stays 50,100). The
+            Safety Net (= start + drawdown + $100 = 52,100) 'must be maintained for the lifetime of the Performance
+            Account' - only profit above 52,100 may be withdrawn, i.e. after a payout the balance is >= 52,100 and the
+            effective cushion to the floor is >= $2,000.
+          dll:
+            amount_usd: 1000          # tier-based by prior EOD balance: profit $0-1,499 -> $1,000 (2 contracts); $1,500-2,999 -> $1,000 (3); $3,000-5,999 -> $2,000 (4); >= $6,000 -> $3,000 (4)
+            kind: pause
+          consistency_pct: 50         # largest profitable day must be < 50% of net profit since last approved payout (only blocks payout requests; never fails the account)
+          payout:
+            cycle_requirement: "5 trading days (not necessarily consecutive) each with >= $250 net profit, since last payout"
+            min_profit_to_request_usd: 2600   # balance must be >= 52,600 (= safety net 52,100 + $500 min payout)
+            min_payout_usd: 500
+            max_payout_per_cycle_usd: [1500, 1500, 2000, 2500, 2500, 3000]   # payout #1..#6 for 50K EOD PA
+            max_pct_of_profit: null   # no % cap documented; limited by safety net and per-payout max
+            buffer_usd: 2100          # safety net = start + 2,100 (52,100) permanently
+            split_pct: 100            # 100% of approved payout (no tiers)
+            frequency: "up to weekly (each time 5 qualifying days are completed); no deadline"
+          payouts_before_live: null   # PA closes after 6th payout; live selection is discretionary ('invitation-based', any time)
+          lifetime_payout_cap_usd: 13000   # per 50K EOD PA = sum of the 6 max payouts; then the PA is closed and a new eval is needed
+          scaling_plan: "Tiers set daily from prior EOD balance: 2 / 3 / 4 contracts at profit <1,500 / 1,500-2,999 / >=3,000 (max 4 minis or 40 micros, 10 micros = 1 mini); DLL 1,000/1,000/2,000/3,000"
+          inactivity_days: 30         # must record >= 2 days with >= $50 net profit in every rolling 30-day window; dormant at 15 days, closed at 30
+        account_limits:
+          max_funded_accounts: 20     # 'up to 20 PAs active at the same time' across EOD, Intraday and Legacy combined
+          max_eval_accounts: null     # not stated for new products; 5-packs sold; 'Stockpiling Evaluation Accounts' prohibited
+        strategy_restrictions:
+          max_loss_per_trade: >-
+            No numeric per-trade cap on the new (post-2026-03-01) EOD/Intraday products: the 30% negative-P&L (MAE)
+            rule is filed under 'Legacy' ('legacy-30-negative-p-l-rule-mae'; open negative P&L may not exceed 30% of
+            start-of-day profit balance) and applies to Legacy PAs only. BUT Prohibited Activities (current help center)
+            bans: 'Using the Trailing Threshold as a Stop Loss: Traders are prohibited from using the account's full
+            threshold as a stop-loss mechanism to absorb large losses, leading to account liquidation.' and 'Trading
+            Without Stop Losses or Risk Management: All trades must have either pending or mental stop losses'. In the
+            PA the DLL ($1,000 at tier 1) mechanically caps a single-day loss below the $2,000 MLL.
+          min_rr_or_profit_rules: >-
+            Legacy 5:1 risk-reward rule is Legacy-only. Current Prohibited Activities: 'High-Risk Strategies: Strategies
+            that involve small profit targets while risking disproportionately large amounts are not allowed. For
+            example, setting a five-tick profit target with a 150-tick stop loss demonstrates unacceptable risk management.'
+          min_hold_time / microscalping: "No explicit min hold time; HFT and sim-exploiting / non-directional bracket trading prohibited"
+          news_trading: "allowed for normal strategy; 'news trading strategies that chase the market or place orders on both sides' prohibited"
+          hedging_stacking: >-
+            'No Hedging of Any Kind - Directional Trading only. Holding both long and short positions simultaneously on
+            the same or correlated instrument is strictly prohibited.' Hedging & Correlated Instruments rule: may not
+            hold opposing positions in correlated instruments, contract sizes (mini vs micro) or across multiple accounts
+            (e.g. short NQ / long ES); violation -> account closure. Evals: 'You may not pass Evaluation Accounts by
+            hedging them against each other.' 'Stockpiling Evaluation Accounts: Purchasing multiple discounted
+            evaluation accounts to cycle through and intentionally blow up accounts in pursuit of windfall profits is
+            not permitted.'
+          copy_trading: >-
+            Allowed across your OWN accounts (Tradovate Group Trade is 'automatically enabled for any Apex user with more
+            than one active Tradovate account'). Prohibited between people: 'Sharing MAC addresses, computers, IPs,
+            credit cards, or trade copying with other traders is strictly forbidden.'
+          other:
+            - "No automation/algorithms ('No Automation or Algorithm Usage allowed')."
+            - "All positions must be closed before market close (EOD close 4:59:59 PM ET; day resets 6 PM ET)."
+            - "Order exceeding the max position size is rejected (no penalty)."
+  - plan: Intraday Trailing Drawdown (Evaluation -> Intraday Performance Account)
+    sizes:
+      50K:
+        eval:
+          price_usd: 249              # list, standard; picker 2026-10-10
+          price_notes: >-
+            One-time, 30 days. 'No Activation Fee' variant $799; 5-pack $950 / $3,450. Same SAVENOW coupon (~90% first
+            purchase) as EOD. Other sizes std/no-act-fee: 25K $167/$690, 100K $790/$999, 150K $1,190/$1,890.
+          billing: one_time
+          reset_fee_usd: null         # no resets
+          activation_fee_usd: 99      # one-time PA activation (25K $89, 100K $129, 150K $149); $0 on No-Activation-Fee evals
+          profit_target_usd: 3000
+          mll:
+            amount_usd: 2000
+            type: intraday_trailing   # trails peak balance in real time INCLUDING unrealized gains
+            lock_balance_usd: 53000   # Rithmic & Wealthcharts evals lock at profit-target balance (when peak hits 55,000); Tradovate evals trail indefinitely
+            breach: realtime
+          dll: {amount_usd: null, kind: null}   # 'The Intraday Evaluation does not have a Daily Loss Limit'
+          consistency_pct: null
+          min_trading_days: 0
+          max_days: 30
+          max_contracts: "6 mini / 60 micro (fixed)"
+        funded:
+          mll: {amount_usd: 2000, type: intraday_trailing, lock_balance_usd: 50100, breach: realtime}   # stops at start+$100 when peak (realized or unrealized) reaches 52,100
+          mll_after_payout: "Same as EOD PA: floor locked at 50,100 before any payout is possible; safety net 52,100 kept for life; withdrawals only above 52,100."
+          dll: {amount_usd: 1000, kind: pause}   # PA has tier-based DLL (same tier table as EOD PA) even though the Intraday eval has none
+          consistency_pct: 50
+          payout:
+            cycle_requirement: "5 trading days each with >= $200 net profit (not necessarily consecutive)"
+            min_profit_to_request_usd: 2600   # balance >= 52,600
+            min_payout_usd: 500
+            max_payout_per_cycle_usd: [1500, 2000, 2500, 2500, 3000, 3000]   # payout #1..#6 for 50K Intraday PA (differs from EOD)
+            max_pct_of_profit: null
+            buffer_usd: 2100
+            split_pct: 100
+            frequency: "up to weekly"
+          payouts_before_live: null
+          lifetime_payout_cap_usd: 14500   # sum of 6 max payouts, then PA closes
+          scaling_plan: "Same tier table as EOD PA (2/3/4 contracts, DLL 1,000/1,000/2,000/3,000), set from prior EOD balance"
+          inactivity_days: 30
+        account_limits:
+          max_funded_accounts: 20
+          max_eval_accounts: null
+        strategy_restrictions:
+          max_loss_per_trade: "Same as EOD plan (no numeric MAE rule on new products; 'Using the Trailing Threshold as a Stop Loss' prohibited)."
+          min_rr_or_profit_rules: "Same as EOD plan (5-tick target vs 150-tick stop example prohibited)."
+          min_hold_time / microscalping: "No explicit min hold; HFT prohibited"
+          news_trading: "allowed for normal strategy; two-sided news gambling prohibited"
+          hedging_stacking: "Same as EOD plan."
+          copy_trading: "Own accounts allowed; copying with other traders forbidden."
+          other: []
+    notes:
+      - "Live stage (both plans): invitation-only 'Apex Live Prop Trading Program'. When selected, ALL sim evals are closed (active ones refunded) and PAs deactivated; their positive balances go into a 'Bonus Vault' paid as 20% of monthly live withdrawals (40% in first month). Live account: $0 start, $3,000 EOD drawdown, locks at +$100 once profit reaches $3,100 ('safety net' $3,100 not withdrawable until closure), 90/10 split, daily payout requests, $500 min; extra live accounts (max 5) after +$4,500."
+      - "All new-product PAs are simulated ('Sim Funded'); 100% split applies to approved payouts."
+      - "Payout table check: max payouts differ between EOD and Intraday for 50K (#2: $1,500 vs $2,000; #3: $2,000 vs $2,500; #4/#5 also differ)."
+      - "EOD PA Safety Net vs lock: Safety net 52,100 = start + MLL + 100; min balance to request 52,600. Floor stops at 50,100."
+      - "PA tier table (DLL article 2026-07-14) labels 50K tier 4 as '$6,000 & Up' while Scaling article says '$5,999 & Up' (typo)."
+      - "Product-picker JSON (2026-10-10) contains internal fields consistency_rule_percentage:30 and max_eval_daily_profit_percent:30 on evals and reset_fee:60; the help-center articles state eval consistency 'Not Applied' and 'no reset fees'. Treat the help center as authoritative; flagged as discrepancy."
+      - "Prohibited Activities snapshot is from 2026-03-25 (latest archived); it may have been edited since. It also says positions must be closed before market close and bans automation."
+      - "Third-party sources (TradersPost Mar-2026) still cite 7-day minimum, 8-day payout cycle, 90/10 after $25k and 30% rules - these are Legacy rules and are superseded for new accounts."
+    unknowns:
+      - "Max number of simultaneous evaluation accounts for new products (not stated in help center)."
+      - "Exact current text of the Hedging & Correlated Instruments rule page (only search snippet seen); whether it applies to non-Legacy accounts is implied by the Intraday PA FAQ ('Violation of the Hedging & Correlated Instruments Rule results in immediate Performance Account closure')."
+      - "Exact effective checkout price on 2026-10-24 (coupon percentage changes weekly; last seen 'up to 90% off', code SAVENOW, promo first_month_code 92)."
+      - "Whether a Prohibited-Activities revision after 2026-03-25 changed the 'trailing threshold as stop loss' wording (official page blocked by Cloudflare)."
+      - "Criteria / number of payouts for selection to Live (discretionary)."

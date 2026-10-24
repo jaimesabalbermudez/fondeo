@@ -1,0 +1,274 @@
+firm: FundedNext Futures
+as_of: 2026-10-24
+sources:
+  # Official help center (dates = page dateModified metadata)
+  - https://helpfutures.fundednext.com/en/articles/17229807-what-is-fundednext-futures-flex-challenge             # 2026-10-14
+  - https://helpfutures.fundednext.com/en/articles/17229829-fundednext-futures-flex-challenge-all-rules           # 2026-10-13
+  - https://helpfutures.fundednext.com/en/articles/17229848-fundednext-futures-flex-fundednext-account-all-rules  # 2026-09-30
+  - https://helpfutures.fundednext.com/en/articles/17230209-what-are-benchmark-days-at-fundednext-futures          # 2026-10-24
+  - https://helpfutures.fundednext.com/en/articles/17230292-daily-loss-limit-and-maximum-loss-limit-at-fundednext-futures  # 2026-10-24
+  - https://helpfutures.fundednext.com/en/articles/17228899-what-are-the-available-account-sizes-and-their-prices-in-fundednext-futures  # 2026-10-13
+  - https://helpfutures.fundednext.com/en/articles/17228852-what-are-the-reset-conditions-and-fees-at-fundednext-futures  # 2026-10-13
+  - https://helpfutures.fundednext.com/en/articles/17228885-how-does-the-add-on-feature-work-with-the-fundednext-futures-challenges  # 2026-09-30
+  - https://helpfutures.fundednext.com/en/articles/17242096-what-will-be-my-reward-share-from-the-futures-fundednext-account  # 2026-10-12
+  - https://helpfutures.fundednext.com/en/articles/17225812-how-many-accounts-can-i-hold-with-fundednext-futures-and-what-is-the-maximum-allocation-available  # 2026-09-30
+  - https://helpfutures.fundednext.com/en/articles/14298337-what-are-the-prohibited-trading-strategies-of-fundednext-futures  # 2026-09-30
+  - https://helpfutures.fundednext.com/en/articles/17230319-what-is-copy-group-trading-policy-at-fundednext-futures  # 2026-09-30
+  - https://helpfutures.fundednext.com/en/articles/17230306-fundednext-futures-dollar-cost-averaging-dca-policy
+  - https://helpfutures.fundednext.com/en/articles/17228935-is-there-any-inactivity-period-in-fundednext-futures
+  - https://helpfutures.fundednext.com/en/articles/16522296-road-to-live-trading-rapid-flex-direct  # 2026-10-24
+  - https://helpfutures.fundednext.com/en/articles/17229677-fundednext-futures-rapid-pro-challenge-all-rules  # 2026-09-30
+  - https://helpfutures.fundednext.com/en/articles/17229713-fundednext-futures-rapid-pro-fundednext-account-all-rules  # 2026-09-30
+  - https://helpfutures.fundednext.com/en/articles/17229762-fundednext-futures-rapid-daily-challenge-all-rules  # 2026-09-30
+  - https://helpfutures.fundednext.com/en/articles/17229779-fundednext-futures-rapid-daily-fundednext-account-all-rules  # 2026-09-30
+  - https://helpfutures.fundednext.com/en/articles/17229536-fundednext-futures-legacy-challenge-all-rules  # 2026-10-24
+  - https://helpfutures.fundednext.com/en/articles/17229581-fundednext-futures-legacy-fundednext-account-all-rules  # 2026-10-24
+  - https://helpfutures.fundednext.com/en/articles/17430065-fundednext-futures-direct-account-all-rules  # 2026-10-07
+  - https://fundednext.com/futures   # marketing/pricing page
+  # Third-party (cross-check only)
+  - https://tradetanto.com/learn/fundednext-futures-rules-a-complete-breakdown
+  - https://pipback.com/blog/fundednext-futures-review
+
+common_rules:
+  billing: one_time            # "one-time fee, no subscription" (fundednext.com/futures); no activation fee
+  activation_fee_usd: 0
+  mll_mechanics: >-
+    Trailing EOD: "It updates once per day at the end of the trading day (05:00 PM CT) — not in real
+    time", trailing highest EOD balance, but "If your floating loss reaches the MLL during a live
+    trade, your account is breached instantly." Hard breach (permanent).
+  dll_mechanics: >-
+    Where present: soft breach, "trading is disabled for the rest of the day"; checked intraday on an
+    equity floor (floating losses count).
+  microscalping: >-
+    Trades closed within 10 s count only if profitable, as % of cycle profit. 30% -> warning.
+    >=40%: Challenge -> progress put on hold until <40%; Funded -> that micro-scalping profit is
+    deducted in full for the cycle. Never a breach by itself.
+  inactivity: "Challenge & FundedNext accounts: 30 consecutive calendar days without a trade -> breached/deactivated; Direct: 7 days."
+  contracts: "Fixed at creation, do not scale with profit; 1:10 mini/micro; excess-contract profit deducted, losses count."
+  account_limits:
+    max_funded_accounts: 5       # active at once, per user AND per household; max 10 FundedNext accounts issued per calendar month
+    max_eval_accounts: "No monthly purchase cap, but max $750,000 combined Challenge allocation at any one time"
+  live_transition: >-
+    Road to Live (2026-10-24): new traders need 15 Performance Rewards across their whole profile to
+    enter the live review pool (not guaranteed). At transition all Challenge accounts are closed
+    without refund; FundedNext accounts with >=1 withdrawal convert to live (max 5); those with 0
+    payouts are closed and refunded. Live 50K starts with $2,000 real balance, MLL trails from $0 and
+    locks on payout request or when profit = starting balance; floor $1,000 below start with 'MLL Lock
+    Benefit'; split 100% of first $5,000 cumulative, then 90/10; daily withdrawals min $100.
+  strategy_restrictions:
+    max_loss_per_trade: null     # no numeric per-trade cap found
+    min_rr_or_profit_rules: null
+    min_hold_time / microscalping: "see common_rules.microscalping (10 s rule, 30%/40% thresholds)"
+    news_trading: allowed        # not prohibited; only 'Gapped or Illiquid Market Trading' and the 2% CME price-limit proximity rule are prohibited
+    hedging_stacking: >-
+      Prohibited 'Reverse Hedging and Coordinated Hedging' — "It can be done across the trader's own
+      accounts or within a single account." Example: "A trader opens a buy on NQ in Account A and a
+      sell on MNQ in Account B, both under their control." Also 'Hedging with Correlated Instruments'.
+      'Account Rolling' prohibited: "multiple Challenge Accounts are purchased with the intention of
+      quickly progressing to FundedNext Accounts ... It resembles gambling more than trading, as
+      success depends on sheer luck rather than a structured strategy." Consequence: "restrictions
+      on purchasing new accounts or adjustments to the lifetime allocation limit."
+    copy_trading: "allowed between own accounts (also with other firms if same exact name): 'Traders can freely copy trades between their own FundedNext Accounts.' Copying others, signals and group trading prohibited."
+    other:
+      - "'Account Flipping and Inconsistent Contract Execution' prohibited: 'using high margin to rapidly grow or blow up accounts through reckless, oversized positions'; example given: a trader who 'places an all-in trade, risking the entire account balance on one position.' General clause: prohibited practices 'will result in account suspension and disqualification from further participation'. No numeric threshold given -> DIRECT RISK for an 'all MLL in one trade' strategy."
+      - "Also prohibited: tick scalping, latency arbitrage, grid trading, bracket strategies, spoofing/layering, wash trading, multi-order spam, slow-feed abuse, simulated-execution exploitation, trading within 2% of CME price limits."
+      - "DCA allowed if planned; 'averaging down blindly in hopes of a reversal is considered poor risk management and should be avoided' (no numeric cap)."
+
+plans:
+  - plan: Flex
+    sizes:
+      50K:
+        eval:
+          price_usd: 141.99
+          price_notes: >-
+            List $141.99; coupon price $74.99 for the first 2 purchases, $84.99 from the 3rd (help
+            center 2026-10-13; marketing page shows $74.99, 'up to 47% off' code FNFLEX). Homepage FAQ
+            lists $69.99 (conflict). Reset $82.99 (Challenge phase only, unlimited up to max allocation).
+          billing: one_time
+          reset_fee_usd: 82.99
+          activation_fee_usd: 0
+          profit_target_usd: 2500
+          mll:
+            amount_usd: 1500
+            type: eod_trailing
+            lock_balance_usd: 50100
+            breach: realtime
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: 40     # best day must stay < 40% of TARGET ($1,000); if exceeded, required profit = best day / 0.40 (target rises, no breach)
+          min_trading_days: null  # not stated (consistency implies >= 3 days at target)
+          max_days: null
+          max_contracts: "3 mini / 30 micro"
+        funded:
+          mll: {amount_usd: 1500, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}
+          mll_after_payout: "'Your first withdrawal resets the MLL to the lock point for your size' ($50,100 = initial balance + $100); stays there."
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: null   # "there is no Consistency Rule on the Flex FundedNext Account"
+          payout:
+            cycle_requirement: "5 Benchmark Days with >= $200 profit each; >= $500 profit in current cycle"
+            min_profit_to_request_usd: 500
+            min_payout_usd: 250
+            max_payout_per_cycle_usd: 1500
+            max_pct_of_profit: 50
+            buffer_usd: null
+            split_pct: 95
+            frequency: "per cycle after 5 Benchmark Days; request at end of day (trading that day removes the wallet-transfer option)"
+          payouts_before_live: "Account CONCLUDES (closes) after the 5th Performance Reward. Live review after 15 rewards across profile (Road to Live 2026-10-24) vs '5 Performance Reward Cycles from a single account' (Flex overview 2026-10-14) - conflict"
+          lifetime_payout_cap_usd: 7500   # derived: 5 payouts x $1,500 cap (gross, before 95% split)
+          scaling_plan: "None (contracts fixed)"
+          inactivity_days: 30
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: "unlimited purchases; $750K combined challenge allocation"
+        strategy_restrictions: "see common_rules.strategy_restrictions"
+      100K:
+        eval: {price_usd: 273.99, price_notes: "coupon $144.99 (first 2) / $159.99", reset_fee_usd: 157.99, profit_target_usd: 5000, mll: {amount_usd: 2500, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, consistency_pct: 40, max_contracts: "5 mini / 50 micro"}
+        funded: {payout: {cycle_requirement: "5 days >= $200, >= $500 cycle profit", max_payout_per_cycle_usd: 2500, max_pct_of_profit: 50, split_pct: 95}}
+      150K:
+        eval: {price_usd: 490.99, price_notes: "coupon $259.99 (first 2) / $289.99", reset_fee_usd: 284.99, profit_target_usd: 8000, mll: {amount_usd: 4000, type: eod_trailing, lock_balance_usd: 150100, breach: realtime}, consistency_pct: 40, max_contracts: "8 mini / 80 micro"}
+        funded: {payout: {cycle_requirement: "5 days >= $250, >= $500 cycle profit", max_payout_per_cycle_usd: 4000, max_pct_of_profit: 50, split_pct: 95}}
+    notes:
+      - "Reward share 95% per help center (2026-10-12) and Flex funded rules. Third-party reviews mention 80% base / 90-95% add-on — outdated; no Flex add-on listed in the official add-on article (only Rapid Pro DLL add-on)."
+      - "Flex 50K MLL ($1,500) is smaller than most competitors; lock at $50,100 means trailing stops after EOD balance $51,600."
+      - "Live cumulative deposit across Flex accounts cannot exceed $10,000 (Flex overview)."
+      - "Article inconsistency: MLL reset after payout described both as 'lock point' and 'initial balance + $100' (same value, $50,100)."
+    unknowns:
+      - "Minimum trading days in Flex challenge (not stated)."
+      - "MLL behaviour after 2nd+ payouts (only first payout described; presumably stays at $50,100)."
+      - "Cycle length/definition beyond 5 Benchmark Days."
+
+  - plan: Rapid Pro
+    sizes:
+      50K:
+        eval:
+          price_usd: 299.98
+          price_notes: "List $299.98; offer $169.99 (prices article 2026-10-13, resets article) vs $149.99 (Rapid Pro rules article 2026-09-30) - conflict. With DLL Add-On: $109.99 or $129.99 depending on article. Reset $174.99 ($134.99 with add-on per resets article; $117.99 per rules article)."
+          billing: one_time
+          reset_fee_usd: 174.99
+          activation_fee_usd: 0
+          profit_target_usd: 3000
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}
+          dll: {amount_usd: null, kind: null}   # $1,000 pause only if the (cheaper) DLL Add-On is chosen
+          consistency_pct: null   # none in Challenge
+          min_trading_days: null  # marketing: "pass in one day"
+          max_days: null
+          max_contracts: "4 mini / 40 micro"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}
+          mll_after_payout: null
+          dll: {amount_usd: null, kind: null}   # $1,000 pause with add-on
+          consistency_pct: 40     # highest day <= 40% of total profit to be eligible
+          payout:
+            cycle_requirement: "40% consistency met; >= $500 profit in current cycle; no Benchmark Days"
+            min_profit_to_request_usd: 500
+            min_payout_usd: 250
+            max_payout_per_cycle_usd: 1200   # homepage FAQ says $1,500 for Rapid 50K (conflict)
+            max_pct_of_profit: null
+            buffer_usd: null
+            split_pct: 90
+            frequency: "every 3 days once eligible"
+          payouts_before_live: "Account concludes after 5 Performance Rewards; live review per Road to Live (15 rewards across profile)"
+          lifetime_payout_cap_usd: 6000   # derived: 5 x $1,200
+          scaling_plan: "None"
+          inactivity_days: 30
+        account_limits: {max_funded_accounts: 5, max_eval_accounts: "unlimited; $750K challenge allocation"}
+        strategy_restrictions: "see common_rules.strategy_restrictions"
+      25K: {eval: {offer_price_usd: 79.99, profit_target_usd: 1500, mll: {amount_usd: 1000, lock_balance_usd: 25100}, max_contracts: "2/20"}, funded: {max_payout_per_cycle_usd: 800}}
+      100K: {eval: {offer_price_usd: "249.99 or 279.99 (conflict)", profit_target_usd: 5000, mll: {amount_usd: 2500, lock_balance_usd: 100100}, max_contracts: "6/60"}, funded: {max_payout_per_cycle_usd: 2500}}
+    notes: []
+    unknowns:
+      - "MLL behaviour after payouts on Rapid Pro/Daily funded."
+      - "Max % of profit per withdrawal on Rapid Pro."
+
+  - plan: Rapid Daily
+    sizes:
+      50K:
+        eval:
+          price_usd: 299.98
+          price_notes: "Offer $169.99 (prices/resets articles 2026-10-13) vs $149.99 (rules article 2026-09-30). Reset $189.99 (rules article flags it [VERIFY])."
+          billing: one_time
+          reset_fee_usd: 189.99
+          activation_fee_usd: 0
+          profit_target_usd: 3000
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}
+          dll: {amount_usd: 1000, kind: pause}
+          consistency_pct: null
+          min_trading_days: null
+          max_days: null
+          max_contracts: "4 mini / 40 micro"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}
+          mll_after_payout: null
+          dll: {amount_usd: 1000, kind: pause}
+          consistency_pct: null
+          payout:
+            cycle_requirement: "EOD balance >= buffer ($52,100 = start + MLL + $100); >= $500 profit in cycle"
+            min_profit_to_request_usd: 500
+            min_payout_usd: 250
+            max_payout_per_cycle_usd: 1200
+            max_pct_of_profit: null
+            buffer_usd: 2100
+            split_pct: 90
+            frequency: daily
+          payouts_before_live: "Concludes after 5th Performance Reward"
+          lifetime_payout_cap_usd: 6000   # derived 5 x 1,200
+          scaling_plan: "None"
+          inactivity_days: 30
+        account_limits: {max_funded_accounts: 5, max_eval_accounts: "unlimited; $750K challenge allocation"}
+        strategy_restrictions: "see common_rules.strategy_restrictions"
+    notes: []
+    unknowns: ["Whether payout may take balance below the $52,100 buffer."]
+
+  - plan: Direct   # straight-to-funded, 50K only
+    sizes:
+      50K:
+        eval: null
+        price_usd: 283.99
+        price_notes: "Offer $169.99 (prices article 2026-10-13). No reset."
+        billing: one_time
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}
+          mll_after_payout: "First withdrawal locks MLL at $50,100."
+          dll: {amount_usd: 1000, kind: pause}
+          consistency_pct: 20     # PERPETUAL: all-time best day <= 20% of current cycle profit
+          payout:
+            cycle_requirement: "clear $2,100 buffer in current cycle + best-day <= 20% of cycle profit"
+            min_profit_to_request_usd: null
+            min_payout_usd: 800
+            max_payout_per_cycle_usd: 1200
+            max_pct_of_profit: null
+            buffer_usd: 2100
+            split_pct: 90
+            frequency: per cycle
+          payouts_before_live: "Concludes after 5th Performance Reward"
+          lifetime_payout_cap_usd: 6000   # derived
+          scaling_plan: "None (3 mini / 30 micro fixed)"
+          inactivity_days: 7
+        account_limits: {max_funded_accounts: 5}
+        strategy_restrictions: "see common_rules.strategy_restrictions"
+    notes: []
+    unknowns: []
+
+  - plan: Legacy   # DISCONTINUED: "no longer available for purchase", no resets for existing
+    sizes:
+      50K:
+        eval: {price_usd: 199.99, reset_fee_usd: null, profit_target_usd: 3000, mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50000, breach: realtime}, dll: {amount_usd: null, kind: null}, consistency_pct: 40, max_contracts: "3 mini / 30 micro"}
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50000, breach: realtime}
+          mll_after_payout: "First withdrawal resets MLL to initial balance ($50,000)."
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: null
+          payout: {cycle_requirement: "5 Benchmark Days >= $200; >= $500 cycle profit", min_payout_usd: 250, max_payout_per_cycle_usd: 6000, max_pct_of_profit: "50% before 30 Benchmark Days; 100% after", buffer_usd: null, split_pct: 80}
+          payouts_before_live: "Not concluded after 5 rewards"
+          lifetime_payout_cap_usd: null
+    notes: ["Kept for reference only; not purchasable as of 2026-10-24. 'Withdrawing all of your simulated profit in a single request causes a hard breach.'"]
+    unknowns: []
+
+notes:
+  - "Bolt plan appears only in homepage FAQ/structured data (50K $99.99, $1,200/cycle); not in help-center product lists — treated as discontinued."
+  - "FundedNext 'Labs' experimental challenges exist (fundednext.com/labs) — not researched."
+  - "Several price conflicts between marketing page, homepage FAQ and help-center articles (dates noted inline); help-center prices article (2026-10-13) treated as primary."
+  - "Key differences vs Tradeify: Flex/Rapid/Direct funded accounts CLOSE after 5 payouts (hard lifetime ceiling ~5x cap), and the prohibited-strategies article explicitly targets 'all-in' / oversized-position account flipping and buying many challenges to roll them ('Account Rolling')."
+unknowns:
+  - "Whether 'Account Flipping' detection leads to payout denial vs suspension in practice, and any numeric threshold (none published)."
+  - "Flex challenge minimum trading days."
+  - "Reset-after-DLL inconsistency in resets article (resume after reset vs next session 5 PM CT)."

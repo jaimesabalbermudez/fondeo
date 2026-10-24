@@ -1,0 +1,37 @@
+Política                                      Bankroll     Media   Mediana  P(ruina)       p10       p90
+A. Todo desde el inicio                            500    19,004      -460       81%      -460    95,966
+A. Todo desde el inicio                          1,000    31,639      -990       69%      -990   120,964
+A. Todo desde el inicio                          2,000    47,798    -1,935       55%    -1,935   137,499
+A. Todo desde el inicio                          3,000    65,159    71,299       39%    -2,993   146,608
+A. Todo desde el inicio                          5,000    84,770    93,382       21%    -4,968   157,100
+
+B. Solo Lucid DLL + Tradeify                       500    14,648      -460       78%      -460    67,841
+B. Solo Lucid DLL + Tradeify                     1,000    24,220      -905       66%      -905    85,449
+B. Solo Lucid DLL + Tradeify                     2,000    38,914    34,261       46%    -1,963   100,297
+B. Solo Lucid DLL + Tradeify                     3,000    52,078    55,540       27%    -2,956   106,340
+B. Solo Lucid DLL + Tradeify                     5,000    63,443    62,647        9%    16,101   108,321
+
+C. B y ampliar con caja ≥ $3,000                   500    21,835      -460       78%      -460   105,885
+C. B y ampliar con caja ≥ $3,000                 1,000    34,706      -905       66%      -905   122,731
+C. B y ampliar con caja ≥ $3,000                 2,000    56,821    54,570       45%    -1,963   138,717
+C. B y ampliar con caja ≥ $3,000                 3,000    75,982    84,948       27%    -2,956   149,390
+C. B y ampliar con caja ≥ $3,000                 5,000    93,346    96,963       12%    -4,890   155,469
+
+D. C + día gordo de $2k con poca caja              500    25,349      -460       66%      -460    94,873
+D. C + día gordo de $2k con poca caja            1,000    41,339    11,818       49%      -914   111,707
+D. C + día gordo de $2k con poca caja            2,000    64,864    68,081       21%    -1,957   127,250
+D. C + día gordo de $2k con poca caja            3,000    78,717    80,905       14%    -2,912   141,674
+D. C + día gordo de $2k con poca caja            5,000    90,578    91,626        6%    31,085   147,076
+
+E. D + solo 2 evals por plan con poca caja         500    20,400      -395       73%      -395    86,218
+E. D + solo 2 evals por plan con poca caja       1,000    40,452    22,174       46%      -952   111,104
+E. D + solo 2 evals por plan con poca caja       2,000    65,623    66,139       17%    -1,898   126,632
+E. D + solo 2 evals por plan con poca caja       3,000    79,587    80,883       10%    -2,891   139,970
+E. D + solo 2 evals por plan con poca caja       5,000    91,003    90,763        5%    28,175   150,796
+
+F. Todo prudente siempre (día gordo $2k)           500    17,128      -460       67%      -460    64,763
+F. Todo prudente siempre (día gordo $2k)         1,000    29,475    18,608       45%      -910    78,474
+F. Todo prudente siempre (día gordo $2k)         2,000    47,097    49,553       19%    -1,951    90,870
+F. Todo prudente siempre (día gordo $2k)         3,000    56,326    57,284        7%    13,839    95,743
+F. Todo prudente siempre (día gordo $2k)         5,000    62,698    62,752        2%    25,874    99,548
+

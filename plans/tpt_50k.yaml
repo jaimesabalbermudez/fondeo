@@ -1,0 +1,14 @@
+id: tpt_50k
+firm: Take Profit Trader
+name: Test 50K → PRO
+costs: {eval_price: 170, code_price: 102, code_reusable: true, billing: monthly, reset_price: 99, activation_fee: 0, discount: "NOFEE40 oficial: -40% de por vida del test y sin activación de $130"}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 0, consistency: 0.50, min_days: 3}
+funded:
+  mll: 2000
+  drawdown: intraday
+  lock_offset: 0
+  payout: {split: 0.8, min_cycle_profit: 0.01, buffer: 2000, min_amount: 0.01}
+max_funded_accounts: 5
+firm_max_activations_30d: 10
+hold_passed: true
+notes: ["PRO: drawdown intradía; retiros diarios de todo lo que supera el colchón de $2.000", "El 50% del colchón solo se cobra al cerrar la cuenta (no modelado)"]

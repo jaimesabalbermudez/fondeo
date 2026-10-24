@@ -1,0 +1,16 @@
+id: tradeify_select_flex_50k
+firm: Tradeify
+name: Select Flex 50K
+costs: {eval_price: 165, code_price: 99, code_reusable: false, reset_price: 109, billing: one_time, activation_fee: 0, discount: "40% (DGT/ETFPROMO, afiliados; no aplica a resets); reutilización no verificada"}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 100, consistency: 0.40, min_days: 3}
+funded:
+  mll: 2000
+  drawdown: eod
+  lock_offset: 100
+  floor_after_payout: 100
+  payout: {split: 0.9, min_green_days: 5, green_min: 150, min_cycle_profit: 1, min_amount: 250,
+           max_amount: [2500], pct_of_profit: 0.5}
+max_funded_accounts: 5
+firm_max_purchases_30d: 15  # compras Select por 30 días
+hold_passed: true           # se pueden aprobar y activar más tarde
+notes: ["Cap $2.500 para cuentas compradas desde 2026-09-01", "Sin máximo de payouts; tras 3 payouts en una cuenta (o 10 en total) es elegible para Elite Live (discrecional, no modelado)", "Dudas sobre si el drawdown se bloquea en la evaluación (artículos contradictorios)"]

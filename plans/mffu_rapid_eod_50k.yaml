@@ -1,0 +1,14 @@
+id: mffu_rapid_eod_50k
+firm: MyFundedFutures
+name: Rapid EOD 50K
+costs: {eval_price: 225, code_price: 135, code_reusable: false, reset_price: 225, billing: one_time, activation_fee: 0, discount: "Promo del sitio -40% (CLUB); MFFU limita algunos códigos a 2 usos, sin confirmar para este"}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 100, consistency: 0.30, min_days: 4}
+funded:
+  mll: 2000
+  drawdown: eod
+  lock_offset: 100
+  payout: {split: 0.9, min_cycle_profit: 500, buffer: 2100, min_amount: 500}
+max_funded_accounts: 3     # límite propio del plan
+firm_max_funded: 5
+firm_max_evals: 10         # otra página dice 5 (sin confirmar)
+notes: ["Sin tope por payout ni regla del 50%: se retira todo lo que supera el colchón de $2.100", "Tras el 1er payout, cada payout exige +$500 desde el anterior"]

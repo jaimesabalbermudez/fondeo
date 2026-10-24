@@ -1,0 +1,131 @@
+firm: Take Profit Trader
+as_of: 2026-10-24
+# Official help center = Zendesk (takeprofittraderhelp.zendesk.com), read through its public Help Center API on
+# 2026-10-24; per-article 'updated_at' dates are shown below. Structure: Test (sim, monthly sub) -> PRO (sim funded,
+# one-time activation) -> PRO+ (live capital, invitation only; 'PRO+ Development' variant for risky traders).
+sources:
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15169070804125-Rule-1-Hit-Your-Profit-Target            # upd 2026-10-09
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15169066911133-Rule-2-Do-Not-Exceed-Maximum-Position-Size # upd 2026-10-09
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15170265979165-Rule-3-Do-Not-Hit-End-Of-Day-EOD-Maximum-Trailing-Drawdown # upd 2026-08-25
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15170347090461-Rule-4-Trade-Approved-Products-During-Approved-Hours # upd 2026-10-09
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15170316538013-Rule-5-Be-Consistent                     # upd 2026-09-22
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/30331694826909-Rule-6-No-Counter-Positions             # upd 2026-08-14
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15171769361053-PRO-Account-Rules                      # upd 2026-10-20
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15172219527581-PRO-Account-Profit-Split-Withdrawal-Rules # upd 2026-10-09
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15171820366109-How-to-Keep-Track-Of-Your-Drawdown      # upd 2026-09-02
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15171929948829-Advantages-of-PRO                      # upd 2026-09-28
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15172006753821-PRO-Account-Rules                      # PRO+ rules, upd 2026-09-28
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15171978600349-PRO-Account-Upgrade-Process-Overview-and-Guidelines # upd 2026-10-20
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/36429526878237-PRO-Development-Accounts                # upd 2026-09-28
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/39331980656925-PRO-Development-30-Day-Live-Capital-Cooldown # upd 2026-09-28
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15172695563933-Rules-for-Multiple-Accounts            # upd 2026-09-15
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/34431153546397-TakeProfitTrader-Universal-Trading-Policies-UTP # upd 2026-10-09
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/34431223270557-Independent-Trade-Execution-Policy      # upd 2026-10-09
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/34431176505245-Trade-Copier-Policy                    # upd 2026-10-22
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/36569493361693-Sustainable-Trading-Policy             # upd 2026-08-27
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15141145057053-Test-Subscriptions                     # upd 2026-08-14
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15140989806493-Resetting-Your-Test-Account            # upd 2026-09-28
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15171895352733-Resetting-A-PRO-Account                # upd 2026-09-16
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/29660646764445-NOFEE40-PROMO-FAQS                     # upd 2026-08-26 (promo linked from homepage 2026-10-24)
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/38320927906717-50AND3-PROMO-FAQS                      # upd 2026-08-25 (3-day eval change)
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/37697356049949-Speed-of-Payouts-Update-Q-A            # upd 2026-08-20
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15172354954525-Withdrawal-Fees                        # upd 2026-10-19
+  - https://takeprofittraderhelp.zendesk.com/hc/en-us/articles/15172548967069-Commissions-on-Test-and-PRO-accounts   # upd 2026-08-08
+  - https://takeprofittrader.com/   # homepage 2026-10-24: 'Get 40% Off For Life + Never Pay An Activation Fee ... Code: NOFEE40'; 'One Time $130 Fee'
+  - https://blog.traderspost.io/article/take-profit-trader-pricing-evaluation-guide   # THIRD-PARTY, only for list prices by size
+plans:
+  - plan: Test -> PRO (sim funded) -> PRO+ (live)
+    sizes:
+      50K:
+        eval:
+          price_usd: 170              # per month; see price_notes for provenance
+          price_notes: >-
+            List price $170/month is not printed on the official site text (pricing is rendered from an API), but it is
+            implied by official promo FAQs: 50K = $102 with 40% off (NOFEE40), $85 with 50% off (50AND3/NOFEE50), $119 with
+            30% off (NOFEE30) -> 170. Third-party (TradersPost 2026) lists 25K $150, 50K $170, 75K $245, 100K $330,
+            150K $360/month (another third-party: 100K ~$350, 150K ~$375). Current homepage promo (2026-10-24): NOFEE40 =
+            40% off the monthly test fee for life of that test + PRO activation fee waived (=> 50K $102/month).
+            Promos rotate (NOFEE30/40/50, 50AND3).
+          billing: monthly            # recurring subscription until passed or cancelled; stops automatically on pass
+          reset_fee_usd: 99           # test reset (25K $79, 75K $139, 100K $169, 150K $199); does not change renewal date
+          activation_fee_usd: 130     # one-time PRO activation; waived with NOFEE-type promo codes (given as $130 credit)
+          profit_target_usd: 3000
+          mll:
+            amount_usd: 2000
+            type: eod_trailing        # min balance follows highest END-OF-DAY balance
+            lock_balance_usd: 50000   # 'continues until the minimum account balance reaches the original starting balance ... stops trailing and remains fixed'
+            breach: realtime          # 'If your account drops to the Minimum Account Balance at any time - through realized or unrealized losses - the account is immediately liquidated.'
+          dll: {amount_usd: null, kind: null}   # no daily loss limit among the 6 core test rules
+          consistency_pct: 50         # best day must be < 50% of total net profit; not a fail, target auto-raises to > 2x best day
+          min_trading_days: 3         # tests bought from 2026-08-17 (older tests/resets of them: 5 days)
+          max_days: null              # no time limit (monthly billing continues)
+          max_contracts: "6 mini / 60 micro (static)"
+        funded:   # = PRO account (simulated, paid real money)
+          mll: {amount_usd: 2000, type: intraday_trailing, lock_balance_usd: 50000, breach: realtime}   # trails peak incl. unrealized; stops at starting balance (reached at peak 52,000)
+          mll_after_payout: >-
+            Not described explicitly. Floor is locked at the starting balance (50,000) once peak reaches 52,000, and
+            withdrawals are only allowed from profit above the buffer (52,000 = start + MLL), so withdrawals never
+            touch the floor and the floor stays at 50,000 (inference). Withdrawing 'inside' the buffer is only possible
+            when the account is closed, at 50% of the buffer.
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: null       # 'No funded consistency rule'
+          payout:
+            cycle_requirement: "none - withdraw from day one, daily; 'Zero minimum days of profit'"
+            min_profit_to_request_usd: 2000   # balance must exceed the 52,000 buffer zone first
+            min_payout_usd: null      # no account-level minimum documented; wallet withdrawals <= $250 pay a $50 fee (free above $250)
+            max_payout_per_cycle_usd: null   # 'No maximum withdrawal amount'
+            max_pct_of_profit: 100    # all profit above buffer withdrawable (trader receives 80% of it)
+            buffer_usd: 2000          # buffer zone = MLL; 50K must reach 52,000 before withdrawing
+            split_pct: 80             # PRO 80/20; PRO+ 90/10
+            frequency: "daily; must be flat (no positions/orders) when requesting; balances update ~8-9 PM ET"
+          payouts_before_live: null   # PRO+ upgrade is by invitation after holistic review; no fixed count
+          lifetime_payout_cap_usd: null   # none documented
+          scaling_plan: "none ('No scaling plan on any account'); PRO keeps 6 mini / 60 micro"
+          inactivity_days: 7          # must trade >= 1 day per calendar week (Sun-Fri) with >= 1 round trip
+        live:   # PRO+ (extension of schema): live capital, invitation only
+          start_balance_usd: 0
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 0, breach: realtime}   # starts at -2,000, trails realized EOD profit up to $0
+          buffer_usd: 0               # 'No buffer zone requirement for withdrawal'
+          split_pct: 90
+          frozen_pro_profit_usd: 5000 # $5,000 of PRO profit frozen while PRO+ active; covers PRO+ negative balance on loss
+          reset: "not possible; return via new test or PRO reset which is then upgraded"
+          development_variant: "PRO+ Development (50K): 2 mini / 20 micro, DLL $1,000 soft (pause), EOD drawdown $1,250; 30-day purchase cooldown if net live-capital loss >= $10,000 in rolling 30 days"
+        account_limits:
+          max_funded_accounts: 5      # PRO + PRO+ combined; max 10 passed-test activations per 30 days
+          max_eval_accounts: null     # unlimited ('as many test accounts as they want')
+        strategy_restrictions:
+          max_loss_per_trade: null    # no per-trade loss rule; Sustainable Trading Policy flags 'using maximum position size on the majority of trades' and 'repeatedly blowing through maximum loss limits' as higher-risk patterns (review, possible PRO+ Development placement or termination)
+          min_rr_or_profit_rules: null
+          min_hold_time / microscalping: "no explicit rule; 'relying on simulation-specific fill inefficiencies' and aggressive sizing at fixed moments (open, news) may be refused ('These aren't styles we will fund')"
+          news_trading: "Test: no restriction found. PRO/PRO+: must be flat with no orders from 1 min before to 1 min after FOMC statement (Wed 2 PM ET), NFP, CPI"
+          hedging_stacking: >-
+            Rule 6: 'strictly prohibits holding opposite positions in the same or closely related products across any
+            accounts under the same beneficial control' (ES<->MES, NQ<->MNQ, YM<->MYM; non-exhaustive) -> automatic
+            liquidation + profit forfeiture. Independent Trade Execution Policy: accounts must not 'Structure accounts in
+            a manner where the failure of some accounts statistically increases the likelihood of success of others' or
+            'Open or operate multiple accounts under separate identities for the purpose of distributing materially
+            similar high-risk trades'. Sustainable Trading Policy lists 'Account churning' as a risk pattern.
+          copy_trading: >-
+            Allowed only across accounts you own: 'Synchronization across accounts solely owned and controlled by you is
+            permitted'. Approved copiers: Tradesyncer, TradeCopia, Affordable Indicators, Replikanto Flowbot (Compliance
+            Edition only), platform-native copiers. Copying between different users is prohibited.
+          other:
+            - "No bots/algos; all trades manually executed."
+            - "No overnight positions; auto-flatten 4:55 PM ET; trading day 6 PM-5 PM ET."
+            - "PRO/PRO+: exit before limit up/down or lose the account."
+            - "Commissions $4.50 RT per mini, $1.50 RT per micro (Test and PRO)."
+            - "PRO reset: up to 3 per account, 50K $649 (25K $449, 75K $799, 100K $999, 150K $1,499)."
+    notes:
+      - "Test drawdown is EOD-computed but breach is checked intraday (realized+unrealized): 'drawdown for test accounts is calculated only at the end of the trading day' yet liquidation occurs 'at any time'."
+      - "PRO switches to INTRADAY trailing (incl. unrealized) - stricter than the test. Lock at starting balance coincides with the buffer level (52,000 for 50K)."
+      - "Buffer zones table: 25K $26,500; 50K $52,000; 75K $77,500; 100K $103,000; 150K $154,500 (= start + MLL). Drawdowns: 25K 1,500; 50K 2,000; 75K 2,500; 100K 3,000; 150K 4,500. Max contracts 3/6/9/12/15."
+      - "Buffer release on closure: official 2026-10-09 text 'You can withdraw 50% of your Buffer Zone after your account is closed.' Third-party reviews (QuantVPS etc.) describe 50% if account < 60 days / 80% after 60 days - older version, conflicts with current official text."
+      - "Evaluation minimum days changed from 5 to 3 for tests purchased from 2026-08-17 (50AND3 FAQ). NOFEE30/NOFEE50 FAQs still mention 5 days (older)."
+      - "Withdrawal fee: wallet withdrawal of $250 or less costs $50; third-party sources call $250 a 'minimum payout' - not stated as minimum officially."
+      - "PRO account is simulated; PRO+ is live (TPT capital, direct exchange routing)."
+    unknowns:
+      - "Official list prices per size (pricing loads from a dashboard API not readable without login); 50K $170/month derived from official promo math, other sizes from third parties only."
+      - "Whether there is any minimum withdrawal amount from the PRO account itself (only the $50 fee for <= $250 wallet withdrawals is documented)."
+      - "Exact effect of withdrawals on the PRO floor is not stated (inferred to stay locked at starting balance)."
+      - "Criteria and timing for PRO -> PRO+ invitation (holistic, no threshold published)."
+      - "Whether the test has any news restriction (only PRO/PRO+ rules mention prohibited news)."

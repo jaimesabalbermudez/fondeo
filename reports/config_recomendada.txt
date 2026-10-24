@@ -1,0 +1,29 @@
+ampliar  2000 prudente< 1000 gordo  1000 | $1000: ruina 48% mediana  12,407 media  45,763 | $3000: ruina 14% mediana 105,093 media  98,355
+ampliar  2000 prudente< 1000 gordo  2000 | $1000: ruina 46% mediana  52,910 media  59,869 | $3000: ruina 14% mediana 108,622 media 102,075
+ampliar  2000 prudente< 1000 gordo  3000 | $1000: ruina 49% mediana  46,581 media  58,902 | $3000: ruina 16% mediana 112,826 media 104,274
+ampliar  2000 prudente< 2000 gordo  1000 | $1000: ruina 32% mediana  46,683 media  50,796 | $3000: ruina 5% mediana  91,746 media  92,384
+ampliar  2000 prudente< 2000 gordo  2000 | $1000: ruina 29% mediana  82,453 media  73,726 | $3000: ruina 5% mediana 109,284 media 107,003
+ampliar  2000 prudente< 2000 gordo  3000 | $1000: ruina 30% mediana  89,166 media  78,720 | $3000: ruina 7% mediana 113,544 media 109,538
+ampliar  2000 prudente< 3000 gordo  1000 | $1000: ruina 32% mediana   8,675 media  24,158 | $3000: ruina 3% mediana  33,887 media  44,985
+ampliar  2000 prudente< 3000 gordo  2000 | $1000: ruina 29% mediana  57,765 media  56,353 | $3000: ruina 3% mediana  86,086 media  85,865
+ampliar  2000 prudente< 3000 gordo  3000 | $1000: ruina 29% mediana  78,692 media  70,898 | $3000: ruina 4% mediana 101,045 media 100,675
+ampliar  3000 prudente< 1000 gordo  1000 | $1000: ruina 46% mediana  25,411 media  45,952 | $3000: ruina 14% mediana 102,370 media  96,875
+ampliar  3000 prudente< 1000 gordo  2000 | $1000: ruina 45% mediana  51,779 media  57,235 | $3000: ruina 14% mediana 110,200 media 103,260
+ampliar  3000 prudente< 1000 gordo  3000 | $1000: ruina 49% mediana  38,219 media  56,974 | $3000: ruina 15% mediana 114,334 media 105,341
+ampliar  3000 prudente< 2000 gordo  1000 | $1000: ruina 31% mediana  53,408 media  54,137 | $3000: ruina 5% mediana  96,039 media  93,939
+ampliar  3000 prudente< 2000 gordo  2000 | $1000: ruina 29% mediana  82,008 media  73,285 | $3000: ruina 5% mediana 108,935 media 105,651
+ampliar  3000 prudente< 2000 gordo  3000 | $1000: ruina 29% mediana  88,612 media  77,762 | $3000: ruina 8% mediana 110,867 media 107,870
+ampliar  3000 prudente< 3000 gordo  1000 | $1000: ruina 31% mediana  39,371 media  46,932 | $3000: ruina 2% mediana  86,677 media  85,337
+ampliar  3000 prudente< 3000 gordo  2000 | $1000: ruina 27% mediana  77,171 media  71,623 | $3000: ruina 2% mediana 104,617 media 105,495
+ampliar  3000 prudente< 3000 gordo  3000 | $1000: ruina 28% mediana  89,854 media  77,956 | $3000: ruina 4% mediana 110,001 media 109,568
+ampliar  5000 prudente< 1000 gordo  1000 | $1000: ruina 46% mediana  21,289 media  45,509 | $3000: ruina 13% mediana 102,849 media  96,483
+ampliar  5000 prudente< 1000 gordo  2000 | $1000: ruina 46% mediana  47,308 media  55,807 | $3000: ruina 14% mediana 108,058 media 100,528
+ampliar  5000 prudente< 1000 gordo  3000 | $1000: ruina 48% mediana  42,589 media  57,223 | $3000: ruina 15% mediana 110,969 media 102,280
+ampliar  5000 prudente< 2000 gordo  1000 | $1000: ruina 32% mediana  50,266 media  52,374 | $3000: ruina 5% mediana  92,884 media  92,995
+ampliar  5000 prudente< 2000 gordo  2000 | $1000: ruina 28% mediana  77,057 media  71,052 | $3000: ruina 5% mediana 108,451 media 104,760
+ampliar  5000 prudente< 2000 gordo  3000 | $1000: ruina 29% mediana  87,331 media  77,278 | $3000: ruina 8% mediana 110,833 media 106,263
+ampliar  5000 prudente< 3000 gordo  1000 | $1000: ruina 33% mediana  44,994 media  47,663 | $3000: ruina 2% mediana  87,128 media  86,080
+ampliar  5000 prudente< 3000 gordo  2000 | $1000: ruina 28% mediana  79,634 media  71,919 | $3000: ruina 1% mediana 105,746 media 106,307
+ampliar  5000 prudente< 3000 gordo  3000 | $1000: ruina 29% mediana  85,385 media  75,342 | $3000: ruina 3% mediana 113,676 media 112,339
+
+Menor ruina media: ((3000, 3000, 2000), [np.float64(0.274), np.float64(77171.09132812504), np.float64(71623.323340651), np.float64(0.018666666666666668), np.float64(104616.91624999978), np.float64(105495.30249589508)])

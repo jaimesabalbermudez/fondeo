@@ -1,0 +1,287 @@
+firm: MyFundedFutures (MFFU)
+as_of: 2026-10-24
+sources:
+  # Official help center (help.myfundedfutures.com) - dateModified from article metadata
+  - https://help.myfundedfutures.com/en/articles/15072271-flex-plan-50-000-a-comprehensive-guide              # mod 2026-10-21 (in "Legacy Plans" collection)
+  - https://help.myfundedfutures.com/en/articles/13521620-flex-plan-the-path-forward-legacy                   # mod 2026-06-03 (older Flex version)
+  - https://help.myfundedfutures.com/en/articles/13134709-rapid-plan-50k-a-comprehensive-look                 # mod 2026-08-24
+  - https://help.myfundedfutures.com/en/articles/16158363-rapid-eod-50k-a-comprehensive-look                  # mod 2026-08-24
+  - https://help.myfundedfutures.com/en/articles/13134718-understanding-rapid-live                            # mod 2026-09-08
+  - https://help.myfundedfutures.com/en/articles/13286746-rapid-plan-reserve-program-performance-bonus-structure  # mod 2026-10-21
+  - https://help.myfundedfutures.com/en/articles/17573707-comprehensive-look-into-redesigned-pro-plan        # mod 2026-10-14
+  - https://help.myfundedfutures.com/en/articles/11802674-legacy-pro-plan-sim-funded-and-live-account-highlights  # mod 2026-10-20
+  - https://help.myfundedfutures.com/en/articles/12879226-pro-plan-1day-addon
+  - https://help.myfundedfutures.com/en/articles/8694840-balancing-freedom-and-responsibility-consistency-for-sim-funded-pro-accounts-at-mffu
+  - https://help.myfundedfutures.com/en/articles/14290805-builder-plan-50k-a-comprehensive-guide              # mod 2026-10-21
+  - https://help.myfundedfutures.com/en/articles/17589665-studio-plans-a-comprehensive-guide                  # mod 2026-10-14
+  - https://help.myfundedfutures.com/en/articles/13745661-payout-policy-overview-best-and-fastest-prop-firm-payouts  # mod 2026-08-25
+  - https://help.myfundedfutures.com/en/articles/11802636-traders-evaluation-simplified                       # mod 2026-09-24
+  - https://help.myfundedfutures.com/en/articles/11994562-consistency-rule-at-my-fundedfutures               # mod 2026-09-25
+  - https://help.myfundedfutures.com/en/articles/8348565-end-of-day-eod-drawdown-explained
+  - https://help.myfundedfutures.com/en/articles/12802721-intraday-drawdown-explained
+  - https://help.myfundedfutures.com/en/articles/16498635-moving-from-evaluation-to-sim-funded-account       # mod 2026-09-04
+  - https://help.myfundedfutures.com/en/articles/16596524-inactivity-rule-one-time-payment-model             # mod 2026-09-03
+  - https://help.myfundedfutures.com/en/articles/16596406-understanding-the-difference-between-account-resets-and-renewals
+  - https://help.myfundedfutures.com/en/articles/12398151-does-myfundedfutures-charge-activation-fees
+  - https://help.myfundedfutures.com/en/articles/8444599-fair-play-and-prohibited-trading-practices
+  - https://help.myfundedfutures.com/en/articles/12011241-hedging-what-you-should-know
+  - https://help.myfundedfutures.com/en/articles/8230018-can-someone-else-trade-my-account
+  - https://help.myfundedfutures.com/en/articles/8230009-news-trading-policy
+  - https://help.myfundedfutures.com/en/articles/10244682-cross-instrument-policy
+  - https://help.myfundedfutures.com/en/articles/9698984-2-price-limit-rule
+  - https://help.myfundedfutures.com/en/articles/9558251-permitted-times-to-trade
+  - https://help.myfundedfutures.com/en/articles/12109396-comprehensive-faq-live-accounts-at-myfunded-futures
+  # Official site (prices: page JSON contains price / reset_price / activation_price per product), fetched 2026-10-24
+  - https://myfundedfutures.com/
+  - https://myfundedfutures.com/plans
+  # Third-party (fallback)
+  - https://pipback.com/firms/myfundedfutures/
+  - https://tradecovex.com/guides/best-trade-copier-mffu-2026
+plans:
+  - plan: Flex   # LEGACY - no longer sold (not in site product list on 2026-10-24); existing accounts still run under these rules
+    sizes:
+      50K:
+        eval:
+          price_usd: null           # not purchasable any more; last list price unknown
+          price_notes: "Flex absent from myfundedfutures.com product catalogue (Builder, Rapid, Rapid EOD, Pro, Studio only). Help article for 50K Flex sits in 'Legacy Plans' collection but was edited 2026-10-21. Optional DLL add-on was sold 'at a reduced price'."
+          billing: one_time         # all new purchases one-time since 2026-08-25 (legacy subscribers kept monthly)
+          reset_fee_usd: null
+          activation_fee_usd: 0
+          profit_target_usd: 3000
+          mll:
+            amount_usd: 2000
+            type: eod_trailing
+            lock_balance_usd: 50100   # firm-wide: EOD trailing locks at start + $100 (trigger EOD balance $52,100)
+            breach: realtime          # "open equity losses are taken into consideration ... if an open position dips your account balance below the minimum account balance, your evaluation attempt will fail"
+          dll: {amount_usd: 1000, kind: pause}   # ONLY with optional DLL add-on; default none
+          consistency_pct: 50
+          min_trading_days: 2
+          max_days: null
+          max_contracts: "3 mini / 30 micros"   # current article; older version 5/50
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 100, breach: realtime}   # sim funded starts at $0 balance; floor -$2,000, locks at +$100 (= 50,100 equivalent)
+          mll_after_payout: "After the first payout the MLL moves to $100 (balance basis $0) and stays fixed permanently, regardless of where it was trailing. No buffer -> balance after payout can be close to the floor."
+          dll: {amount_usd: 1000, kind: pause}   # only with add-on
+          consistency_pct: null
+          payout:
+            cycle_requirement: "5 winning days with >= $150 net P&L each + >= $500 net profit since last payout (first: total net profit >= $500)"
+            min_profit_to_request_usd: 500
+            min_payout_usd: 500         # older article version: $250
+            max_payout_per_cycle_usd: 2000   # reduced from $5,000 (older version / still quoted in payout overview text summaries)
+            max_pct_of_profit: 50       # "up to 50% of total profits per payout"
+            buffer_usd: 0
+            split_pct: 80
+            frequency: "each new cycle of 5 qualifying winning days"
+          payouts_before_live: 5        # "Five consecutive approved payouts on the same account" (max sim payouts 5)
+          lifetime_payout_cap_usd: 100000   # "total sim payout cap of $100,000" (practically 5 x $2,000)
+          scaling_plan: "Sim funded by balance: $0-1,499 -> 1 mini/10 micros; $1,500-1,999 -> 2/20; $2,000+ -> 3/30"
+          inactivity_days: 7
+        account_limits:
+          max_funded_accounts: 5        # general rule for 25K/50K sim funded (3 if any 100K/150K held)
+          max_eval_accounts: 10
+        strategy_restrictions: &mffu_restrictions
+          max_loss_per_trade: null      # no explicit per-trade loss rule
+          min_rr_or_profit_rules: null
+          "min_hold_time / microscalping": "HFT not allowed. 'Slippage and Bracket Usage: Exploiting the absence of slippage and utilizing tight brackets to gain from favorable fills are not permitted.' No numeric hold-time rule found for sim."
+          news_trading: allowed         # T1 news allowed on evals, Flex and Builder; PROHIBITED on Rapid and Pro sim funded (flat 2 min before/after)
+          hedging_stacking: "\"MyFunded Futures prohibits hedging of any kind. Hedging is defined as a trader entering both buy and sell positions on the same underlying asset, at the same time\" (mini vs micro same underlying counts). Hedging through different unrelated assets permitted. 'Collaborating with others to execute identical or opposite strategies across unconnected accounts is prohibited.' No explicit ban on same-direction stacking across one's own accounts found."
+          copy_trading: "own accounts: allowed per third-party (tradecovex); official text only forbids copying between different traders ('Traders are not permitted to copy trade one another') and shared devices"
+          other:
+            - "Positions auto-closed 4:10 PM ET; holiday half-days not auto-liquidated -> open position at close = breach."
+            - "2% price-limit rule: no trading within 2% of CME price limit on sim funded and live."
+            - "Cross-instrument: combining minis+micros to exceed contract limit can lead to breach."
+            - "Orders: placing multiple limit orders at same price to manipulate fills prohibited; trading gapped/illiquid markets for isolated fills prohibited."
+            - "Live post-breach: 21-day cooldown (no sim trading, no new evals/resets)."
+    notes:
+      - "Flex rule changes per official FAQ: payout cap per cycle reduced to $2,000 (previously $5,000); sim-funded contract limits reduced; DLL add-on introduced. Payout overview search snippet (third-party summary) still mentions $5,000 - outdated."
+      - "Live (Flex): initial balance $2,000, min balance $156, EOD drawdown, no DLL, 3 mini/30 micro, 80/20, daily payouts."
+      - "Pipback changelog also records the Flex 50K cap change $5,000 -> $2,000 (third-party)."
+    unknowns:
+      - "Whether Flex can still be purchased anywhere (not in site catalogue as of 2026-10-24) and its last price."
+      - "Whether 'net profit $500' for first payout is total since start or above any threshold (article: 'at least $500 in total net profit at the time of the request')."
+
+  - plan: Rapid   # intraday trailing in sim funded
+    sizes:
+      50K:
+        eval:
+          price_usd: 209            # official list (site product data); reset_price = 209
+          price_notes: "Site shows $125 'based on current promotions' (40% off, code CLUB). New customers 50% off first eval."
+          billing: one_time
+          reset_fee_usd: 209
+          activation_fee_usd: 0
+          profit_target_usd: 3000
+          mll:
+            amount_usd: 2000
+            type: eod_trailing        # eval MLL listed as "(EOD)"
+            lock_balance_usd: 50100
+            breach: realtime
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: 50
+          min_trading_days: 2
+          max_days: null
+          max_contracts: "5 mini / 50 micros"
+        funded:
+          mll: {amount_usd: 2000, type: intraday_trailing, lock_balance_usd: 100, breach: realtime}   # trails equity HWM incl. unrealized; balance basis $0; locks at $100 (= 50,100 equivalent)
+          mll_after_payout: "Not separately stated; payout requires $2,100 buffer which equals the lock point, so the floor is already locked at $100 when paid out."
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: null
+          payout:
+            cycle_requirement: "Build >= $2,100 realized profit (buffer); first payout 24h after first trade; then daily"
+            min_profit_to_request_usd: 2600   # buffer $2,100 + minimum withdrawal $500 ("Minimum withdrawal after buffer: $500")
+            min_payout_usd: 500
+            max_payout_per_cycle_usd: null    # no cap stated (profit above buffer)
+            max_pct_of_profit: null
+            buffer_usd: 2100
+            split_pct: 90                     # since 2026-01-12 (was 80)
+            frequency: "daily (every 24h)"
+          payouts_before_live: null           # live: automatic at $10,000 net profit in a single day (excess that day forfeited) or Risk Team discretion
+          lifetime_payout_cap_usd: null
+          scaling_plan: "None stated for current Rapid 50K (5 mini/50 micro). Cross-instrument article example mentions a 2-contract starting scale for 'Rapid 50k' - likely outdated."
+          inactivity_days: 7
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: 10
+        strategy_restrictions:
+          <<: *mffu_restrictions
+          news_trading: "T1 news prohibited in sim funded (no positions/orders 2 min before and after FOMC, NFP, CPI, etc.); allowed in eval"
+    notes:
+      - "Live: $0 start, $2,000 EOD drawdown that stops at $0, 3 mini/30 micro, 90/10, daily. Up to $5,000 of sim profits held in 'Reserve' (bonus after 20 profitable live days + $10,000 gross live payouts, or used to cover negative live balance). Multiple Rapid accounts merge into one live account."
+    unknowns:
+      - "Explicit per-payout maximum for intraday Rapid (none stated)."
+
+  - plan: Rapid EOD
+    sizes:
+      50K:
+        eval:
+          price_usd: 225
+          price_notes: "Site promo price $135 (40% off)."
+          billing: one_time
+          reset_fee_usd: 225
+          activation_fee_usd: 0
+          profit_target_usd: 3000
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: 30
+          min_trading_days: 4
+          max_days: null
+          max_contracts: "3 mini / 30 micros"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 100, breach: realtime}   # balance basis $0
+          mll_after_payout: "Not separately stated; buffer $2,100 = lock point, so floor locked at $100 before first payout."
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: null
+          payout:
+            cycle_requirement: "First: clear $2,100 buffer (+$500 min request). Then each payout unlocks when net profit since last payout >= $500."
+            min_profit_to_request_usd: 500
+            min_payout_usd: 500
+            max_payout_per_cycle_usd: null    # "There is no cap on how much you can request per payout cycle."
+            max_pct_of_profit: null
+            buffer_usd: 2100
+            split_pct: 90
+            frequency: daily
+          payouts_before_live: null          # same as Rapid: $10k single-day auto-live or discretion
+          lifetime_payout_cap_usd: null
+          scaling_plan: null
+          inactivity_days: 7
+        account_limits:
+          max_funded_accounts: 3            # plan-specific limit
+          max_eval_accounts: 10
+        strategy_restrictions:
+          <<: *mffu_restrictions
+          news_trading: "T1 news prohibited in sim funded"
+    notes: []
+    unknowns: []
+
+  - plan: Pro   # redesigned Pro (article 2026-10-14)
+    sizes:
+      50K:
+        eval:
+          price_usd: 265
+          price_notes: "Site promo $159 (40% off). 'Pro 50K 1 Day' add-on product list $379: $4,000 target, no consistency, 1 day min."
+          billing: one_time
+          reset_fee_usd: 265
+          activation_fee_usd: 0
+          profit_target_usd: 3000
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: 50
+          min_trading_days: 2
+          max_days: null
+          max_contracts: "3 mini / 30 micros"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}
+          mll_after_payout: "After first payout MLL moves to $50,100 and remains static (article uses $50K balance basis for Pro)."
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: null
+          payout:
+            cycle_requirement: "Every 14 calendar days from day of first trade; buffer $2,100 must be cleared (one-time exception: up to 60% of profits before buffer cleared, min $1,000)"
+            min_profit_to_request_usd: 2100
+            min_payout_usd: 1000
+            max_payout_per_cycle_usd: 100000   # "$100,000 per user" (also sim cap)
+            max_pct_of_profit: null            # 60% applies only to the one-time pre-buffer withdrawal
+            buffer_usd: 2100
+            split_pct: 80
+            frequency: "every 14 calendar days"
+          payouts_before_live: 3               # reviewed for live after 3 consecutive payouts or $20,000 profit (review only)
+          lifetime_payout_cap_usd: 100000      # profits above $100,000 forfeited
+          scaling_plan: "None; 3 mini / '3 micro' (sic, likely 30) in sim funded"
+          inactivity_days: 7
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: 10
+        strategy_restrictions:
+          <<: *mffu_restrictions
+          news_trading: "T1 news prohibited in sim funded"
+          other:
+            - "Pro 'Consistent Trading Policy' (soft, discretionary): 'Avoidance of Maximum Contract Sizes ... resist the urge to employ maximum or oversized contract sizes in every trade'; 'Avoid high-risk, high-reward strategies'; violations may lead to restrictions, penalties or termination. Relevant to all-in single-trade strategies."
+            - "Same firm-wide hedging/fair-play/2% price limit rules apply."
+    notes:
+      - "Live (redesigned Pro): $0 start, -$2,000 EOD trailing MLL, 2 contracts max, 80/20, $250 min payout. Sim profit held as Reserve; bonus after 20 profitable live days + $10,000 gross live payouts."
+      - "Legacy Pro accounts keep old rules (5 mini sim funded, static live drawdown, live allocation $2,000-$5,000)."
+    unknowns:
+      - "Exact amount withdrawable per 14-day cycle after buffer (assumed any amount above buffer, >= $1,000)."
+
+  - plan: Builder   # current 'entry' plan (replaces Flex in catalogue)
+    sizes:
+      50K:
+        eval:
+          price_usd: 153            # $2,000 MLL version; $1,500 MLL 'Add-On' version $125
+          price_notes: "Article: 30% off -> $107/$87; 40% off (2 uses) -> $92/$75. Site shows $92."
+          billing: one_time
+          reset_fee_usd: 153
+          activation_fee_usd: 0
+          profit_target_usd: 3000
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}   # or $1,500 option
+          dll: {amount_usd: 1000, kind: pause}
+          consistency_pct: null
+          min_trading_days: 1
+          max_days: null
+          max_contracts: "4 mini / 40 micros"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 100, breach: realtime}   # balance basis $0
+          mll_after_payout: "MLL resets to $100 after first payout (payout overview)."
+          dll: {amount_usd: 1000, kind: pause}
+          consistency_pct: 50     # per payout cycle
+          payout:
+            cycle_requirement: ">= 2 trading days in cycle; first payout needs $500 net profit above $2,100 buffer; later $500 since last payout; 50% consistency per cycle; first request >= 48h after first trade"
+            min_profit_to_request_usd: 500
+            min_payout_usd: 500
+            max_payout_per_cycle_usd: 2000
+            max_pct_of_profit: null
+            buffer_usd: 2100        # $1,600 on the $1,500-MLL option
+            split_pct: 80
+            frequency: "every 48h when criteria met"
+          payouts_before_live: 5
+          lifetime_payout_cap_usd: 10000   # implied 5 x $2,000 (payout overview also mentions $100k total sim cap)
+          scaling_plan: null
+          inactivity_days: 7
+        account_limits:
+          max_funded_accounts: 1   # only one Builder 50K sim funded per user
+          max_eval_accounts: 10
+        strategy_restrictions:
+          <<: *mffu_restrictions
+          news_trading: allowed
+    notes:
+      - "Live: $2,000 EOD trailing (static once at $0), $1,000 DLL, 80/20, daily payouts, max 1 live account."
+      - "Studio plans (#001 $10K/$140, #002 $20K/$280, #003 $5K/$75): static MLL ($500/$1,000/$250), no DLL, no consistency, payouts anytime, sim daily profit cap, micros only, 1 account, Hyperprop only - not modelled."
+    unknowns: []

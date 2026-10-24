@@ -1,0 +1,16 @@
+id: apex_eod_50k
+firm: Apex Trader Funding
+name: EOD 50K
+costs: {eval_price: 590, code_price: 99, code_reusable: false, billing: one_time, activation_fee: 129, discount: "Promos rotativas de hasta -90% (SAVENOW); precio final no verificado"}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, dll: 1000, min_days: 1, max_days: 21}
+funded:
+  mll: 2000
+  drawdown: eod
+  lock_offset: 100
+  dll: 1000
+  payout: {split: 1.0, min_green_days: 5, green_min: 250, min_cycle_profit: 1, consistency: 0.50, buffer: 2100,
+           min_amount: 500, max_amount: [1500, 1500, 2000, 2500, 2500, 3000], max_payouts: 6}
+max_funded_accounts: 20
+hold_passed: false          # la activación hay que pagarla en 7 días o el pase caduca
+p_payout_denial: 0.5
+notes: ["Prohíbe usar el umbral completo como stop", "Evaluación de 30 días naturales (~21 de trading)", "DLL funded escalonado ($1k-$3k); se usa $1k"]

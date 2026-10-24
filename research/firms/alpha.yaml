@@ -1,0 +1,272 @@
+firm: Alpha Futures
+as_of: 2026-10-24
+sources:
+  - https://alpha-futures.com/                                                       # pricing/plan tables
+  - https://help.alpha-futures.com/en/articles/9491999-maximum-loss-limit-mll           # 2026-07-15
+  - https://help.alpha-futures.com/en/articles/9492014-daily-loss-guard                 # 2026-07-15
+  - https://help.alpha-futures.com/en/articles/9492048-consistency-rule                 # 2026-07-27
+  - https://help.alpha-futures.com/en/articles/9492051-payout-policy                    # 2026-07-27
+  - https://help.alpha-futures.com/en/articles/10491202-maximum-withdrawal-request      # 2026-07-27
+  - https://help.alpha-futures.com/en/articles/9492088-maximum-allocation               # 2026-07-27
+  - https://help.alpha-futures.com/en/articles/9492025-scaling-plan
+  - https://help.alpha-futures.com/en/articles/9508585-prohibited-trading-practices     # 2025-10-30
+  - https://help.alpha-futures.com/en/articles/10573989-copy-trading                    # 2026-07-17
+  - https://help.alpha-futures.com/en/articles/9492063-news-trading-policy              # 2026-07-27
+  - https://help.alpha-futures.com/en/articles/11632512-standard-account-overview       # 2026-07-27
+  - https://help.alpha-futures.com/en/articles/11634907-advanced-account-overview       # 2026-07-22
+  - https://help.alpha-futures.com/en/articles/11771813-zero-account-overview           # 2026-08-12
+  - https://help.alpha-futures.com/en/articles/15838742-direct-account-overview         # 2026-07-09
+  - https://help.alpha-futures.com/en/articles/9492068-monthly-subscription             # 2026-08-12
+  - https://help.alpha-futures.com/en/articles/9492077-reset                            # 2026-08-12
+  - https://help.alpha-futures.com/en/articles/9492083-activation-fee                   # 2026-07-24
+  - https://help.alpha-futures.com/en/articles/9820801-activating-your-qualified-account
+  - https://help.alpha-futures.com/en/articles/12757982-inactivity-rule                 # 2025-11-05
+  - https://help.alpha-futures.com/en/articles/10743344-path-to-live-structure          # 2026-08-21
+  - https://help.alpha-futures.com/en/articles/15855255-live-cool-down-period           # 2026-07-07
+  - https://tradetanto.com/learn/alpha-futures-rules-every-plan-rule-and-limit          # THIRD-PARTY (cross-check only)
+  - https://www.quantvps.com/blog/alpha-futures-payout-rules                            # THIRD-PARTY (cross-check only)
+
+# Dates above are the "Written by" dates shown on Help Center articles (Intercom); no separate "last updated" field.
+# Common to ALL plans (from MLL article): "The Maximum Loss Limit (MLL) is EOD (end of day) trailing on all of our accounts";
+# "stops trailing at the account starting balance on all of our accounts"; "If you break MLL at any point, floating equity
+# or closed balance of account, your account will be liquidated." => eod_trailing, lock at starting balance, realtime breach.
+# Qualified accounts: "Qualified Traders do not pay a monthly subscription." Payout split 90% flat from first payout.
+# Payout cadence: up to 4 payouts/month; 5 winning days of >= $200 between requests (Zero/Standard/Advanced).
+
+plans:
+  - plan: Standard
+    sizes:
+      50K:
+        eval:
+          price_usd: 129
+          price_notes: "Monthly subscription until pass. Coupon codes circulate on aggregators (10-20% off, unverified); DontPayFull (Jul 2026) mentioned a $79/mo 50K promo."
+          billing: monthly
+          reset_fee_usd: 109
+          activation_fee_usd: 0          # "No Activation Fee"
+          profit_target_usd: 3000
+          mll:
+            amount_usd: 2000
+            type: eod_trailing
+            lock_balance_usd: 50000      # floor stops at starting balance (reached when EOD balance >= 52,000)
+            breach: realtime
+          dll: {amount_usd: null, kind: null}   # "NONE on Evaluation!"
+          consistency_pct: 50           # best day must not exceed 50% of net profit (recommend best day <= $1,500); not passing until satisfied, not a breach
+          min_trading_days: 2
+          max_days: null
+          max_contracts: "5 mini / 50 micro"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50000, breach: realtime}
+          mll_after_payout: "MLL does NOT move on payout: 'If MLL was at $49,200 before payout, it will be after as well.' Withdrawals reduce balance toward the unchanged floor (only 50% of profit withdrawable keeps a cushion)."
+          dll: {amount_usd: 1000, kind: pause}   # Daily Loss Guard, 'soft breach': flatten + locked until next trading day 6PM ET; counts unrealized
+          consistency_pct: 40           # biggest day / net profit since last request; >= 40% blocks payout button (not a breach); resets each request
+          payout:
+            cycle_requirement: "5 winning days (non-consecutive) of >= $200 each since last request + 40% consistency"
+            min_profit_to_request_usd: 1000   # derived: min payout $500 and max 50% of profit
+            min_payout_usd: 500
+            max_payout_per_cycle_usd: 3000    # flat, not escalating by payout number
+            max_pct_of_profit: 50
+            buffer_usd: null
+            split_pct: 90
+            frequency: "up to 4 per month, whenever 5 qualifying winning days accrue; processed within 48 business hours (third-party)"
+          payouts_before_live: null    # discretionary; e.g. "Five performance fees on a single Qualified Account" can trigger review/call-up
+          lifetime_payout_cap_usd: null
+          scaling_plan: "By profit: <$1,500 -> 2 mini/20 micro; $1,500-2,000 -> 3/30; >= $2,000 -> 5/50"
+          inactivity_days: 10          # trade at least once every 10 trading days (platform archiving) — applies to eval and qualified
+        account_limits:
+          max_funded_accounts: 5       # Standard Qualified: 5 (3 for Standard accounts prior to 2026-07-27); if user has any active Advanced Qualified, total limited to 3
+          max_eval_accounts: null
+        strategy_restrictions:
+          max_loss_per_trade: null     # no numeric per-trade limit, but see 'All or Nothing' clause below
+          min_rr_or_profit_rules: null
+          min_hold_time / microscalping: "Microscalping = 'trades less than 10 ticks AND less than 2 minutes'; 'There is no must hold past X minutes rule' — violation only if it forms 'a clear pattern in the trader's profit'."
+          news_trading: "Eval: no restrictions. Qualified (Standard/Zero/Direct): 'no orders may be executed within 2 minutes before or 2 minutes after high impact news events' (ForexFactory red folder, USD for ES/NQ/GC/CL); speeches: 4-minute window around listed start. Holding through news allowed. 1st violation: profits in window voided + payout denied (warning); subsequent: account breach."
+          hedging_stacking: "'Account Rolling' / 'All or Nothing': 'taking max leverage positions with no plan, no stop loss'; traders who hit max loss and buy new accounts to repeat the process fall under it. 'Using maximum leverage on a single position and using DLL as a stop loss will not be tolerated.' ACCOUNT STACKING: 'excessive Evaluations and storing multiple passed accounts' (to roll into a Qualified Account after a withdrawal or max loss) prohibited. CROSS-ACCOUNT HEDGING: 'going short on one account, and long on the other is strictly prohibited at Evaluation and Qualified Phase' (also long NQ / short MNQ in same account). GROUP TRADING: 'Collaborating with others to execute identical or opposite strategies across unconnected accounts is prohibited.'"
+          copy_trading: "allowed: 'Copy trading in general is permitted as long as it is a single user executing the trades.' Automated, group and reverse trading 'strictly prohibited'."
+          other:
+            - "'The use of AI, bots, and other automated trading mechanisms is strictly prohibited across all account types'; HFT (>100 trades/day) restricted."
+            - "'Initiating trades to profit from isolated fills in gapped or illiquid markets is not allowed.'"
+            - "Positions must be closed by 4:10/4:20 PM ET; no overnight holds (third-party; not verified on Help Center)."
+      100K:
+        eval: {price_usd: 239, billing: monthly, reset_fee_usd: 199, profit_target_usd: 6000, mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100000, breach: realtime}, consistency_pct: 50, max_contracts: "10 mini / 100 micro"}
+        funded: {dll: {amount_usd: 2000, kind: pause}, consistency_pct: 40, payout: {min_payout_usd: 500, max_payout_per_cycle_usd: 4000, max_pct_of_profit: 50, split_pct: 90}, scaling_plan: "<1.5K:3, 1.5-2K:4, 2-3K:5, >=3K:10 minis"}
+      150K:
+        eval: {price_usd: 349, billing: monthly, reset_fee_usd: 289, profit_target_usd: 9000, mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 150000, breach: realtime}, consistency_pct: 50, max_contracts: "15 mini / 150 micro"}
+        funded: {dll: {amount_usd: 3000, kind: pause}, consistency_pct: 40, payout: {min_payout_usd: 500, max_payout_per_cycle_usd: 5000, max_pct_of_profit: 50, split_pct: 90}, scaling_plan: "<1.5K:3, 1.5-2K:4, 2-3K:5, 3-4.5K:10, >=4.5K:15 minis"}
+    notes:
+      - "Qualified Account reset (like a reactivation): 50K $599, 100K $799, 150K $999; max 2 per account, only if account never reached a payout request, within 7 days of breach."
+      - "Homepage lists a monthly 'price' for Qualified accounts too, but the Monthly Subscription article states 'Qualified Traders do not pay a monthly subscription' — treated as no fee."
+      - "Third-party (tradetanto/quantvps) claims Standard payouts are 'every 14 days'; official Payout Policy (2026-07-27) says 5 winning days, up to 4/month. Official used."
+      - "Qualified starting balance assumed = nominal (50,000) since MLL article says floor stops at starting balance on all accounts; not explicitly stated for Qualified."
+      - "Path to live: all Qualified accounts close when called up; each Qualified account with >=1 payout converts to a live account starting at $0 with $2,000 EOD drawdown (50K), 2 minis until MLL reaches $0 then 4 minis; DLL 30% of account size; daily uncapped payouts. Choice: Live Program (80% split, sim profits forfeited) or Alpha Prime (60% split + 12-month salary from 50% of sim profit, max $75K). Losing live -> up to 3-month cool-down."
+    unknowns:
+      - "Exact profit split / payout processing fees per payout method (only 90% stated)."
+      - "Whether Qualified accounts start at nominal balance (50,000) or $0 — inferred nominal."
+      - "Position close time / overnight rule not confirmed on Help Center."
+      - "Max Withdrawal Request article mentions 'Premium' accounts (apparently a legacy plan) without figures; no Premium plan currently sold — rules unknown."
+      - "Evaluation account count limit (none listed), though 'excessive Evaluations' is flagged as stacking."
+
+  - plan: Advanced
+    sizes:
+      50K:
+        eval:
+          price_usd: 209
+          price_notes: "Monthly. Activation fee $149 abolished for accounts purchased after 2026-07-08."
+          billing: monthly
+          reset_fee_usd: 189
+          activation_fee_usd: 0
+          profit_target_usd: 4000
+          mll: {amount_usd: 1750, type: eod_trailing, lock_balance_usd: 50000, breach: realtime}
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: 40           # best day <= $1,600 on 50K
+          min_trading_days: 3
+          max_days: null
+          max_contracts: "5 mini / 50 micro"
+        funded:
+          mll: {amount_usd: 1750, type: eod_trailing, lock_balance_usd: 50000, breach: realtime}   # amount from homepage qualified table; Advanced article silent
+          mll_after_payout: "Not stated in Advanced article; general rule (Zero/Standard articles) is that MLL does not move on payout — assumed same."
+          dll: {amount_usd: null, kind: null}   # "No Daily Loss Guard on Evaluation or Qualified Accounts" (trader may self-set)
+          consistency_pct: null                 # "No Consistency Rule on Advanced Qualified Accounts"
+          payout:
+            cycle_requirement: "5 winning days of >= $200 each since last request"
+            min_profit_to_request_usd: 2000     # derived: $1,000 min payout at 50%
+            min_payout_usd: 1000
+            max_payout_per_cycle_usd: 15000     # all sizes
+            max_pct_of_profit: 50
+            buffer_usd: null
+            split_pct: 90
+            frequency: "up to 4 per month"
+          payouts_before_live: null
+          lifetime_payout_cap_usd: null
+          scaling_plan: "None — full contract limit at all times"
+          inactivity_days: 10
+        account_limits:
+          max_funded_accounts: 3        # Advanced Qualified: 3; any user with an active Advanced Qualified is limited to 3 total
+          max_eval_accounts: null
+        strategy_restrictions:
+          max_loss_per_trade: null
+          min_rr_or_profit_rules: null
+          min_hold_time / microscalping: "same as Standard (10 ticks AND 2 min pattern)"
+          news_trading: "No news restrictions on Advanced Qualified, but 'An all or nothing approach or gambling tendencies still will not be tolerated at any time, especially during high volatility events.'"
+          hedging_stacking: "same prohibitions as Standard (account rolling / all-or-nothing, stacking, cross-account hedging, group trading)"
+          copy_trading: "allowed (single user)"
+          other: []
+      100K:
+        eval: {price_usd: 349, billing: monthly, reset_fee_usd: 319, profit_target_usd: 8000, mll: {amount_usd: 3500, type: eod_trailing, lock_balance_usd: 100000, breach: realtime}, consistency_pct: 40, max_contracts: "10 mini / 100 micro"}
+        funded: {payout: {min_payout_usd: 1000, max_payout_per_cycle_usd: 15000, max_pct_of_profit: 50, split_pct: 90}}
+      150K:
+        eval: {price_usd: 489, billing: monthly, reset_fee_usd: 449, profit_target_usd: 12000, mll: {amount_usd: 5250, type: eod_trailing, lock_balance_usd: 150000, breach: realtime}, consistency_pct: 40, max_contracts: "15 mini / 150 micro"}
+        funded: {payout: {min_payout_usd: 1000, max_payout_per_cycle_usd: 15000, max_pct_of_profit: 50, split_pct: 90}}
+    notes:
+      - "Homepage: Advanced Qualified resets 'None' (no qualified reset)."
+      - "Third-party (tradetanto) says Advanced qualified DLG = 2% of current balance; official Help Center (DLG 2026-07-15, Advanced overview 2026-07-22) says no DLG. Official used."
+    unknowns:
+      - "Advanced Qualified MLL behaviour after payout not explicitly stated."
+
+  - plan: Zero
+    sizes:
+      50K:
+        eval:
+          price_usd: 139
+          price_notes: "Monthly. No activation fee 'ever'."
+          billing: monthly
+          reset_fee_usd: 119
+          activation_fee_usd: 0
+          profit_target_usd: 3000
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50000, breach: realtime}
+          dll: {amount_usd: 1000, kind: pause}   # DLG applies in Zero Evaluation too
+          consistency_pct: null                  # none in eval -> can pass in 1 day
+          min_trading_days: 1
+          max_days: null
+          max_contracts: "3 mini / 30 micro"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50000, breach: realtime}
+          mll_after_payout: "Does not reset/move: 'If MLL was at $49,200 before payout, it will be after as well.'"
+          dll: {amount_usd: 1000, kind: pause}
+          consistency_pct: 40
+          payout:
+            cycle_requirement: "5 winning days of >= $200 each + 40% consistency"
+            min_profit_to_request_usd: 400     # derived: $200 min at 50%
+            min_payout_usd: 200
+            max_payout_per_cycle_usd: 1500
+            max_pct_of_profit: 50
+            buffer_usd: null
+            split_pct: 90
+            frequency: "up to 4 per month"
+          payouts_before_live: null
+          lifetime_payout_cap_usd: null
+          scaling_plan: "By profit: <$1,500 -> 1 mini/10 micro; $1,500-2,000 -> 2/20; >= $2,000 -> 3/30"
+          inactivity_days: 10
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: null
+        strategy_restrictions:
+          max_loss_per_trade: null
+          min_rr_or_profit_rules: null
+          min_hold_time / microscalping: "same as Standard"
+          news_trading: "Eval unrestricted; Qualified: 2 min before/after high-impact news (see Standard)"
+          hedging_stacking: "same as Standard"
+          copy_trading: "allowed (single user)"
+          other: []
+      25K:
+        eval: {price_usd: 89, billing: monthly, reset_fee_usd: 79, profit_target_usd: 1500, mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25000, breach: realtime}, dll: {amount_usd: 500, kind: pause}, max_contracts: "1 mini / 10 micro"}
+        funded: {payout: {min_payout_usd: 200, max_payout_per_cycle_usd: 1000, max_pct_of_profit: 50, split_pct: 90}, scaling_plan: "none"}
+      100K:
+        eval: {price_usd: 279, billing: monthly, reset_fee_usd: 249, profit_target_usd: 6000, mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100000, breach: realtime}, dll: {amount_usd: 2000, kind: pause}, max_contracts: "6 mini / 60 micro"}
+        funded: {payout: {min_payout_usd: 200, max_payout_per_cycle_usd: 2500, max_pct_of_profit: 50, split_pct: 90}}
+    notes:
+      - "Qualified reset: 25K $399, 50K $499, 100K $799 (max 2, only before any payout request, within 7 days)."
+    unknowns: []
+
+  - plan: Direct (instant funding, no evaluation)
+    sizes:
+      50K:
+        eval:
+          price_usd: 519
+          price_notes: "One-time fee, no monthly subscription, no evaluation."
+          billing: one_time
+          reset_fee_usd: null
+          activation_fee_usd: null
+          profit_target_usd: null
+          mll: {amount_usd: null, type: null, lock_balance_usd: null, breach: null}
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: null
+          min_trading_days: null
+          max_days: null
+          max_contracts: null
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50000, breach: realtime}   # homepage says 'EOD MLL'; lock from general MLL article
+          mll_after_payout: "Not stated for Direct."
+          dll: {amount_usd: 1000, kind: pause}
+          consistency_pct: 20
+          payout:
+            cycle_requirement: "Withdrawal Profit Target between requests: 1st $3,000, then $2,000 each (leftover does not carry over) + 20% consistency; no winning-day rule"
+            min_profit_to_request_usd: 3000   # 1st; 2000 thereafter
+            min_payout_usd: 500
+            max_payout_per_cycle_usd: 2000    # CONFLICT: Max Withdrawal Request article says $1,500 for 50K Direct
+            max_pct_of_profit: 50
+            buffer_usd: null
+            split_pct: 90
+            frequency: "up to 4 per month"
+          payouts_before_live: null
+          lifetime_payout_cap_usd: null
+          scaling_plan: "None"
+          inactivity_days: 10
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: null
+        strategy_restrictions:
+          max_loss_per_trade: null
+          min_rr_or_profit_rules: null
+          min_hold_time / microscalping: "same as Standard"
+          news_trading: "2 min before/after high-impact news (see Standard)"
+          hedging_stacking: "same as Standard"
+          copy_trading: "allowed (single user)"
+          other: []
+    notes:
+      - "50K Direct max contracts 4 mini / 40 micro."
+      - "Max payout conflict: homepage + Payout Policy + Direct overview (2026-07-09/27) say $2,000 for 50K; Maximum Withdrawal Request article (2026-07-27) says $1,500 (and 25K $1,000, 100K $2,500, 150K $3,000 agree across sources)."
+      - "Other sizes: 25K $349 (MLL 1,000, DLL 500, targets 1,500/1,000, cap 1,000); 100K $689 (3,000 / 2,000 / 6,000-4,000 / 2,500); 150K $859 (4,500 / 3,000 / 9,000-6,000 / 3,000)."
+    unknowns:
+      - "Direct MLL lock level and behaviour after payout not stated explicitly."
+      - "50K Direct max payout ($2,000 vs $1,500)."
+

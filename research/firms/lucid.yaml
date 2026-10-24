@@ -1,0 +1,319 @@
+firm: Lucid Trading
+as_of: 2026-10-24
+sources:
+  # Official help center (support.lucidtrading.com). dateModified taken from each article's metadata.
+  - https://support.lucidtrading.com/en/articles/12945790-lucidflex-evaluation-account      # mod 2026-10-19
+  - https://support.lucidtrading.com/en/articles/12945795-lucidflex-funded-account          # mod 2026-10-13
+  - https://support.lucidtrading.com/en/articles/12945796-lucidflex-payouts                 # mod 2026-07-28
+  - https://support.lucidtrading.com/en/articles/12945805-lucidflex-consistency-percentage  # mod 2026-10-19
+  - https://support.lucidtrading.com/en/articles/12945808-lucidflex-scaling-plan            # mod 2026-05-06
+  - https://support.lucidtrading.com/en/articles/12945815-lucidflex-drawdown                # mod 2026-08-26
+  - https://support.lucidtrading.com/en/articles/16226050-lucidflex-customization           # mod 2026-10-20
+  - https://support.lucidtrading.com/en/articles/13424914-lucidflex-live-legacy             # mod 2026-08-26
+  - https://support.lucidtrading.com/en/articles/12890029-lucidpro-evaluation-account       # mod 2026-08-26
+  - https://support.lucidtrading.com/en/articles/12890069-lucidpro-funded-account           # mod 2026-08-26
+  - https://support.lucidtrading.com/en/articles/12890092-lucidpro-payouts                  # mod 2026-10-21
+  - https://support.lucidtrading.com/en/articles/12890109-lucidpro-consistency-percentage   # mod 2026-08-26
+  - https://support.lucidtrading.com/en/articles/12890122-lucidpro-daily-loss-limit         # mod 2026-07-26
+  - https://support.lucidtrading.com/en/articles/12890136-lucidpro-drawdown                 # mod 2026-08-26
+  - https://support.lucidtrading.com/en/articles/16226068-lucidpro-customization            # mod 2026-10-19
+  - https://support.lucidtrading.com/en/articles/12890148-luciddirect-funded-account        # mod 2026-08-26
+  - https://support.lucidtrading.com/en/articles/12890164-luciddirect-payout-objectives     # mod 2026-08-26
+  - https://support.lucidtrading.com/en/articles/12890178-luciddirect-consistency-percentage
+  - https://support.lucidtrading.com/en/articles/12890185-luciddirect-daily-loss-limit      # mod 2026-10-19
+  - https://support.lucidtrading.com/en/articles/12890192-luciddirect-drawdown
+  - https://support.lucidtrading.com/en/articles/15996664-luciddaily-evaluation
+  - https://support.lucidtrading.com/en/articles/15997244-luciddaily-funded-account
+  - https://support.lucidtrading.com/en/articles/15997266-luciddaily-payouts
+  - https://support.lucidtrading.com/en/articles/15998336-luciddaily-consistency
+  - https://support.lucidtrading.com/en/articles/15998425-luciddaily-drawdown
+  - https://support.lucidtrading.com/en/articles/16085900-luciddaily-daily-loss-limit
+  - https://support.lucidtrading.com/en/articles/16033858-luciddaily-customization          # mod 2026-10-20
+  - https://support.lucidtrading.com/en/articles/16558826-new-live-structure                # mod 2026-10-14
+  - https://support.lucidtrading.com/en/articles/17327076-new-lucidmaxx-program             # mod 2026-10-09
+  - https://support.lucidtrading.com/en/articles/11404617-maximum-number-of-accounts        # mod 2026-08-26
+  - https://support.lucidtrading.com/en/articles/11404734-prohibited-hedging                # mod 2026-10-06
+  - https://support.lucidtrading.com/en/articles/11404742-prohibited-microscalping
+  - https://support.lucidtrading.com/en/articles/11404736-prohibited-high-frequency-trading
+  - https://support.lucidtrading.com/en/articles/11404728-other-trading-activities
+  - https://support.lucidtrading.com/en/articles/11404732-trade-with-integrity
+  - https://support.lucidtrading.com/en/articles/11404729-allowed-trading-times
+  - https://support.lucidtrading.com/en/articles/11404632-inactivity-policy
+  - https://support.lucidtrading.com/en/articles/11404620-simulated-account-fees
+  - https://support.lucidtrading.com/en/articles/11508978-approved-products-and-commissions
+  # Third-party (prices only; lucidtrading.com is behind a Cloudflare challenge and could not be fetched)
+  - https://www.eltraderfinanciado.com/en/news/lucid-trading/lucid-trading-on-demand-payouts-40-dll-october-2026   # 2026-10-19
+  - https://www.eltraderfinanciado.com/en/news/lucid-trading/lucid-trading-optional-daily-loss-limit             # updated 2026-10-13, data 2026-08-06
+  - https://proptradingvibes.com/blog/lucid-trading-max-drawdown                                                  # mod 2026-10-12
+plans:
+  - plan: Flex   # "LucidFlex"
+    sizes:
+      50K:
+        eval:
+          price_usd: 115            # list price, DLL ON + 40% consistency (base config). THIRD-PARTY (eltraderfinanciado, 2026-10-19)
+          price_notes: "THIRD-PARTY prices (official site blocked). From 2026-10-18: 50K Flex DLL ON $115 (was $136), DLL OFF $165 (was $146); 50% consistency add-on +$7..$35 depending on size. Codes: ETFPROMO -40% DLL ON / -30% DLL OFF (expired 2026-10-23); VIBES -40% (affiliate). Codes of 30-50% are near-permanent."
+          billing: one_time
+          reset_fee_usd: null       # resets exist (purchased from dashboard) but amount not published officially
+          activation_fee_usd: 0
+          profit_target_usd: 3000
+          mll:
+            amount_usd: 2000
+            type: eod_trailing
+            lock_balance_usd: 50100 # floor locks at start+$100 once EOD balance exceeds Initial Trail Balance $52,100 (same table for eval and funded)
+            breach: realtime        # see notes: official text "If your account balance reached the MLL, your account will be breached"; intraday touch assumed
+          dll: {amount_usd: null, kind: pause}   # optional at checkout (DLL ON/OFF). Soft breach = locked out until next session. Amount for Flex not stated officially; third-party says $1,200 for 50K
+          consistency_pct: 40       # 50 with paid add-on (with small built-in cushion, e.g. $1,560 on 50K)
+          min_trading_days: null    # no explicit rule; 40% consistency implies >=3 days, 50% add-on >=2 days
+          max_days: null            # "take as long as you need" (but 30-day inactivity deletion applies)
+          max_contracts: "4 mini / 40 micros (no scaling in eval)"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}   # Initial Trail Balance $52,100 -> floor locks $50,100
+          mll_after_payout: "On the first payout request the MLL jumps to the Locked MLL Balance ($50,100) and stays static, even if the balance had not reached $52,100 yet. There is no buffer, so after a payout the balance can sit very close to the floor."
+          dll: {amount_usd: null, kind: pause}   # optional (same choice as eval); third-party: $1,200 on 50K
+          consistency_pct: null
+          payout:
+            cycle_requirement: "5 separate days with >= $150 profit (50K) in the cycle + positive net profit (>= $1) in the cycle; both reset after each approved payout"
+            min_profit_to_request_usd: 1        # only 'positive net profit in cycle'; effective floor is set by the $500 minimum request
+            min_payout_usd: 500
+            max_payout_per_cycle_usd: 2000      # flat, does NOT scale with payout number (25K $1,000 / 100K $2,500 / 150K $3,000)
+            max_pct_of_profit: 50               # table: "50% of Profit up to $2,000"; text says "50% of their account balance" (see notes)
+            buffer_usd: 0                       # "There is no buffer balance that must be maintained in LucidFlex funded accounts."
+            split_pct: 90
+            frequency: "any day once criteria met (no fixed window). DLL ON accounts: 'On Demand' intraday requests from that session's profit (trading paused rest of day after request). DLL OFF: end-of-day schedule."
+          payouts_before_live: 5                # max 5 payouts per Flex account, then enters live review pool (legacy accounts bought <=2026-02-27: 6)
+          lifetime_payout_cap_usd: 10000        # implied: 5 payouts x $2,000 max per 50K account (gross, before split); not stated as a cap
+          scaling_plan: "Funded 50K, by simulated profit (updates end of session): $0-999 -> 2 minis/20 micros; $1,000-1,999 -> 3/30; $2,000+ -> 4/40. Payouts reduce profit and can drop the tier."
+          inactivity_days: 30                   # no trade with >= $1 net P&L in 30 calendar days -> account deleted
+        account_limits:
+          max_funded_accounts: 5                # per household, all funded types combined
+          max_eval_accounts: 10                 # evals + funded combined may not exceed 10
+        strategy_restrictions:
+          max_loss_per_trade: null              # no per-trade loss cap / negative P&L rule found
+          min_rr_or_profit_rules: null
+          "min_hold_time / microscalping": "Prohibited microscalping: flagged if >50% of profits come from trades held <=5 seconds (manual review, warning, then profit forfeiture). HFT prohibited."
+          news_trading: allowed                 # allowed on Flex/Pro/Direct (NOT on LucidDaily)
+          hedging_stacking: "\"Lucid Trading strictly prohibits all forms of hedging, including ... across multiple accounts held by the same user, between different users' accounts, between different firms\". Cannot be long/short same contract (mini vs micro) in separate accounts, nor 'different contracts in separate accounts with correlated assets. Example: You cannot go long ES in one account and short NQ in a separate account.' Penalty: accounts reset to prior day balance (drawdown not restored); repeat = breach + ban. Same-direction stacking across accounts is NOT prohibited."
+          copy_trading: allowed                 # "Automated trading systems and trade copiers are permitted"
+          other:
+            - "Positions auto-closed 4:45 PM ET (not a breach); trading reopens 6:00 PM ET."
+            - "Martingaling 'strongly discouraged' (not prohibited); DCA/scaling-in allowed; flipping for trading-day count allowed."
+            - "Trade with Integrity: prohibits exploiting system errors, sim price discrepancies, 'tactics that do not reflect real-world trading conditions'."
+            - "Circumventing the scaling plan (e.g. minis+micros) can lead to profit wiped for the day."
+            - "Live: 'yolo' traders not eligible for bonus/escrow and may get longer cooldowns (live only)."
+    notes:
+      - "Flex customization (2026-10): DLL ON/OFF x consistency 40%/50% = 4 configurations, fixed at purchase. DLL ON = cheaper + On Demand (intraday) payouts."
+      - "Other sizes (eval target / MLL / max size): 25K $1,250/$1,000/2 mini; 100K $6,000/$3,000/6 mini; 150K $9,000/$4,500/10 mini. Min winning-day profit 25K $100, 100K $200, 150K $250. Lock floors 25,100/100,100/150,100 at trail balances 26,100/103,100/154,600."
+      - "Payout max wording conflict (same official article): text says 'request 50% of their account balance up to a maximum', table says '50% of Profit up to $2,000'. Interpreted as 50% of profit."
+      - "Breach timing: official drawdown articles only say 'If your account balance reached the MLL, your account will be breached'. Third-party (proptradingvibes, 2026-10-12): 'EOD describes when the floor moves; it does not create an intraday recovery window'. One older third-party review claimed intraday dips are tolerated if recovered by close - treated as unreliable."
+      - "Live (new structure, mod 2026-10-14): after payout 5 trader enters live review pool (discretionary). One live account per funded account with >=1 payout; live starts at $0 balance, $2,000 EOD drawdown (50K), locks at $100 once profit = drawdown; daily payouts; repeatable bonus $2,000 after +$4,000 and 20 trading days. Cash-out option = 50% of live starting balance at 90/10. All sim accounts closed when moved live."
+      - "Legacy Flex (bought/reset <= 2026-02-27): live after 6th payout, move-to-live cap $8,000 per 50K account with escrow."
+      - "Payout disbursement within 2 business days; funds deducted within minutes of approval. Requests are final."
+      - "Commissions (sim): ES/NQ $1.75 per side, MES/MNQ $0.50 per side."
+    unknowns:
+      - "Official list prices and reset fees (lucidtrading.com blocked by Cloudflare; only third-party prices)."
+      - "Official Flex DLL dollar amount when DLL ON (third-party: $1,200 on 50K, same as Pro/Daily)."
+      - "Whether MLL breach is evaluated on unrealized intraday equity (assumed realtime; not explicitly stated)."
+      - "No explicit lifetime payout cap beyond the 5-payout limit."
+
+  - plan: Pro    # "LucidPro"
+    sizes:
+      50K:
+        eval:
+          price_usd: 172            # DLL ON list price (unchanged at 2026-10-18). THIRD-PARTY
+          price_notes: "THIRD-PARTY: 50K Pro DLL ON $172, DLL OFF $215 (was $192). ETFPROMO -40%/-30% (expired 2026-10-23); VIBES -40%."
+          billing: one_time
+          reset_fee_usd: null
+          activation_fee_usd: 0
+          profit_target_usd: 3000
+          mll:
+            amount_usd: 2000
+            type: eod_trailing
+            lock_balance_usd: 50100   # locks when EOD balance exceeds $52,100
+            breach: realtime
+          dll: {amount_usd: 1200, kind: pause}   # only if DLL ON chosen at checkout (optional since 2026-10); soft breach
+          consistency_pct: null     # none in eval ("Pass the evaluation in one trading day")
+          min_trading_days: 1
+          max_days: null
+          max_contracts: "4 mini / 40 micros"
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}
+          mll_after_payout: "Not stated explicitly. Payout requires balance above buffer $52,100 (= trail balance), so the floor is already locked at $50,100 when any payout is taken; it remains static."
+          dll: {amount_usd: 1200, kind: pause}   # if DLL ON: fixed $1,200 until EOD close above $52,100, then 'LucidScale DLL' = 60% of highest EOD profit (never decreases)
+          consistency_pct: 40       # per payout cycle, resets after each payout (35% for accounts bought/reset before 2025-11-28)
+          payout:
+            cycle_requirement: "Profit since last payout >= $500 (50K) + largest day <= 40% of cycle profit + balance above buffer"
+            min_profit_to_request_usd: 500
+            min_payout_usd: 500
+            max_payout_per_cycle_usd: [2000, 2500, 2500, 2500, 2500]   # payout 1 $2,000; payouts 2+ $2,500
+            max_pct_of_profit: null   # limited by buffer instead: can only withdraw balance above $52,100
+            buffer_usd: 2100          # buffer balance $52,100 = initial MLL + $100; cannot withdraw from buffer
+            split_pct: 90             # accounts before 2025-11-28 3PM EST: 100% of first $10k
+            frequency: "any day once criteria met; DLL ON -> On Demand intraday payouts"
+          payouts_before_live: 5      # 'Payout 5 represents the maximum payout level' for Flex, Pro, Direct
+          lifetime_payout_cap_usd: 12000   # implied: 2,000 + 4 x 2,500 (gross)
+          scaling_plan: "None - full 4 mini / 40 micro from day one"
+          inactivity_days: 30
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: 10
+        strategy_restrictions:
+          max_loss_per_trade: null
+          min_rr_or_profit_rules: null
+          "min_hold_time / microscalping": "Same firm-wide microscalping rule (>50% profits from trades <=5s) and HFT ban."
+          news_trading: allowed
+          hedging_stacking: "Same firm-wide hedging ban (incl. cross-account and correlated assets across accounts)."
+          copy_trading: allowed
+          other:
+            - "40% payout-cycle consistency effectively limits how much one big day can count toward a payout."
+    notes:
+      - "Pro funded 'No simulated payout caps' marketing line conflicts with per-payout max table and 5-payout limit; per-payout max table is used."
+      - "Example official min balances (50K): $52,600 for a $500 payout; $54,100 for $2,000 first payout; $54,600 for $2,500 payout 2+."
+    unknowns:
+      - "Official prices/reset fees."
+      - "Explicit statement of MLL behaviour after payout."
+
+  - plan: Direct   # "LucidDirect" - straight to funded, no evaluation
+    sizes:
+      50K:
+        eval:
+          price_usd: 515            # one-time purchase of the funded account itself. THIRD-PARTY (unchanged 2026-10-19)
+          price_notes: "No evaluation phase. THIRD-PARTY price $515 (25K $329 / 100K $700 / 150K $836); typical code -30%."
+          billing: one_time
+          reset_fee_usd: null
+          activation_fee_usd: 0
+          profit_target_usd: null
+          mll: {amount_usd: null, type: null, lock_balance_usd: null, breach: null}
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: null
+          min_trading_days: null
+          max_days: null
+          max_contracts: null
+        funded:
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: 50100, breach: realtime}   # trail balance $52,100
+          mll_after_payout: "Not stated; payout profit goal ($3,000) exceeds the $2,100 trail, so floor is already locked at $50,100."
+          dll: {amount_usd: 1200, kind: pause}   # mandatory on 50K; becomes 60% of highest EOD profit after close above $52,100
+          consistency_pct: 20       # per payout cycle
+          payout:
+            cycle_requirement: "Profit goal in cycle: $3,000 for payout 1, $2,500 for payouts 2+; largest day <= 20% of cycle profit"
+            min_profit_to_request_usd: 3000
+            min_payout_usd: 500
+            max_payout_per_cycle_usd: [2000, 2000, 2000, 2500, 2500]
+            max_pct_of_profit: null
+            buffer_usd: null
+            split_pct: 90
+            frequency: "any day once criteria met; On Demand intraday payouts (50K has DLL)"
+          payouts_before_live: 5
+          lifetime_payout_cap_usd: 11000   # implied 3x2,000 + 2x2,500
+          scaling_plan: "None"
+          inactivity_days: 30
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: 10
+        strategy_restrictions:
+          max_loss_per_trade: null
+          min_rr_or_profit_rules: null
+          "min_hold_time / microscalping": "Firm-wide microscalping/HFT rules."
+          news_trading: allowed
+          hedging_stacking: "Firm-wide hedging ban."
+          copy_trading: allowed
+          other: []
+    notes:
+      - "Direct 100K/150K have larger MLL ($3,500/$5,000) than other plans."
+    unknowns:
+      - "Whether payout can be taken out of profit that would drop balance below a buffer (no buffer stated)."
+
+  - plan: Daily   # "LucidDaily" - daily payouts, intraday trailing in funded
+    sizes:
+      50K:
+        eval:
+          price_usd: 94             # cheapest config (DLL ON + intraday eval drawdown). THIRD-PARTY; EOD-eval config $122
+          price_notes: "THIRD-PARTY: DLL ON intraday-eval $94, DLL ON EOD-eval $122 (2026-10-18); DLL OFF costs more."
+          billing: one_time
+          reset_fee_usd: null
+          activation_fee_usd: 0
+          profit_target_usd: 3000
+          mll:
+            amount_usd: 2000
+            type: eod_trailing        # or intraday_trailing, chosen at checkout
+            lock_balance_usd: 50100
+            breach: realtime
+          dll: {amount_usd: 1200, kind: pause}   # optional (DLL ON)
+          consistency_pct: 50       # eval article says 50%; customization article mentions 40%/50% choice (conflict)
+          min_trading_days: null
+          max_days: null
+          max_contracts: "4 mini / 40 micros"
+        funded:
+          mll: {amount_usd: 2000, type: intraday_trailing, lock_balance_usd: 50100, breach: realtime}
+          mll_after_payout: "Not stated; buffer $52,100 equals trail balance so floor is locked at $50,100 before any payout."
+          dll: {amount_usd: 1200, kind: pause}
+          consistency_pct: null
+          payout:
+            cycle_requirement: "Balance above buffer + positive net profit since last payout"
+            min_profit_to_request_usd: 1
+            min_payout_usd: 500
+            max_payout_per_cycle_usd: null   # any amount above buffer
+            max_pct_of_profit: null
+            buffer_usd: 2100
+            split_pct: 90
+            frequency: "daily (multiple per session with DLL ON)"
+          payouts_before_live: null
+          lifetime_payout_cap_usd: null
+          scaling_plan: null
+          inactivity_days: 30
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: 10
+        strategy_restrictions:
+          max_loss_per_trade: null
+          min_rr_or_profit_rules: null
+          "min_hold_time / microscalping": "Firm-wide rules."
+          news_trading: "prohibited in funded: US high-impact (red folder) news = HARD breach; must be flat from 1 min before to 1 min after"
+          hedging_stacking: "Firm-wide hedging ban."
+          copy_trading: allowed
+          other:
+            - "Maximum Daily Profit $8,000 (50K): reaching it moves trader to live automatically."
+    notes:
+      - "Included for completeness; not a priority plan."
+    unknowns:
+      - "Consistency 40% vs 50% option conflict between official articles."
+
+  - plan: Maxx   # invitation-only, not purchasable by public
+    sizes:
+      50K:
+        eval:
+          price_usd: 155            # THIRD-PARTY promo price; invitation only
+          price_notes: "Invitation-only (LucidMaxx status). Two steps: eval ($3,000 target, $2,000 EOD, 40% consistency) then Pre-Live ($2,000 target, $2,000 EOD, no consistency)."
+          billing: one_time
+          reset_fee_usd: null
+          activation_fee_usd: null
+          profit_target_usd: 3000
+          mll: {amount_usd: 2000, type: eod_trailing, lock_balance_usd: null, breach: realtime}
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: 40
+          min_trading_days: null
+          max_days: null
+          max_contracts: null
+        funded:
+          mll: {amount_usd: 100, type: static, lock_balance_usd: null, breach: realtime}   # live starts with $2,000 balance withdrawable day 1; static MLL $100
+          mll_after_payout: "Static"
+          dll: {amount_usd: null, kind: null}
+          consistency_pct: null
+          payout: {cycle_requirement: "daily, uncapped", min_profit_to_request_usd: null, min_payout_usd: null, max_payout_per_cycle_usd: null, max_pct_of_profit: null, buffer_usd: null, split_pct: 90, frequency: daily}
+          payouts_before_live: 0
+          lifetime_payout_cap_usd: null
+          scaling_plan: "Standard live scaling plan"
+          inactivity_days: null
+        account_limits:
+          max_funded_accounts: 5
+          max_eval_accounts: null
+        strategy_restrictions:
+          max_loss_per_trade: null
+          min_rr_or_profit_rules: null
+          "min_hold_time / microscalping": null
+          news_trading: null
+          hedging_stacking: "Live hedging strictly prohibited (Lucid and CME)."
+          copy_trading: null
+          other: []
+    notes:
+      - "Not available to the public; listed only for completeness."
+    unknowns: []
