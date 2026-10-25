@@ -11,4 +11,5 @@ funded:
 max_funded_accounts: 3     # límite propio del plan
 firm_max_funded: 5
 firm_max_evals: 10         # otra página dice 5 (sin confirmar)
+inactivity_days: 7         # 1 trade por semana como mínimo (research/firms)
 notes: ["Sin tope por payout ni regla del 50%: se retira todo lo que supera el colchón de $2.100", "Tras el 1er payout, cada payout exige +$500 desde el anterior"]

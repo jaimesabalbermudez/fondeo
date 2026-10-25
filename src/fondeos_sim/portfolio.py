@@ -21,6 +21,11 @@ optimización (`eval_step`, `funded_step`):
 - `firm_failure_year`: probabilidad anual de que cada firma deje de pagar a todo el mundo (cierre,
   cambio de reglas, impagos). Desde ese día no se cobra nada pendiente de esa firma ni se compra más.
 - Al llegar al horizonte se deja de comprar y se dejan correr las cuentas abiertas ("cierre").
+- `trades_per_day`: trades que caben en una sesión (uno detrás de otro). Cada día operan como mucho
+  esas cuentas por camino: primero las que están a punto de incumplir la regla de inactividad de su
+  firma, después las que llevan más días paradas (desempate al azar). Una cuenta que supera el plazo
+  de inactividad (`inactivity_days` del plan, días naturales -> 5/7 en días de trading) se pierde.
+  None = todas las cuentas operan cada día.
 """
 
 from dataclasses import dataclass
@@ -80,7 +85,7 @@ class _Pool:
 def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float, n_paths: int = 2000,
                        copy: str = "none", rho: float = 1.0, payout_delay: int = 2, seed: int = 0,
                        queue_passed: bool = True, max_extra_days: int = 400,
-                       firm_failure_year: float = 0.0) -> PortfolioResult:
+                       firm_failure_year: float = 0.0, trades_per_day: int | None = None) -> PortfolioResult:
     rng = np.random.default_rng(seed)
     P, k = n_paths, len(allocs)
     horizon = int(round(months * MONTH))
@@ -113,6 +118,12 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
         epools.append(_Pool(EvalState(a.plan, P * a.parallel), P, a.parallel) if a.plan.eval else None)
         fpools.append(_Pool(FundedState(a.plan, a.funded_strat, P * fslots), P, fslots))
     denied = [np.zeros((P, fp.slots), bool) for fp in fpools]
+    # días seguidos sin operar de cada cuenta y plazo de inactividad en días de trading
+    e_idle = [np.zeros((P, ep.slots), int) if ep else None for ep in epools]
+    f_idle = [np.zeros((P, fp.slots), int) for fp in fpools]
+    idle_limit = np.array([a.plan.inactivity_days * 5 // 7 if a.plan.inactivity_days else inf for a in allocs])
+    e_sel = [np.zeros((P, ep.slots), bool) if ep else None for ep in epools]
+    f_sel = [np.zeros((P, fp.slots), bool) for fp in fpools]
     fresh = [np.zeros((P, fp.slots), bool) for fp in fpools]   # activadas hoy: operan desde mañana
 
     first_price = np.array([a.plan.costs.eval_price for a in allocs])
@@ -131,7 +142,7 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
     n_eval, n_fund, n_queue, bought = (np.zeros((P, k), int) for _ in range(4))
     buys_log = np.zeros((P, n_firms, total_days + 1), int)
     acts_log = np.zeros((P, n_firms, total_days + 1), int)
-    stats = np.zeros((k, 5))   # evaluaciones, funded, gastado, cobrado, aprobadas perdidas
+    stats = np.zeros((k, 6))   # evaluaciones, funded, gastado, cobrado, aprobadas perdidas, cerradas por inactividad
     spent, paid, n_evals_tot, n_funded_tot = np.zeros(P), np.zeros(P), np.zeros(P), np.zeros(P)
     cash_hist = np.zeros((P, horizon + 1))
     ruin_day = np.full(P, -1)
@@ -167,6 +178,7 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
                 fp.st.reset(fp.flat(paths, s))
                 fp.occ[paths, s] = True
                 fresh[j][paths, s] = True
+                f_idle[j][paths, s] = 0
                 denied[j][paths, s] = rng.random(paths.size) < p_deny[j]
                 need &= ~take
         pay(m, j, activation[j])
@@ -212,6 +224,7 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
                 paths = np.flatnonzero(m)
                 ep.st.reset(ep.flat(paths, s))
                 ep.occ[paths, s] = True
+                e_idle[j][paths, s] = 0
                 pay(m, j, price)
                 committed[m] += activation[j]
                 bought[m, j] += 1
@@ -250,10 +263,15 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
             return
         paths, slots = np.nonzero(ep.occ)
         idx = ep.flat(paths, slots)
-        eval_step(ep.st, a.eval_strat, idx, rng, U[("e", j)][paths, slots] if ("e", j) in U else None)
+        tr = e_sel[j][paths, slots]
+        if tr.any():
+            eval_step(ep.st, a.eval_strat, idx[tr], rng,
+                      U[("e", j)][paths[tr], slots[tr]] if ("e", j) in U else None)
         st = ep.st
-        passed = st.passed[idx]
-        failed = ~st.alive[idx] | (~passed & (st.days[idx] >= EVAL_HORIZON))
+        passed = st.passed[idx] & tr
+        expired = e_idle[j][paths, slots] > idle_limit[j]
+        failed = ~passed & (~st.alive[idx] | (st.days[idx] >= EVAL_HORIZON) | expired)
+        stats[j, 5] += expired.sum()
         if monthly[j]:   # renovación de la suscripción
             due = ~passed & ~failed & (st.days[idx] % MONTH == 0)
             if due.any():
@@ -287,23 +305,56 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
 
     def step_funded(j, day, U):
         fp = fpools[j]
-        trading = fp.occ & ~fresh[j]
+        live = fp.occ & ~fresh[j]
+        trading = live & f_sel[j]
         fresh[j][:] = False
-        if not trading.any():
+        if not live.any():
             return
-        paths, slots = np.nonzero(trading)
+        w, amount = np.zeros(0, int), np.zeros(0)
+        if trading.any():
+            tp, ts = np.nonzero(trading)
+            w, amount = funded_step(fp.st, fp.flat(tp, ts), rng, U[("f", j)][tp, ts] if ("f", j) in U else None)
+        paths, slots = np.nonzero(live)
         idx = fp.flat(paths, slots)
-        w, amount = funded_step(fp.st, idx, rng, U[("f", j)][paths, slots] if ("f", j) in U else None)
         if w.size:
             wp, ws = np.divmod(w, fp.slots)
             ok = ~denied[j][wp, ws]
             net = amount[ok] * split[j]
             np.add.at(arrivals[:, firm_of[j], day + payout_delay], wp[ok], net)
             stats[j, 3] += net.sum()
-        done = ~fp.st.active[idx] | (fp.st.days[idx] >= FUNDED_HORIZON)
+        expired = f_idle[j][paths, slots] > idle_limit[j]
+        stats[j, 5] += expired.sum()
+        done = ~fp.st.active[idx] | (fp.st.days[idx] >= FUNDED_HORIZON) | expired
         if done.any():
             fp.occ[paths[done], slots[done]] = False
             np.subtract.at(n_fund[:, j], paths[done], 1)
+
+    def select():
+        """Marca en e_sel / f_sel las cuentas que operan hoy y actualiza los días sin operar."""
+        blocks = [(e_sel[j], e_idle[j], epools[j].occ, j) for j in range(k) if epools[j] is not None]
+        blocks += [(f_sel[j], f_idle[j], fpools[j].occ & ~fresh[j], j) for j in range(k)]
+        for sel, _, occ, _ in blocks:
+            sel[:] = occ
+        if trades_per_day is not None:
+            cand = [(np.nonzero(occ), b) for b, (_, _, occ, _) in enumerate(blocks)]
+            path = np.concatenate([pp for (pp, _), _ in cand])
+            if path.size:
+                idle = np.concatenate([blocks[b][1][pp, ss] for (pp, ss), b in cand])
+                lim = np.concatenate([np.full(pp.size, idle_limit[blocks[b][3]]) for (pp, _), b in cand])
+                urgent = idle + 1 >= lim
+                score = -idle - 1e4 * urgent + 0.5 * rng.random(path.size)   # menor = antes
+                order = np.lexsort((score, path))
+                first = np.searchsorted(path[order], path[order], side="left")
+                rank = np.empty(path.size, int)
+                rank[order] = np.arange(path.size) - first
+                keep = rank < trades_per_day
+                c = 0
+                for (pp, ss), b in cand:
+                    blocks[b][0][pp, ss] = keep[c:c + pp.size]
+                    c += pp.size
+        for sel, idle, occ, _ in blocks:
+            idle[sel] = 0
+            idle[occ & ~sel] += 1
 
     for day in range(total_days):
         failed_firm = fail_day <= day
@@ -319,6 +370,7 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
             stuck = (ruin_day < 0) & ~open_any & ~(arrivals[:, :, day + 1:].sum(axis=(1, 2)) > 0)
             ruin_day[stuck] = day
         U = uniforms()
+        select()
         for j, a in enumerate(allocs):
             step_evals(j, a, day, U)
             step_funded(j, day, U)
@@ -331,7 +383,7 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
         elif not open_any.any() and not pending.any():
             break
 
-    keys = ("evaluaciones", "funded", "gastado", "cobrado", "aprobadas perdidas")
+    keys = ("evaluaciones", "funded", "gastado", "cobrado", "aprobadas perdidas", "cerradas por inactividad")
     per_plan = {a.key: dict(zip(keys, stats[j] / P)) for j, a in enumerate(allocs)}
     return PortfolioResult(days=np.arange(horizon + 1), cash=cash_hist, final=cash, ruined=ruin_day >= 0,
                            ruin_day=ruin_day, min_cash=min_cash, spent=spent, paid=paid, evals=n_evals_tot,

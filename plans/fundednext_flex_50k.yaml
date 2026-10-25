@@ -14,4 +14,5 @@ max_funded_accounts: 5
 firm_max_activations_30d: 10   # funded emitidas por mes
 hold_passed: true
 p_payout_denial: 0.3
+inactivity_days: 30         # días naturales sin operar -> cuenta cerrada (research/firms)
 notes: ["'Account flipping' prohíbe trades all-in sin umbral numérico: p_payout_denial es una hipótesis", "La cuenta se cierra tras el 5º payout"]

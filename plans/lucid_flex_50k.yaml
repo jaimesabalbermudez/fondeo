@@ -13,4 +13,5 @@ funded:
 max_funded_accounts: 5
 firm_max_open: 10          # evaluaciones + funded <= 10 por hogar
 p_payout_denial: 0.0
+inactivity_days: 30         # días naturales sin operar -> cuenta cerrada (research/firms)
 notes: ["Breach intradía asumido (no explícito en el help center)", "Tras 5 payouts pasa a revisión para live (valor no modelado)"]

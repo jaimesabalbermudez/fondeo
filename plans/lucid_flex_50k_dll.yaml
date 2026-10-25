@@ -14,6 +14,7 @@ funded:
            max_amount: [2000], pct_of_profit: 0.5, max_payouts: 5}
 max_funded_accounts: 5
 firm_max_open: 10          # evaluaciones + funded <= 10 por hogar
+inactivity_days: 30         # días naturales sin operar -> cuenta cerrada (research/firms)
 notes: ["Evaluación verificada con captura (2026-10-24): objetivo $3.000, DLL $1.200, MLL $2.000 EOD, consistencia 40%, máx. 4 minis / 40 micros, reset $80, On Demand Payouts",
         "Funded verificado con captura de lucidtrading.com (2026-10-24): MLL $2.000, DLL $1.200 por debajo del trail inicial, sin consistencia, 5 días de $150, 5 días hasta payout, máx. 4 minis / 40 micros con scaling plan, activación gratis, 5 payouts hasta live",
         "DLL: pausa diaria, no quema la cuenta. Por encima del trail, LucidScale DLL (60% del mayor profit EOD) según el help center del plan Pro; asumido igual en Flex",

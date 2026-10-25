@@ -1,11 +1,13 @@
 """Validación del motor contra resultados analíticos conocidos."""
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
 from fondeos_sim.engine import EvalStrategy, FundedStrategy, simulate_eval, simulate_funded
 from fondeos_sim.market import bernoulli_trade, path_trade
-from fondeos_sim.plan import Costs, EvalRules, FundedRules, Plan, PayoutRules, load_plans
+from fondeos_sim.plan import Costs, EvalRules, FundedRules, Plan, PayoutRules, load_plan, load_plans
 
 N = 200_000
 
@@ -136,3 +138,20 @@ def test_copying_trades_keeps_expected_value(copy):
     per_eval = lambda r: (r.final - 100_000).sum() / r.evals.sum()   # noqa: E731
     assert per_eval(cop) == pytest.approx(per_eval(ind), rel=0.1)
     assert (cop.final - 100_000).std() > (ind.final - 100_000).std()
+
+
+PLANS = Path(__file__).resolve().parents[1] / "plans"
+
+
+def test_trades_per_day_cap_and_inactivity():
+    from dataclasses import replace
+    from fondeos_sim.portfolio import Allocation, simulate_portfolio
+    plan = load_plan(PLANS / "lucid_flex_50k_dll.yaml")
+    al = [Allocation(plan, EvalStrategy(1200, None, 10.0), FundedStrategy(2000, None, 150, 600), parallel=5)]
+    free = simulate_portfolio(al, 20000, 3, n_paths=300, seed=1)
+    capped = simulate_portfolio(al, 20000, 3, n_paths=300, seed=1, trades_per_day=2)
+    assert capped.evals.mean() < 0.8 * free.evals.mean()
+    assert capped.per_plan[plan.id]["cerradas por inactividad"] == 0   # 30 días: margen de sobra
+    strict = [replace(al[0], plan=replace(plan, inactivity_days=2))]
+    starved = simulate_portfolio(strict, 20000, 3, n_paths=300, seed=1, trades_per_day=1)
+    assert starved.per_plan[plan.id]["cerradas por inactividad"] > 0

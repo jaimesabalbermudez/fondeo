@@ -11,4 +11,5 @@ funded:
 max_funded_accounts: 5
 firm_max_funded: 5
 firm_max_evals: 10
+inactivity_days: 7         # 1 trade por semana como mínimo (research/firms)
 notes: ["Payouts diarios por encima del colchón; tope por payout desconocido"]

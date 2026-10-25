@@ -13,4 +13,5 @@ funded:
 max_funded_accounts: 5
 firm_max_purchases_30d: 15  # compras Select por 30 días
 hold_passed: true           # se pueden aprobar y activar más tarde
+inactivity_days: 7         # 1 trade por semana como mínimo (research/firms)
 notes: ["Cap $2.500 para cuentas compradas desde 2026-09-01", "Sin máximo de payouts; tras 3 payouts en una cuenta (o 10 en total) es elegible para Elite Live (discrecional, no modelado)", "Dudas sobre si el drawdown se bloquea en la evaluación (artículos contradictorios)"]

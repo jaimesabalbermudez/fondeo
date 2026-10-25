@@ -5,6 +5,8 @@ operar recomendada (`recommended.py`); los cálculos caros viven en la caché de
 (`uv run fondeos-precalcular` los deja hechos).
 """
 
+from dataclasses import replace
+
 import altair as alt
 import numpy as np
 import pandas as pd
@@ -56,8 +58,8 @@ def ranked():
 
 
 @st.cache_resource(show_spinner="Simulando tu cartera...")
-def sim(bankroll, months, n_paths=2000):
-    return rec.simulate(bankroll, months, n_paths)
+def sim(bankroll, months, n_paths=2000, tpd=CFG.trades_per_day):
+    return rec.simulate(bankroll, months, n_paths, cfg=replace(CFG, trades_per_day=tpd))
 
 
 @st.cache_resource(show_spinner="Buscando el bankroll necesario...")
@@ -190,12 +192,15 @@ def page_guide():
         step(4, "Cada cuenta su propio trade, una detrás de otra",
              "Nunca copies el mismo trade en todas a la vez: si pierden juntas, el bankroll se vacía de golpe. "
              "Separando los trades el valor esperado es el mismo y el riesgo mucho menor.")
-        step(5, "Reinvierte y aguanta los primeros meses",
-             "Mantén las evaluaciones en marcha con todos los huecos que permita cada firma. El riesgo se "
-             "concentra en los 2–3 primeros meses; cuando la caja crece y hay cuentas funded pagando, desaparece.")
+        step(5, f"Unos {CFG.trades_per_day} trades al día, rotando cuentas",
+             "No hace falta operar todas las cuentas cada día: opera primero las que más tiempo llevan paradas. "
+             "Ninguna puede pasar una semana sin un trade (Tradeify, MFFU) ni un mes (Lucid, FundedNext). "
+             "Reinvierte y aguanta: el riesgo se concentra en los 2–3 primeros meses.")
         step(6, "Respeta los límites de cada firma",
              "Lucid: 5 funded y ≤10 cuentas abiertas · Tradeify: 5 funded, 15 compras/30 días · "
              "MFFU Rapid EOD: 3 funded · FundedNext: 5 funded, 10 activaciones/mes.")
+
+    guide_schedule()
 
     st.subheader("Qué hacer en cada cuenta")
     md('<span class="muted">Objetivos netos de comisiones. Puntos de ejemplo en NQ: evaluación con 1 NQ '
@@ -265,14 +270,58 @@ def page_guide():
     caption("Detalle completo, abanico de resultados y cualquier otro bankroll en la página **Simulación**.")
 
 
+# volatilidad del NQ por franja (pts/√min, velas de 5 min, 60 días hasta oct 2026): analysis/06_horario.py
+VOL = [("Pre 4:00–9:30", 7.0), ("Apertura 9:30–10:00", 18.8), ("10:00–11:00", 13.4), ("11:00–14:00", 9.9),
+       ("14:00–15:30", 7.7), ("Cierre 15:30–16:00", 8.6), ("Noche", 5.6)]
+
+
+def guide_schedule():
+    st.subheader("Horario")
+    md('<span class="muted">Sin ventaja, la hora no cambia la probabilidad de ganar un trade: solo lo rápido que se '
+       'resuelve. Como los trades van de uno en uno, la apertura es donde caben más.</span>', unsafe_allow_html=True)
+    left, right = st.columns([3, 2], gap="large")
+    with left:
+        md("""
+| Hora Nueva York | Hora España | Qué operar | Por qué |
+|---|---|---|---|
+| 9:31–10:00 | 15:31–16:00 | **Días gordos**, uno detrás de otro | Son los más lentos; en la apertura un gordo tarda ~30 min (por la tarde, ~3 h) |
+| 10:00–11:30 | 16:00–17:30 | **Evaluaciones**, de la de trade más grande a la más pequeña | Aún hay volatilidad: 10–25 min por trade |
+| 11:30–15:00 | 17:30–21:00 | **Días verdes** de las funded | Trades pequeños: la lentitud da igual, y en la apertura se resolverían en segundos (regla de microscalping) |
+| antes de 15:50 | antes de 21:50 | **Todo cerrado** | FundedNext cierra a las 16:10 NY; nada abierto al final de la sesión |
+""", help="Ejemplos: evaluación Lucid ±$1.200 con 1 NQ = 60/60 pts; gordo +$8.000/−$2.000 con 2 NQ = 200/50 pts; "
+          "día verde +$150/−$600 con 5 MNQ = 15/60 pts. Tiempo medio hasta TP o SL = TP·SL/σ².")
+        md("- **Nunca dos trades abiertos a la vez**: si coinciden en la misma dirección los resultados van juntos, "
+           "y en direcciones opuestas es hedging (prohibido).\n"
+           "- **Dirección al azar** (o según el gap): con ventaja cero da igual, y así evitas sesgos.\n"
+           "- **Noticias**: no abras un trade en el minuto de un dato importante (8:30, 10:00 o 14:00 NY los días de "
+           "CPI, NFP, ISM o FOMC): el deslizamiento se dispara.\n"
+           "- **Hora en España**: Nueva York + 6 h; en las semanas de cambio de hora (finales de marzo y de octubre) "
+           "son 5 h.")
+    with right:
+        vol = pd.DataFrame(VOL, columns=["Franja (NY)", "Volatilidad"])
+        vol["Apertura"] = vol["Franja (NY)"].str.startswith("Apertura")
+        st.altair_chart(alt.Chart(vol).mark_bar(cornerRadiusEnd=4).encode(
+            y=alt.Y("Franja (NY):N", sort=None, title=None),
+            x=alt.X("Volatilidad:Q", title="Volatilidad del NQ (puntos por √minuto)"),
+            color=alt.condition(alt.datum.Apertura, alt.value(ORANGE), alt.value(BLUE)),
+            tooltip=["Franja (NY)", alt.Tooltip("Volatilidad:Q", format=".1f")]).properties(height=250),
+            width="stretch")
+        caption("NQ en velas de 5 minutos, últimos 60 días. A más volatilidad, antes se resuelve cada trade.")
+
+
 def page_sim():
     st.title("Simulación de tu cartera")
     md('<div class="lead">Miles de caminos posibles operando según la guía: compras, aprobados, payouts, '
                 'límites de cada firma y reinversión, día a día.</div>', unsafe_allow_html=True)
-    c1, c2, _ = st.columns([1, 1, 2])
+    c1, c2, c3 = st.columns([1, 1, 2])
     bankroll = c1.number_input("Bankroll inicial ($)", 100, 1_000_000, 5000, 100)
     months = c2.segmented_control("Horizonte", [3, 6, 12], default=12, format_func=lambda m: f"{m} meses") or 12
-    res = sim(int(bankroll), int(months))
+    tpd_opts = {str(t) if t else "sin límite": t for t in rec.TRADES_PER_DAY}
+    tpd = c3.segmented_control("Trades al día", list(tpd_opts), default=str(CFG.trades_per_day),
+                               help="Cuántos trades caben en una sesión operando de uno en uno (ver el horario de "
+                                    "la Guía). Con más cuentas que trades, cada día operan las que más tiempo "
+                                    "llevan paradas.") or str(CFG.trades_per_day)
+    res = sim(int(bankroll), int(months), tpd=tpd_opts[tpd])
     profit = res.final - bankroll
 
     k = st.columns(4)
@@ -447,6 +496,6 @@ nav = st.navigation([
     st.Page(page_plans, title="Planes", icon="📋", url_path="planes"),
 ])
 with st.sidebar:
-    caption("Supuestos: mercado sin ventaja (edge 0), un trade por cuenta y día, precios con códigos "
+    caption(f"Supuestos: mercado sin ventaja (edge 0), un trade por cuenta y día (máximo {CFG.trades_per_day} al día), precios con códigos "
                "reutilizables verificados, comisiones incluidas. Los cálculos se guardan en caché.")
 nav.run()

@@ -1,0 +1,18 @@
+NQ 2026-08-16 -> 2026-10-23 (último 29118)
+
+Volatilidad por franja (hora de Nueva York), puntos por raíz de minuto:
+  Pre 4:00-9:30          7.0
+  Apertura 9:30-10:00   18.8
+  10:00-11:00           13.4
+  11:00-14:00            9.9
+  14:00-15:30            7.7
+  Cierre 15:30-16:00     8.6
+  Noche                  5.6
+
+Tiempo medio hasta TP o SL (minutos):
+                                           Pre  Apertura10:00-11:0011:00-14:0014:00-15:30    Cierre     Noche
+  Eval Lucid +1200/-1200, 1 NQ              73        10        20        37        61        49       115
+  Eval MFFU +900/-2000, 1 NQ                91        13        25        46        76        61       143
+  Gordo +8000/-2000, 2 NQ                  203        28        56       103       168       136       318
+  Gordo prudente +2000/-2000, 2 NQ          51         7        14        26        42        34        80
+  Verde +150/-600, 5 MNQ                    18         3         5         9        15        12        29

@@ -94,6 +94,7 @@ class Plan:
     firm_max_activations_30d: int | None = None  # cuentas funded activadas por 30 días naturales
     hold_passed: bool | None = None          # ¿se puede aparcar una evaluación aprobada? (None = desconocido)
     p_payout_denial: float = 0.0       # prob. de que la firma anule los payouts (reglas anti-estrategia)
+    inactivity_days: int | None = None # días naturales sin operar tras los que la firma cierra la cuenta
     notes: tuple[str, ...] = ()
 
     @property
@@ -134,6 +135,7 @@ def load_plan(path: str | Path) -> Plan:
         firm_max_activations_30d=d.get("firm_max_activations_30d"),
         hold_passed=d.get("hold_passed"),
         p_payout_denial=float(d.get("p_payout_denial", 0.0)),
+        inactivity_days=d.get("inactivity_days"),
         notes=tuple(d.get("notes", [])),
     )
 

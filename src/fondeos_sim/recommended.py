@@ -9,6 +9,8 @@ Reglas de operación:
   mismo trade en todas a la vez).
 - Se empieza por los planes de más ROI y se amplía la cartera cuando crece la caja.
 - Con poca caja se juega "prudente": día gordo más pequeño, que cobra más a menudo.
+- Como los trades van de uno en uno, solo caben unos 12 al día: cada día operan las cuentas que más
+  tiempo llevan paradas (ninguna supera el plazo de inactividad de su firma).
 """
 
 from dataclasses import dataclass, replace
@@ -42,6 +44,7 @@ class Config:
     )
     prudent_below: float = 3000   # con caja libre por debajo se juega prudente
     prudent_gordo: float = 2000   # día gordo prudente; después días verdes +150 / stop 600
+    trades_per_day: int | None = 12   # trades que caben en una sesión, uno detrás de otro (ver Guía: horario)
 
 
 DEFAULT = Config()
@@ -83,12 +86,14 @@ def allocations(cfg: Config = DEFAULT) -> list[Allocation]:
 def simulate(bankroll: float, months: float = 6, n_paths: int = 2000, cfg: Config = DEFAULT,
              **kw) -> PortfolioResult:
     return cached("cartera", (bankroll, months, n_paths, cfg, sorted(kw.items())),
-                  lambda: simulate_portfolio(allocations(cfg), bankroll, months, n_paths=n_paths, seed=7, **kw))
+                  lambda: simulate_portfolio(allocations(cfg), bankroll, months, n_paths=n_paths, seed=7,
+                                             trades_per_day=cfg.trades_per_day, **kw))
 
 
 def bankroll_needed(target: float, months: float = 6, cfg: Config = DEFAULT) -> tuple[float, float]:
     return cached("bankroll", (target, months, cfg),
-                  lambda: bankroll_for_ruin(allocations(cfg), target, months, n_paths=1500))
+                  lambda: bankroll_for_ruin(allocations(cfg), target, months, n_paths=1500,
+                                            trades_per_day=cfg.trades_per_day))
 
 
 def precompute():
@@ -102,7 +107,10 @@ def precompute():
         simulate(b, n_paths=1500)
     for months in (3, 6, 12):               # cifras de la Guía y valores por defecto de la Simulación
         simulate(5000, months)
+    for tpd in TRADES_PER_DAY:              # selector de trades al día de la Simulación (12 meses)
+        simulate(5000, 12, cfg=replace(DEFAULT, trades_per_day=tpd))
     print("  listo")
 
 
 BANKROLL_LEVELS = (500, 1000, 2000, 3000, 5000, 8000, 12000)
+TRADES_PER_DAY = (6, 9, 12, 15, 20, None)
