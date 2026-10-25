@@ -1,0 +1,23 @@
+NQ 1 min, 20 sesiones (2026-09-28 -> 2026-10-23), cierre forzoso 15:50 NY
+
+Duración (min) según la hora de entrada; mediana / p90 / % que no cierra antes de las 15:50
+                                            9:31-10:00           10:01-11:30           11:31-13:00           13:01-15:00
+Eval ±$1.200 con 1 NQ                  8 /   21 /   0%      16 /   94 /   0%      28 /  133 /   7%      50 /  125 /  33%
+Eval ±$1.200 con 2 NQ                  2 /    4 /   0%       4 /   17 /   0%       9 /   33 /   0%      13 /   54 /   2%
+Eval ±$1.200 con 4 NQ                  1 /    1 /   0%       1 /    3 /   0%       3 /   10 /   0%       3 /   13 /   0%
+Eval MFFU +$900/−$2.000, 1 NQ          9 /   37 /   0%      19 /  107 /   1%      40 /  195 /  11%      50 /  125 /  35%
+Gordo +$8.000/−$2.000, 2 NQ           12 /  365 /  11%      34 /  290 /  14%      56 /  230 /  27%      65 /  140 /  50%
+Gordo +$8.000/−$2.000, 4 NQ            3 /   25 /   0%       9 /   50 /   0%      16 /   97 /   5%      22 /   96 /  18%
+Gordo prudente ±$2.000, 2 NQ           4 /   12 /   0%       9 /   51 /   0%      24 /   91 /   3%      36 /  105 /  23%
+Verde +$150/−$600, 5 MNQ               1 /    6 /   0%       3 /   17 /   0%       6 /   26 /   0%       8 /   50 /   4%
+
+Si se abre un trade nuevo cada X minutos en la MISMA dirección sin esperar al anterior:
+correlación entre los resultados de dos trades seguidos (0 = independientes, 1 = el mismo trade)
+  Eval ±$1.200 con 1 NQ            cada 15 min +0.39   cada 30 min +0.25   cada 60 min +0.18
+  Eval ±$1.200 con 2 NQ            cada 15 min +0.18   cada 30 min +0.03   cada 60 min +0.07
+  Eval ±$1.200 con 4 NQ            cada 15 min -0.07   cada 30 min -0.00   cada 60 min -0.04
+  Eval MFFU +$900/−$2.000, 1 NQ    cada 15 min +0.43   cada 30 min +0.29   cada 60 min +0.12
+  Gordo +$8.000/−$2.000, 2 NQ      cada 15 min +0.58   cada 30 min +0.38   cada 60 min +0.19
+  Gordo +$8.000/−$2.000, 4 NQ      cada 15 min +0.22   cada 30 min +0.13   cada 60 min +0.10
+  Gordo prudente ±$2.000, 2 NQ     cada 15 min +0.34   cada 30 min +0.17   cada 60 min +0.08
+  Verde +$150/−$600, 5 MNQ         cada 15 min +0.06   cada 30 min +0.02   cada 60 min +0.07
