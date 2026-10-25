@@ -2,8 +2,9 @@ id: apex_eod_50k
 firm: Apex Trader Funding
 name: EOD 50K
 costs: {eval_price: 590, code_price: 99, code_reusable: false, billing: one_time, activation_fee: 129, discount: "Promos rotativas de hasta -90% (SAVENOW); precio final no verificado"}
-eval: {profit_target: 3000, mll: 2000, drawdown: eod, dll: 1000, min_days: 1, max_days: 21}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, dll: 1000, min_days: 1, max_days: 21, contracts: 6}
 funded:
+  contracts: [[0, 2], [1500, 3], [3000, 4]]   # máx. NQ: scaling plan PA por balance EOD previo
   mll: 2000
   drawdown: eod
   lock_offset: 100

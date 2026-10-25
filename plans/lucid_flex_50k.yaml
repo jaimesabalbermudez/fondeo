@@ -2,8 +2,9 @@ id: lucid_flex_50k
 firm: Lucid Trading
 name: Flex 50K (sin DLL, consistencia 40%)
 costs: {eval_price: 165, code_price: 107, code_reusable: false, billing: one_time, activation_fee: 0, discount: "Precios de terceros. Códigos ~35% (PFD/VIBES, afiliados); reutilización no verificada"}
-eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 100, consistency: 0.40, min_days: 1}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 100, consistency: 0.40, min_days: 1, contracts: 4}
 funded:
+  contracts: [[0, 2], [1000, 3], [2000, 4]]   # máx. NQ: scaling plan funded por profit (se actualiza al cierre)
   mll: 2000
   drawdown: eod
   lock_offset: 100

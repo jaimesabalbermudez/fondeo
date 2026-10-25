@@ -7,6 +7,7 @@ significa que el suelo deja de subir en start+100).
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
+import numpy as np
 import yaml
 
 DRAWDOWN_TYPES = ("eod", "intraday", "static")
@@ -20,10 +21,20 @@ class PhaseRules:
     dll: float | None = None           # pérdida diaria máxima (pausa el día, no quema la cuenta)
     dll_scale_pct: float | None = None  # por encima del trail inicial (start + mll + lock_offset) el DLL pasa
                                         # a ser este % del mayor profit EOD (LucidScale DLL de Lucid)
+    contracts: tuple[tuple[float, float], ...] | None = None   # máx. NQ por (profit desde el que aplica, n);
+                                                              # varios tramos = scaling plan. None = sin límite
 
     def __post_init__(self):
         if self.drawdown not in DRAWDOWN_TYPES:
             raise ValueError(f"drawdown debe ser uno de {DRAWDOWN_TYPES}: {self.drawdown}")
+
+    def max_contracts(self, profit):
+        """Contratos NQ permitidos con este profit (balance - inicial), según el scaling plan."""
+        if self.contracts is None:
+            return np.full(np.shape(profit), np.inf)
+        levels = np.array([c[0] for c in self.contracts])
+        n = np.array([c[1] for c in self.contracts], float)
+        return n[np.clip(np.searchsorted(levels, profit, side="right") - 1, 0, None)]
 
 
 @dataclass(frozen=True)
@@ -115,9 +126,18 @@ def _payout(d: dict) -> PayoutRules:
     return PayoutRules(**d)
 
 
+def _contracts(phase: dict) -> dict:
+    """`contracts: 4` o `contracts: [[0, 2], [1000, 3], [2000, 4]]` (scaling plan por profit)."""
+    phase = dict(phase)
+    c = phase.get("contracts")
+    if c is not None:
+        phase["contracts"] = ((0.0, float(c)),) if np.isscalar(c) else tuple((float(a), float(b)) for a, b in c)
+    return phase
+
+
 def load_plan(path: str | Path) -> Plan:
     d = yaml.safe_load(Path(path).read_text())
-    funded = dict(d["funded"])
+    funded = _contracts(d["funded"])
     funded["payout"] = _payout(funded.get("payout", {}))
     return Plan(
         id=d["id"],
@@ -125,7 +145,7 @@ def load_plan(path: str | Path) -> Plan:
         name=d["name"],
         start_balance=float(d.get("start_balance", 50_000)),
         costs=Costs(**d["costs"]),
-        eval=EvalRules(**d["eval"]) if d.get("eval") else None,
+        eval=EvalRules(**_contracts(d["eval"])) if d.get("eval") else None,
         funded=FundedRules(**funded),
         max_funded_accounts=d.get("max_funded_accounts"),
         firm_max_funded=d.get("firm_max_funded"),

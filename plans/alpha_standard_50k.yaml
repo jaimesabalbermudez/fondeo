@@ -2,8 +2,9 @@ id: alpha_standard_50k
 firm: Alpha Futures
 name: Standard 50K
 costs: {eval_price: 129, billing: monthly, reset_price: 109, activation_fee: 0, discount: "Sin código verificado"}
-eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 0, consistency: 0.50, min_days: 2}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 0, consistency: 0.50, min_days: 2, contracts: 5}
 funded:
+  contracts: [[0, 2], [1500, 3], [2000, 5]]   # máx. NQ: scaling plan funded por profit
   mll: 2000
   drawdown: eod
   lock_offset: 0

@@ -3,6 +3,10 @@
 Supuestos de la v1:
 - Un trade por día (stop/TP fijos). Es lo que hace el plan del curso y lo que mejor encaja con
   límites diarios; varios trades por día equivalen a un trade con otro stop/TP en un paseo aleatorio.
+- Tamaño: la evaluación opera `contracts` NQ; el día gordo, el máximo que permite el scaling plan con el
+  profit de ese día; los días verdes, `grind_contracts` (micros). Con drawdown EOD/estático el trade tiene
+  una sesión para resolverse y, si no toca TP ni stop, se cierra a mercado (ver market.py). La fricción
+  del día gordo es por contrato.
 - Los payouts se piden en cuanto se cumplen los requisitos, por el máximo permitido.
 - Al llegar al máximo de payouts la cuenta sale de la simulación (pasa a live o se cierra); el
   colchón que quede dentro no se cuenta como valor.
@@ -22,6 +26,7 @@ class EvalStrategy:
     risk: float | None = None    # stop en $; None = todo el margen hasta el suelo
     friction: float = 0.0
     edge: float = 0.0
+    contracts: float = 1.0       # NQ por trade (1 MNQ = 0,1)
 
 
 @dataclass(frozen=True)
@@ -30,8 +35,9 @@ class FundedStrategy:
     gordo_risk: float | None = None
     grind_target: float = 150.0  # profit buscado cada día tras el día gordo
     grind_risk: float = 600.0
-    friction_gordo: float = 0.0
+    friction_gordo: float = 0.0  # por contrato NQ (el día gordo usa el máximo del scaling plan)
     friction_grind: float = 0.0
+    grind_contracts: float = 0.5 # 5 MNQ
     edge: float = 0.0
     cycle_gordo: float = 0.0     # tras cada payout, profit a buscar de golpe antes de volver a sumar días
 
@@ -50,7 +56,8 @@ def _dll(rules: PhaseRules, start, peak):
     return np.where(peak >= trail, rules.dll_scale_pct * (peak - start), rules.dll)
 
 
-def _trade(rng, rules: PhaseRules, start, bal, floor, risk, target, friction, edge, u=None, peak=None):
+def _trade(rng, rules: PhaseRules, start, bal, floor, risk, target, friction, edge, u=None, peak=None,
+           contracts=None):
     """Devuelve (pnl, floor) para las cuentas dadas, según el tipo de drawdown."""
     dll = _dll(rules, start, bal if peak is None else peak)
     if rules.drawdown == "intraday":
@@ -60,7 +67,9 @@ def _trade(rng, rules: PhaseRules, start, bal, floor, risk, target, friction, ed
             risk = np.minimum(risk, dll - friction)
         lock = np.full(bal.shape, _lock_level(rules, start))
         return intraday_trade(rng, bal, floor, risk, target, friction, rules.mll, lock, u)
-    return bernoulli_trade(rng, bal, floor, risk, target, friction, edge, dll, u), floor
+    if contracts is not None and not np.isfinite(contracts).all():
+        contracts = None
+    return bernoulli_trade(rng, bal, floor, risk, target, friction, edge, dll, u, contracts), floor
 
 
 def _eod_trail(rules: PhaseRules, start, bal, floor):
@@ -104,8 +113,9 @@ def eval_step(st: EvalState, strat: EvalStrategy, idx, rng, u=None):
         t = idx[trading]
         target = np.minimum(strat.day_target, need[trading])
         risk = np.full(t.size, np.inf if strat.risk is None else strat.risk)
+        c = np.minimum(strat.contracts, r.max_contracts(bal[t] - start))
         pnl[trading], fl[trading] = _trade(rng, r, start, bal[t], floor[t], risk, target, strat.friction,
-                                           strat.edge, None if u is None else u[trading], st.peak[t])
+                                           strat.edge, None if u is None else u[trading], st.peak[t], c)
     bal[idx] += pnl
     st.peak[idx] = np.maximum(st.peak[idx], bal[idx])
     st.days[idx] += 1
@@ -189,13 +199,16 @@ def funded_step(st: FundedState, idx, rng, u=None):
     g = ~st.gordo_done[idx]
     target = np.where(g, st.gordo_level[idx] - bal[idx], strat.grind_target)
     risk = np.where(g, np.inf if strat.gordo_risk is None else strat.gordo_risk, strat.grind_risk)
+    cap = r.max_contracts(bal[idx] - start)
+    contracts = np.where(g, cap, np.minimum(strat.grind_contracts, cap))
+    friction = np.where(g, strat.friction_gordo * np.where(np.isfinite(cap), cap, 1.0), strat.friction_grind)
     pnl = np.zeros(idx.size)
     fl = floor[idx]
-    for mask, f in ((g, strat.friction_gordo), (~g, strat.friction_grind)):
+    for mask in (g, ~g):
         if mask.any():
             pnl[mask], fl[mask] = _trade(rng, r, start, bal[idx[mask]], floor[idx[mask]], risk[mask],
-                                         target[mask], f, strat.edge, None if u is None else u[mask],
-                                         st.peak[idx[mask]])
+                                         target[mask], friction[mask], strat.edge,
+                                         None if u is None else u[mask], st.peak[idx[mask]], contracts[mask])
     bal[idx] += pnl
     st.peak[idx] = np.maximum(st.peak[idx], bal[idx])
     st.days[idx] += 1

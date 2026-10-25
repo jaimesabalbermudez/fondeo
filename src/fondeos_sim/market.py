@@ -8,13 +8,107 @@ Si el suelo de la cuenta está más cerca que el stop, la liquidación hace de s
 efectiva es el margen y la probabilidad se recalcula con ella. Sin esto el modelo regala valor
 esperado (la firma absorbería gratis la parte de la pérdida que cae por debajo del suelo).
 
+Tamaño y tiempo: con `contracts` (en NQ; 1 MNQ = 0,1) el stop y el TP se pasan a puntos y el trade
+tiene una sesión para resolverse. Lo que no toca ni TP ni stop se cierra a mercado al final del día
+(resultado parcial, con la misma esperanza cero). Con pocos contratos un objetivo grande queda lejos en
+puntos y a menudo no se resuelve en el día; es lo que limitan los scaling plans de las firmas.
+
 Dos modos:
 - `bernoulli_trade`: exacto para drawdown EOD/estático (el suelo no se mueve durante el día).
 - `path_trade`: paseo aleatorio discretizado para drawdown intradía, donde el suelo sigue al máximo
   no realizado de la equity y puede liquidar la posición antes de su stop.
 """
 
+from functools import cache
+
 import numpy as np
+
+NQ_POINT = 20.0   # $ por punto de un contrato NQ
+# Varianza (pts²) de NQ de 9:30 a 15:50 NY con la volatilidad por franja de reports/horario.txt:
+# 30 min a 18,8 pts/√min, 60 a 13,4, 180 a 9,9, 90 a 7,7 y 20 a 8,6 -> σ ≈ 214 pts por sesión.
+SESSION_VAR = 30 * 18.8**2 + 60 * 13.4**2 + 180 * 9.9**2 + 90 * 7.7**2 + 20 * 8.6**2
+# Dispersión (log, desv. típica) de la varianza entre días: hay días tranquilos en los que nada se mueve.
+# 0,7 ≈ 2 x 0,35 de la vol diaria realizada; reproduce el backtest de reports/duracion_trades.txt.
+VAR_DISPERSION = 0.7
+
+
+@cache
+def _session_table(n_p=49, n_tau=40, n_q=101, n_terms=600, n_z=801):
+    """Movimiento browniano entre dos barreras durante una sesión, en unidades de la anchura L = stop + TP.
+
+    Para x0 = stop / L (la probabilidad de TP sin límite de tiempo) y τ = varianza / L² devuelve
+    P(TP en el día), P(sin resolver) y los cuantiles (de mejor a peor) de la posición final de los que
+    no se resuelven, relativa a la entrada. Serie de autofunciones de la densidad con barreras absorbentes.
+    """
+    x0 = np.linspace(0.02, 0.98, n_p)
+    tau = np.logspace(-3, 1, n_tau)
+    n = np.arange(1, n_terms + 1)
+    z = np.linspace(0, 1, n_z)
+    q = np.linspace(0, 1, n_q)
+    decay = np.exp(-np.outer(tau, n**2) * np.pi**2 / 2)                      # (tau, n)
+    a = 2 / (n * np.pi) * np.sin(np.outer(x0, n) * np.pi)                    # (p, n)
+    none = np.einsum("pn,tn->pt", a * (1 - np.cos(n * np.pi)), decay)
+    mean_z = np.einsum("pn,tn->pt", 2 * np.sin(np.outer(x0, n) * np.pi) * (-1.0) ** (n + 1) / (n * np.pi), decay)
+    p_tp = x0[:, None] - mean_z
+    cdf = np.einsum("pn,tn,nz->ptz", a, decay, 1 - np.cos(np.outer(n, z) * np.pi))   # P(Z <= z, sin resolver)
+    cdf = np.maximum.accumulate(np.clip(cdf, 0, None), axis=-1)
+    quant = np.empty((n_p, n_tau, n_q))
+    for i in range(n_p):
+        for j in range(n_tau):
+            c = cdf[i, j]
+            if c[-1] < 1e-9:
+                quant[i, j] = 0.0
+                continue
+            # cuantil de "mejor a peor": q=0 -> posición más alta
+            quant[i, j] = np.interp(1 - q, c / c[-1], z) - x0[i]
+    return x0, np.log(tau), np.clip(none, 0, 1), np.clip(p_tp, 0, 1), quant
+
+
+def _interp2(grid_x, grid_y, table, x, y):
+    """Interpolación bilineal (con recorte a la rejilla) de table[i, j, ...] en los puntos (x, y)."""
+    def idx(g, v):
+        v = np.clip(v, g[0], g[-1])
+        i = np.clip(np.searchsorted(g, v) - 1, 0, g.size - 2)
+        return i, (v - g[i]) / (g[i + 1] - g[i])
+    i, fx = idx(grid_x, x)
+    j, fy = idx(grid_y, y)
+    if table.ndim == 3:
+        fx, fy = fx[:, None], fy[:, None]
+    return ((1 - fx) * (1 - fy) * table[i, j] + fx * (1 - fy) * table[i + 1, j]
+            + (1 - fx) * fy * table[i, j + 1] + fx * fy * table[i + 1, j + 1])
+
+
+def session_outcome(win_p, width_pts, u, var):
+    """Resultado de un trade con una sesión de varianza `var` (pts²) para resolverse.
+
+    `win_p`: P(TP) sin límite de tiempo (= stop / (stop + TP)); `width_pts`: stop + TP en puntos;
+    `u`: uniformes (pequeñas = mejor resultado). Devuelve (código, y): código 1 = TP, -1 = stop,
+    0 = cerrado a mercado con P&L y (en unidades de la anchura, relativo a la entrada).
+    """
+    x0, ltau, none, p_tp, quant = _session_table()
+    lt = np.log(var / width_pts**2)
+    fast = lt > ltau[-1]          # sesión muy larga para el trade: siempre se resuelve
+    pt = np.where(fast, win_p, _interp2(x0, ltau, p_tp, win_p, lt))
+    pn = np.where(fast, 0.0, _interp2(x0, ltau, none, win_p, lt))
+    # P(TP en el día) proporcional dentro de lo que se resuelve, para que con la sesión infinita cuadre
+    pt = np.minimum(pt, 1 - pn)
+    code = np.where(u < pt, 1, np.where(u < pt + pn, 0, -1))
+    y = np.zeros(u.shape)
+    part = code == 0
+    if part.any():
+        v = (u[part] - pt[part]) / np.maximum(pn[part], 1e-12)
+        qs = _interp2(x0, ltau, quant, win_p[part], lt[part])
+        k = v * (qs.shape[1] - 1)
+        lo = np.minimum(k.astype(int), qs.shape[1] - 2)
+        f = k - lo
+        rows = np.arange(qs.shape[0])
+        y[part] = (1 - f) * qs[rows, lo] + f * qs[rows, lo + 1]
+    return code, y
+
+
+def session_var(rng, shape):
+    """Varianza disponible para un trade abierto en la apertura (con días más y menos movidos)."""
+    return SESSION_VAR * np.exp(VAR_DISPERSION * rng.standard_normal(shape) - VAR_DISPERSION**2 / 2)
 
 
 def _effective_risk(bal, floor, risk, friction, dll):
@@ -25,13 +119,19 @@ def _effective_risk(bal, floor, risk, friction, dll):
     return np.maximum(r, 1e-6)
 
 
-def bernoulli_trade(rng, bal, floor, risk, target, friction=0.0, edge=0.0, dll=None, u=None):
-    """`u`: uniformes propias (p.ej. correlacionadas entre cuentas que copian el mismo trade)."""
+def bernoulli_trade(rng, bal, floor, risk, target, friction=0.0, edge=0.0, dll=None, u=None, contracts=None):
+    """`u`: uniformes propias (p.ej. correlacionadas entre cuentas que copian el mismo trade).
+    `contracts`: tamaño en NQ; None = el trade siempre se resuelve (sin límite de tiempo)."""
     r = _effective_risk(bal, floor, risk, friction, dll)
     tp = target + friction
-    p = np.clip(r / (r + tp) + edge, 0.0, 1.0)
+    p = np.clip(r / (r + tp), 0.0, 1.0)
     u = rng.random(bal.shape) if u is None else u
-    return np.where(u < p, target, -(r + friction))
+    if contracts is None:
+        return np.where(u < np.clip(p + edge, 0.0, 1.0), target, -(r + friction))
+    width = (r + tp) / (np.asarray(contracts, float) * NQ_POINT)
+    code, y = session_outcome(p, width, np.clip(u - edge, 0.0, 1.0), session_var(rng, bal.shape))
+    partial = np.clip(y * (r + tp), -r, tp) - friction
+    return np.where(code > 0, target, np.where(code < 0, -(r + friction), partial))
 
 
 def _max_given_low_exit(u, low, high):

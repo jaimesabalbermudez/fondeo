@@ -2,8 +2,9 @@ id: mffu_rapid_eod_50k
 firm: MyFundedFutures
 name: Rapid EOD 50K
 costs: {eval_price: 225, code_price: 135, code_reusable: false, reset_price: 225, billing: one_time, activation_fee: 0, discount: "Promo del sitio -40% (CLUB); MFFU limita algunos códigos a 2 usos, sin confirmar para este"}
-eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 100, consistency: 0.30, min_days: 4}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 100, consistency: 0.30, min_days: 4, contracts: 3}
 funded:
+  contracts: 3   # máx. NQ: sin scaling plan
   mll: 2000
   drawdown: eod
   lock_offset: 100

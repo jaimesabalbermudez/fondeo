@@ -2,8 +2,9 @@ id: tpt_50k
 firm: Take Profit Trader
 name: Test 50K → PRO
 costs: {eval_price: 170, code_price: 102, code_reusable: true, billing: monthly, reset_price: 99, activation_fee: 0, discount: "NOFEE40 oficial: -40% de por vida del test y sin activación de $130"}
-eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 0, consistency: 0.50, min_days: 3}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 0, consistency: 0.50, min_days: 3, contracts: 6}
 funded:
+  contracts: 6   # máx. NQ: sin scaling plan
   mll: 2000
   drawdown: intraday
   lock_offset: 0

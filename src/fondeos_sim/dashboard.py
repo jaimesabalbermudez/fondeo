@@ -13,6 +13,7 @@ import pandas as pd
 import streamlit as st
 
 from fondeos_sim import recommended as rec
+from fondeos_sim.market import session_outcome, session_var
 from fondeos_sim.portfolio import MONTH
 
 BLUE = "#4ea1ff"     # series de datos
@@ -148,6 +149,24 @@ def eval_help(p, es, days, lock):
     return txt
 
 
+def gordo_txt(p, target):
+    """Tamaño del día gordo al empezar la funded (máximo del scaling plan) y cuántos no se resuelven en el día."""
+    c = float(p.funded.max_contracts(0))
+    if not np.isfinite(c):
+        return ""
+    r = float(p.funded.mll)
+    rng = np.random.default_rng(0)
+    n = 20_000
+    code, _ = session_outcome(np.full(n, r / (r + target)), np.full(n, (r + target) / (c * NQ)),
+                              rng.random(n), session_var(rng, n))
+    open_ = (code == 0).mean()
+    limit = "el máximo del scaling plan al empezar" if len(p.funded.contracts) > 1 else "el máximo de la firma"
+    txt = f"≈{pts(target, c * NQ)} con {c:.0f} NQ, {limit}"
+    if open_ >= 0.01:
+        txt += f"; el {open_:.0%} no toca ni TP ni stop en el día: se cierra antes de las 15:50 y se sigue mañana"
+    return txt
+
+
 def step(n, title, text):
     md(f'<div class="step"><div class="step-n">{n}</div><div><div class="step-t">{title}</div>'
                 f'<div class="step-d">{text}</div></div></div>', unsafe_allow_html=True)
@@ -203,9 +222,9 @@ def page_guide():
     guide_schedule()
 
     st.subheader("Qué hacer en cada cuenta")
-    md('<span class="muted">Objetivos netos de comisiones. Puntos de ejemplo en NQ: evaluación con 1 NQ '
-                '($20/pt), día gordo con 2 NQ ($40/pt, lo que permite el scaling plan de Lucid al empezar), '
-                'días verdes con 5 MNQ ($10/pt).</span>', unsafe_allow_html=True)
+    md('<span class="muted">Objetivos netos de comisiones. Tamaño en NQ: evaluación con 1 NQ ($20/pt), día gordo '
+                'con el máximo que permita el scaling plan de la firma (a más contratos, antes se resuelve; la '
+                'comisión extra es mínima) y días verdes con 5 MNQ ($10/pt).</span>', unsafe_allow_html=True)
     tabs = st.tabs([opt(s.plan_id).plan.firm for s in CFG.slots])
     for tab, s in zip(tabs, CFG.slots):
         r = opt(s.plan_id)
@@ -234,7 +253,7 @@ def page_guide():
                 lines = []
                 if fs.gordo_target:
                     lines.append(f"Día gordo: **+{money(fs.gordo_target)}** de golpe arriesgando todo el margen "
-                                 f"(≈{pts(fs.gordo_target, 2 * NQ)} con 2 NQ)")
+                                 f"({gordo_txt(p, fs.gordo_target)})")
                 lines.append(f"Después días verdes de **+{money(fs.grind_target)}**, stop "
                              f"**{stop_txt(fs.grind_risk)}** (≈{pts(fs.grind_target, 5 * MNQ)} con 5 MNQ)")
                 if fs.cycle_gordo:
@@ -249,7 +268,7 @@ def page_guide():
                 else:
                     ps = rec.prudent_strategy(fs, CFG)
                     md(f"- Día gordo: **+{money(ps.gordo_target)}** arriesgando todo el margen "
-                                f"(≈{pts(ps.gordo_target, 2 * NQ)} con 2 NQ)\n"
+                                f"({gordo_txt(p, ps.gordo_target)})\n"
                                 f"- Después días verdes de **+{money(ps.grind_target)}**, stop "
                                 f"**{money(ps.grind_risk)}** (≈15 / 60 pts con 5 MNQ)\n"
                                 "- Cobra más a menudo (≈45–50% de las cuentas) aunque cada cuenta valga menos")
@@ -284,7 +303,7 @@ def guide_schedule():
         md("""
 | Hora Nueva York | Hora España | Qué operar | Por qué |
 |---|---|---|---|
-| 9:31–10:00 | 15:31–16:00 | **Días gordos**, uno detrás de otro | Son los más lentos; en la apertura un gordo tarda ~30 min (por la tarde, ~3 h) |
+| 9:31–10:00 | 15:31–16:00 | **Días gordos**, con todos los contratos que permita la firma | Son los más lentos; con 2 NQ, el 10% más lento tarda horas y ~1 de cada 10 no se resuelve en el día |
 | 10:00–11:30 | 16:00–17:30 | **Evaluaciones**, de la de trade más grande a la más pequeña | Aún hay volatilidad: 10–25 min por trade |
 | 11:30–15:00 | 17:30–21:00 | **Días verdes** de las funded | Trades pequeños: la lentitud da igual, y en la apertura se resolverían en segundos (regla de microscalping) |
 | antes de 15:50 | antes de 21:50 | **Todo cerrado** | FundedNext cierra a las 16:10 NY; nada abierto al final de la sesión |

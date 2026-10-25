@@ -2,8 +2,9 @@ id: fundednext_flex_50k
 firm: FundedNext Futures
 name: Flex 50K
 costs: {eval_price: 141.99, code_price: 84.99, code_reusable: true, reset_price: 82.99, billing: one_time, activation_fee: 0, discount: "Cupón oficial: $74.99 las 2 primeras compras y $84.99 a partir de la 3ª, sin límite"}
-eval: {profit_target: 2500, mll: 1500, drawdown: eod, lock_offset: 100, consistency: 0.40, min_days: 1}
+eval: {profit_target: 2500, mll: 1500, drawdown: eod, lock_offset: 100, consistency: 0.40, min_days: 1, contracts: 3}
 funded:
+  contracts: 3   # máx. NQ: fijo, sin scaling plan
   mll: 1500
   drawdown: eod
   lock_offset: 100

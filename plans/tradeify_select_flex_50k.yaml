@@ -2,8 +2,9 @@ id: tradeify_select_flex_50k
 firm: Tradeify
 name: Select Flex 50K
 costs: {eval_price: 165, code_price: 99, code_reusable: false, reset_price: 109, billing: one_time, activation_fee: 0, discount: "40% (DGT/ETFPROMO, afiliados; no aplica a resets); reutilización no verificada"}
-eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 100, consistency: 0.40, min_days: 3}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 100, consistency: 0.40, min_days: 3, contracts: 4}
 funded:
+  contracts: [[0, 2], [1500, 3], [2000, 4]]   # máx. NQ: scaling plan funded por profit EOD (aplica al día siguiente)
   mll: 2000
   drawdown: eod
   lock_offset: 100

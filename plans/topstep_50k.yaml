@@ -2,8 +2,9 @@ id: topstep_50k
 firm: Topstep
 name: Combine 50K → XFA Standard
 costs: {eval_price: 49, billing: monthly, reset_price: 49, activation_fee: 149, discount: "Sin código verificado"}
-eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 0, consistency: 0.55, min_days: 2}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 0, consistency: 0.55, min_days: 2, contracts: 5}
 funded:
+  contracts: [[0, 2], [1500, 3], [2000, 5]]   # máx. NQ: scaling plan XFA (terceros)
   mll: 2000
   drawdown: eod
   lock_offset: 0

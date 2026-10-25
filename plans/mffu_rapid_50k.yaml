@@ -2,8 +2,9 @@ id: mffu_rapid_50k
 firm: MyFundedFutures
 name: Rapid 50K (funded intradía)
 costs: {eval_price: 209, code_price: 125, code_reusable: false, reset_price: 209, billing: one_time, activation_fee: 0, discount: "Promo del sitio -40% (CLUB); MFFU limita algunos códigos a 2 usos, sin confirmar para este"}
-eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 100, consistency: 0.50, min_days: 2}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 100, consistency: 0.50, min_days: 2, contracts: 5}
 funded:
+  contracts: 5   # máx. NQ: sin scaling plan
   mll: 2000
   drawdown: intraday
   lock_offset: 100

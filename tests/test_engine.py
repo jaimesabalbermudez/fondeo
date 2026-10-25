@@ -62,7 +62,8 @@ def test_path_trade_intraday_trailing_drawup_drawdown():
 
 def test_course_eval_pass_rate():
     rng = np.random.default_rng(4)
-    r = simulate_eval(course_plan(), EvalStrategy(day_target=1500), N, rng)
+    # sin límite de tamaño ni de tiempo: cada trade se resuelve el mismo día
+    r = simulate_eval(course_plan(), EvalStrategy(day_target=1500, contracts=float("inf")), N, rng)
     assert r["p_pass"] == pytest.approx((4 / 7) ** 2, abs=0.004)
     assert r["days_if_pass"] == pytest.approx(2)
 
@@ -155,3 +156,23 @@ def test_trades_per_day_cap_and_inactivity():
     strict = [replace(al[0], plan=replace(plan, inactivity_days=2))]
     starved = simulate_portfolio(strict, 20000, 3, n_paths=300, seed=1, trades_per_day=1)
     assert starved.per_plan[plan.id]["cerradas por inactividad"] > 0
+
+
+def test_session_trade_unresolved_keeps_zero_edge():
+    """Con pocos contratos un objetivo lejano no siempre se resuelve en el día, pero la media sigue en 0."""
+    rng = np.random.default_rng(11)
+    n = 200_000
+    bal = np.full(n, 50_000.0)
+    out = {}
+    for c in (1, 2, 4):
+        pnl = bernoulli_trade(rng, bal, bal - 1e9, np.full(n, 2000.0), np.full(n, 8000.0), contracts=c)
+        out[c] = 1 - ((pnl == 8000) | (pnl == -2000)).mean()
+        assert pnl.mean() == pytest.approx(0, abs=4 * pnl.std() / n**0.5)
+        assert pnl.min() >= -2000 and pnl.max() <= 8000
+    assert out[1] > 0.25 and 0.04 < out[2] < 0.15 and out[4] < 0.02   # backtest NQ: 2 NQ ~11%, 4 NQ ~0%
+
+
+def test_scaling_plan_contracts():
+    lucid = load_plan(PLANS / "lucid_flex_50k_dll.yaml")
+    assert list(lucid.funded.max_contracts(np.array([0, 999, 1000, 2500, -300]))) == [2, 2, 3, 4, 2]
+    assert list(lucid.eval.max_contracts(np.array([0, 2000]))) == [4, 4]

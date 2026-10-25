@@ -9,6 +9,8 @@ Reglas de operación:
   mismo trade en todas a la vez).
 - Se empieza por los planes de más ROI y se amplía la cartera cuando crece la caja.
 - Con poca caja se juega "prudente": día gordo más pequeño, que cobra más a menudo.
+- Tamaño: evaluación con 1 NQ, día gordo con el máximo del scaling plan (si no se resuelve en el día se
+  cierra a mercado y se sigue al día siguiente), días verdes con 5 MNQ.
 - Como los trades van de uno en uno, solo caben unos 12 al día: cada día operan las cuentas que más
   tiempo llevan paradas (ninguna supera el plazo de inactividad de su firma).
 """
