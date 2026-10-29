@@ -1,0 +1,40 @@
+
+### Trades al día: 12
+
+Bankroll $1,000 · 12 meses
+                                                                             mediana     media       p10  ruina evals compradas
+  Recomendado: cada cuenta su trade, uno detrás de otro                      113,882    96,766      -978  29.9%             546
+  Evaluaciones a la vez (mismo trade, ρ=1), funded de una en una                -977    79,014      -978  58.4%             435
+  Evaluaciones a la vez (brackets distintos, ρ=0,7), funded de una en una    112,562   105,928      -978  45.7%             592
+
+Bankroll $2,000 · 12 meses
+                                                                             mediana     media       p10  ruina evals compradas
+  Recomendado: cada cuenta su trade, uno detrás de otro                      133,375   128,900    67,092   8.2%             728
+  Evaluaciones a la vez (mismo trade, ρ=1), funded de una en una             123,817   113,418    -1,991  41.9%             617
+  Evaluaciones a la vez (brackets distintos, ρ=0,7), funded de una en una    169,547   147,167    -1,991  26.7%             818
+
+Bankroll $5,000 · 12 meses
+                                                                             mediana     media       p10  ruina evals compradas
+  Recomendado: cada cuenta su trade, uno detrás de otro                      143,756   143,705    90,960   0.7%             821
+  Evaluaciones a la vez (mismo trade, ρ=1), funded de una en una             174,698   159,589    -4,972  18.6%             884
+  Evaluaciones a la vez (brackets distintos, ρ=0,7), funded de una en una    203,420   196,440   108,462   6.5%            1078
+
+### Trades al día: sin límite
+
+Bankroll $1,000 · 12 meses
+                                                                             mediana     media       p10  ruina evals compradas
+  Recomendado: cada cuenta su trade, uno detrás de otro                      172,106   140,045      -978  29.7%             786
+  Evaluaciones a la vez (mismo trade, ρ=1), funded de una en una                -978    77,241      -978  59.6%             424
+  Evaluaciones a la vez (brackets distintos, ρ=0,7), funded de una en una    124,711   111,788      -978  43.7%             619
+
+Bankroll $2,000 · 12 meses
+                                                                             mediana     media       p10  ruina evals compradas
+  Recomendado: cada cuenta su trade, uno detrás de otro                      198,369   188,319    89,375   8.9%            1043
+  Evaluaciones a la vez (mismo trade, ρ=1), funded de una en una             112,753   106,379    -1,991  44.7%             593
+  Evaluaciones a la vez (brackets distintos, ρ=0,7), funded de una en una    172,495   148,230    -1,991  25.7%             828
+
+Bankroll $5,000 · 12 meses
+                                                                             mediana     media       p10  ruina evals compradas
+  Recomendado: cada cuenta su trade, uno detrás de otro                      216,562   218,016   152,829   0.4%            1195
+  Evaluaciones a la vez (mismo trade, ρ=1), funded de una en una             172,562   157,138    -4,972  19.1%             879
+  Evaluaciones a la vez (brackets distintos, ρ=0,7), funded de una en una    201,247   195,774   104,679   6.1%            1083

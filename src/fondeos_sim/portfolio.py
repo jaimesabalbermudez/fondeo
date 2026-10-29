@@ -13,7 +13,10 @@ optimización (`eval_step`, `funded_step`):
 - `copy` decide qué cuentas copian el mismo trade cada día:
     "none"  - cada cuenta opera por su cuenta (independientes);
     "firms" - stacking entre firmas: la k-ésima cuenta abierta de cada firma copia el mismo trade;
-    "all"   - todas las cuentas abiertas copian el mismo trade.
+    "all"   - todas las cuentas abiertas copian el mismo trade;
+    "evals" - todas las evaluaciones abiertas (de todas las firmas) copian el mismo trade a la vez y las
+              funded operan cada una el suyo. Las evaluaciones copiadas cuentan como un solo trade en
+              `trades_per_day`, así que deja más tiempo para las funded.
   Las cuentas que copian comparten un factor común con correlación `rho` (cópula gaussiana): cada
   cuenta mantiene su probabilidad de acierto (su stop/objetivo), solo cambia cuánto se mueven juntas.
   rho = 1 es el caso extremo (mismo bracket); con stops/objetivos distintos sobre el mismo movimiento
@@ -237,6 +240,10 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
         """Uniformes de hoy por (tipo, asignación) -> (caminos, huecos); vacío si las cuentas son independientes."""
         if copy == "none" or rho <= 0:
             return {}
+        if copy == "evals":   # un factor común por camino para todas las evaluaciones; funded independientes
+            z0 = rng.standard_normal((P, 1))
+            return {("e", j): ndtr(np.sqrt(rho) * z0 + np.sqrt(1 - rho) * rng.standard_normal((P, ep.slots)))
+                    for j, ep in enumerate(epools) if ep is not None}
         groups = []
         for f in range(n_firms):
             blocks = [(kind, j, pool) for j in np.flatnonzero(firm_of == f)
@@ -336,7 +343,16 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
         for sel, _, occ, _ in blocks:
             sel[:] = occ
         if trades_per_day is not None:
-            cand = [(np.nonzero(occ), b) for b, (_, _, occ, _) in enumerate(blocks)]
+            n_e = sum(1 for ep in epools if ep is not None)
+            cap = np.full(P, trades_per_day)
+            ranked = range(len(blocks))
+            if copy == "evals":   # todas las evaluaciones operan, como un único trade copiado
+                any_eval = np.zeros(P, bool)
+                for _, _, occ, _ in blocks[:n_e]:
+                    any_eval |= occ.any(axis=1)
+                cap -= any_eval
+                ranked = range(n_e, len(blocks))
+            cand = [(np.nonzero(blocks[b][2]), b) for b in ranked]
             path = np.concatenate([pp for (pp, _), _ in cand])
             if path.size:
                 idle = np.concatenate([blocks[b][1][pp, ss] for (pp, ss), b in cand])
@@ -347,7 +363,7 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
                 first = np.searchsorted(path[order], path[order], side="left")
                 rank = np.empty(path.size, int)
                 rank[order] = np.arange(path.size) - first
-                keep = rank < trades_per_day
+                keep = rank < cap[path]
                 c = 0
                 for (pp, ss), b in cand:
                     blocks[b][0][pp, ss] = keep[c:c + pp.size]
