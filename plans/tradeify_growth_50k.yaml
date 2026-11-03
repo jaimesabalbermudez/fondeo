@@ -1,0 +1,41 @@
+id: tradeify_growth_50k
+firm: Tradeify
+name: Growth 50K
+start_balance: 50000
+costs:
+  eval_price: 145
+  reset_price: 95
+  billing: one_time
+  activation_fee: 0
+  discount: Sin código verificado
+eval:
+  profit_target: 3000
+  mll: 2000
+  drawdown: eod
+  dll: 1250
+  min_days: 1
+  contracts: 4
+funded:
+  contracts: 4
+  mll: 2000
+  drawdown: eod
+  lock_offset: 100
+  floor_after_payout: 100
+  dll: 1250
+  payout:
+    split: 0.9
+    min_green_days: 5
+    green_min: 150
+    consistency: 0.35
+    buffer: 3000
+    min_amount: 500
+    max_amount:
+    - 1500
+    - 2000
+    - 2500
+    - 3000
+hold_passed: true
+notes:
+- 'DLL funded sube al +6% de profit (no modelado: se usa el DLL inicial)'
+max_funded_accounts: 5
+inactivity_days: 7

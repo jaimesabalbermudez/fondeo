@@ -1,0 +1,39 @@
+id: lucid_pro_100k
+firm: Lucid Trading
+name: Pro 100K (sin DLL)
+start_balance: 100000
+costs:
+  eval_price: 322
+  reset_price: 225
+  code_price: 225.4
+  code_reusable: false
+  billing: one_time
+  activation_fee: 0
+  discount: ETFPROMO -30% (terceros); reutilización no verificada
+eval:
+  profit_target: 6000
+  mll: 3000
+  drawdown: eod
+  lock_offset: 100
+  min_days: 1
+  contracts: 6
+funded:
+  contracts: 6
+  mll: 3000
+  drawdown: eod
+  lock_offset: 100
+  payout:
+    split: 0.9
+    min_cycle_profit: 750
+    consistency: 0.4
+    buffer: 3100
+    min_amount: 500
+    max_amount:
+    - 2500
+    - 3000
+    max_payouts: 5
+notes:
+- Precios de terceros (eltraderfinanciado, 2026-10-29); ETFPROMO -30% no verificado como reutilizable
+max_funded_accounts: 5
+firm_max_open: 10
+inactivity_days: 30

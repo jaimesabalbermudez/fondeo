@@ -85,11 +85,16 @@ plans:
             - "Automated strategies allowed in Combine/XFA (not in Live: API only on sim)."
       100K:
         eval: {price_usd: 99, billing: monthly, reset_fee_usd: 99, activation_fee_usd: 149, profit_target_usd: 6000, mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100000, breach: realtime}, consistency_pct: 55, max_contracts: "10 mini / 100 micro", price_notes: "NAF path $149/mo, reset $149"}
-        funded: {mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 0, breach: realtime}, payout: {max_payout_per_cycle_usd: 3000, max_pct_of_profit: 50, split_pct: 90, min_payout_usd: 125}}
+        # scaling_plan added 2026-10-29: THIRD-PARTY (futureshive.com 2026-10-05, proptradingvibes.com 2026-10-13 agree); official table is image 'XFA charts - hc.png'
+        funded: {mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 0, breach: realtime}, payout: {max_payout_per_cycle_usd: 3000, max_pct_of_profit: 50, split_pct: 90, min_payout_usd: 125}, scaling_plan: {"<1500": 3, "1500-1999.99": 4, "2000-2999.99": 5, ">=3000": 10}}
       150K:
         eval: {price_usd: 199, billing: monthly, reset_fee_usd: 199, activation_fee_usd: 149, profit_target_usd: 9000, mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 150000, breach: realtime}, consistency_pct: 55, max_contracts: "15 mini / 150 micro", price_notes: "NAF path $229/mo, reset $229"}
-        funded: {mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 0, breach: realtime}, payout: {max_payout_per_cycle_usd: 5000, max_pct_of_profit: 50, split_pct: 90, min_payout_usd: 125}}
+        # scaling_plan added 2026-10-29: THIRD-PARTY (same two sources, agree)
+        funded: {mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 0, breach: realtime}, payout: {max_payout_per_cycle_usd: 5000, max_pct_of_profit: 50, split_pct: 90, min_payout_usd: 125}, scaling_plan: {"<1500": 3, "1500-1999.99": 4, "2000-2999.99": 5, "3000-4499.99": 10, ">=4500": 15}}
+      # Other sizes: NONE (2026-10-29). Combine Parameters (2026-09-24), Pricing article and Payout Policy list only 50K/100K/150K.
     notes:
+      - "2026-10-29 re-check (Pricing & Payment article, 'updated over 2 weeks ago'): Combine monthly Standard path 50K $49 / 100K $99 / 150K $199; No Activation Fee path $95 / $149 / $229; activation $149 per XFA (Standard) / $0 (NAF); resets equal the monthly price on each path. DLL discount (NAF only) $10 / $20 / $30. All unchanged vs 2026-10-24."
+      - "XFA scaling plan (THIRD-PARTY transcription of the official image; futureshive.com updated 2026-10-05 and proptradingvibes.com updated 2026-10-13 agree): 50K <1,500 -> 2, 1,500-1,999 -> 3, >=2,000 -> 5. 100K <1,500 -> 3, 1,500-1,999 -> 4, 2,000-2,999 -> 5, >=3,000 -> 10. 150K <1,500 -> 3, 1,500-1,999 -> 4, 2,000-2,999 -> 5, 3,000-4,499 -> 10, >=4,500 -> 15. Official text only confirms the '$50K XFA, 2-lot' starting tier (article 2026-07-16). Lots = minis, 10 micros per mini; increases apply next session; payouts can drop the tier."
       - "Combine MLL breach: account liquidated for the rest of the day and ineligible for funding until Reset (or monthly rebill reset credit). XFA MLL breach: account closed; Back2Funded reactivation possible (max 2 per XFA, only if NO payout ever taken, within 30 days; 50K $599, 100K $699, 150K $829; $50 off with DLL). After Back2Funded everything resets: balance $0, MLL -$2,000 (50K)."
       - "Combine profits do not carry over: XFA starts at $0 balance."
       - "Payout cap discrepancy: Payout Policy table gives XFA Standard caps 50K $2,000 / 100K $3,000 / 150K $5,000; the XFA Parameters page (2026-08-05) says 'up to $5,000' (Standard) / '$6,000' (Consistency) without size breakdown — these match the 150K row, so the per-size table is used."
@@ -98,7 +103,7 @@ plans:
       - "Payout fees: ACH/Wire $30 per payout; Prop-to-Brokerage, Aeropay, Wise: $0 Topstep fee."
       - "Trading day: 5:00 PM CT to 3:10 PM CT. MLL is assessed vs EOD balance at session close for trailing purposes, but breach is checked intraday incl. unrealized P&L."
     unknowns:
-      - "Official XFA Scaling Plan tiers (help article shows them only as an image). Using third-party 2/3/5 lots for 50K; 100K/150K tiers not captured."
+      - "Official XFA Scaling Plan tiers (help article shows them only as an image). 2026-10-29: 50K confirmed and 100K/150K captured from two agreeing THIRD-PARTY transcriptions (see notes); still not verified against the official image."
       - "Exact numeric criteria for Live call-up (payouts count, profit) — Topstep states it is discretionary."
       - "Whether a lifetime payout cap exists for XFA (none mentioned)."
       - "No current verified promo code for Oct 2026."
@@ -210,6 +215,7 @@ plans:
     notes:
       - "DLL is measured on daily Net P&L (5 PM - 3:10 PM CT); on hit, positions flattened, orders cancelled, no trading until next session. Account stays eligible."
       - "The doubled-cap offer is described as 'limited-time'; end date not stated — verify before simulating."
+      - "2026-10-29 re-check: promo STILL LISTED. Payout Policy ('updated over 2 weeks ago') still shows the 'With DLL' cap column (50K 4,000/6,000; 100K 6,000/8,000; 150K 10,000/12,000 = exactly 2x) under 'Limited Time Offering' from 2026-06-02 3:30 PM CT, no end date, 'watch social channels' for expiry. DLL article (2026-06-30) also still carries the 'Limited Time Offering' banner (says 'increase', not 'double'). Pricing article does not mention it. Cannot confirm from checkout that it is still honoured."
     unknowns:
       - "End date of the DLL doubled-payout-cap promotion."
       - "Whether DLL breach is evaluated on unrealized P&L in real time (article says Net P&L 'during the trading day' but doesn't explicitly say unrealized)."

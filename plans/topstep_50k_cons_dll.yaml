@@ -1,0 +1,48 @@
+id: topstep_50k_cons_dll
+firm: Topstep
+name: Combine 50K → XFA Consistency + DLL (caps x2)
+start_balance: 50000
+costs:
+  eval_price: 49
+  billing: monthly
+  reset_price: 49
+  activation_fee: 149
+  discount: Sin código verificado
+eval:
+  profit_target: 3000
+  mll: 2000
+  drawdown: eod
+  lock_offset: 0
+  consistency: 0.55
+  min_days: 2
+  contracts: 5
+  dll: 1000
+funded:
+  contracts:
+  - - 0
+    - 2
+  - - 1500
+    - 3
+  - - 2000
+    - 5
+  mll: 2000
+  drawdown: eod
+  lock_offset: 0
+  floor_after_payout: 0
+  payout:
+    split: 0.9
+    min_trading_days: 3
+    consistency: 0.4
+    min_amount: 125
+    max_amount:
+    - 6000
+    pct_of_profit: 0.5
+  dll: 1000
+max_funded_accounts: 5
+hold_passed: true
+p_payout_denial: 0.5
+inactivity_days: 30
+notes:
+- 'Prohíbe el account stacking: p_payout_denial es una hipótesis'
+- Scaling XFA 100K/150K de terceros
+- Promo 'DLL duplica caps' sin fecha de fin

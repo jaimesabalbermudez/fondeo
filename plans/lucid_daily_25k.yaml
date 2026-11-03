@@ -1,0 +1,39 @@
+id: lucid_daily_25k
+firm: Lucid Trading
+name: Daily 25K (eval EOD + DLL, funded intradía)
+start_balance: 25000
+costs:
+  eval_price: 86
+  reset_price: 60
+  code_price: 60.2
+  code_reusable: false
+  billing: one_time
+  activation_fee: 0
+  discount: ETFPROMO -30% (terceros); reutilización no verificada
+eval:
+  profit_target: 1250
+  mll: 1000
+  drawdown: eod
+  lock_offset: 100
+  dll: 600
+  consistency: 0.5
+  min_days: 1
+  contracts: 2
+funded:
+  contracts: 2
+  mll: 1000
+  drawdown: intraday
+  lock_offset: 100
+  dll: 600
+  payout:
+    split: 0.9
+    min_cycle_profit: 1
+    buffer: 1100
+    min_amount: 500
+notes:
+- Precios de terceros (eltraderfinanciado, 2026-10-29); ETFPROMO -30% no verificado como reutilizable
+- Noticias de alto impacto prohibidas en funded (hard breach)
+- Consistencia 40% vs 50% en conflicto
+max_funded_accounts: 5
+firm_max_open: 10
+inactivity_days: 30

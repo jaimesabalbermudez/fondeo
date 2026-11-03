@@ -1,0 +1,42 @@
+id: lucid_pro_25k_dll
+firm: Lucid Trading
+name: Pro 25K (DLL)
+start_balance: 25000
+costs:
+  eval_price: 108
+  reset_price: 75
+  code_price: 75.6
+  code_reusable: false
+  billing: one_time
+  activation_fee: 0
+  discount: ETFPROMO -30% (terceros); reutilización no verificada
+eval:
+  profit_target: 1250
+  mll: 1000
+  drawdown: eod
+  lock_offset: 100
+  min_days: 1
+  contracts: 2
+funded:
+  contracts: 2
+  mll: 1000
+  drawdown: eod
+  lock_offset: 100
+  payout:
+    split: 0.9
+    min_cycle_profit: 250
+    consistency: 0.4
+    buffer: 1100
+    min_amount: 500
+    max_amount:
+    - 1000
+    - 1500
+    max_payouts: 5
+  dll: 600
+  dll_scale_pct: 0.6
+notes:
+- Precios de terceros (eltraderfinanciado, 2026-10-29); ETFPROMO -30% no verificado como reutilizable
+- '25K: DLL de la evaluación en conflicto (se asume sin DLL)'
+max_funded_accounts: 5
+firm_max_open: 10
+inactivity_days: 30

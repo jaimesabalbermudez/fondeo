@@ -1,0 +1,41 @@
+id: tradeify_growth_100k
+firm: Tradeify
+name: Growth 100K
+start_balance: 100000
+costs:
+  eval_price: 255
+  reset_price: 169
+  billing: one_time
+  activation_fee: 0
+  discount: Sin código verificado
+eval:
+  profit_target: 6000
+  mll: 3500
+  drawdown: eod
+  dll: 2500
+  min_days: 1
+  contracts: 8
+funded:
+  contracts: 8
+  mll: 3500
+  drawdown: eod
+  lock_offset: 100
+  floor_after_payout: 100
+  dll: 2500
+  payout:
+    split: 0.9
+    min_green_days: 5
+    green_min: 200
+    consistency: 0.35
+    buffer: 4500
+    min_amount: 1000
+    max_amount:
+    - 2000
+    - 2500
+    - 3000
+    - 4000
+hold_passed: true
+notes:
+- 'DLL funded sube al +6% de profit (no modelado: se usa el DLL inicial)'
+max_funded_accounts: 5
+inactivity_days: 7

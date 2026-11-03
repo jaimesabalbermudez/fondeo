@@ -1,0 +1,31 @@
+id: lucid_direct_25k
+firm: Lucid Trading
+name: Direct 25K (directo)
+start_balance: 25000
+costs:
+  eval_price: 329
+  code_price: 230.3
+  code_reusable: false
+  billing: one_time
+  activation_fee: 0
+  discount: Código típico -30% (terceros)
+eval: null
+funded:
+  contracts: 2
+  mll: 1000
+  drawdown: eod
+  lock_offset: 100
+  payout:
+    split: 0.9
+    min_cycle_profit: 1500
+    consistency: 0.2
+    min_amount: 500
+    max_amount:
+    - 1000
+    max_payouts: 5
+notes:
+- Precios de terceros (eltraderfinanciado, 2026-10-29); ETFPROMO -30% no verificado como reutilizable
+- 'Objetivo del 1er payout aplicado a todos los ciclos: conservador'
+max_funded_accounts: 5
+firm_max_open: 10
+inactivity_days: 30

@@ -1,0 +1,36 @@
+id: mffu_rapid_150k
+firm: MyFundedFutures
+name: Rapid 150K (funded intradía)
+start_balance: 150000
+costs:
+  eval_price: 463
+  code_price: 278
+  code_reusable: false
+  reset_price: 463
+  billing: one_time
+  activation_fee: 0
+  discount: Promo del sitio -40% (CLUB); reutilización no confirmada
+eval:
+  profit_target: 9000
+  mll: 4500
+  drawdown: eod
+  lock_offset: 100
+  consistency: 0.5
+  min_days: 2
+  contracts: 10
+funded:
+  contracts: 10
+  mll: 4500
+  drawdown: intraday
+  lock_offset: 100
+  payout:
+    split: 0.9
+    min_cycle_profit: 1
+    buffer: 4600
+    min_amount: 500
+max_funded_accounts: 3
+notes:
+- Con alguna funded de 100K/150K el límite total de la firma baja a 3
+firm_max_funded: 5
+firm_max_evals: 10
+inactivity_days: 7

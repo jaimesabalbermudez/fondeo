@@ -1,0 +1,40 @@
+id: mffu_pro_150k
+firm: MyFundedFutures
+name: Pro 150K
+start_balance: 150000
+costs:
+  eval_price: 557
+  code_price: 334
+  code_reusable: false
+  reset_price: 557
+  billing: one_time
+  activation_fee: 0
+  discount: Promo del sitio -40% (CLUB); reutilización no confirmada
+eval:
+  profit_target: 9000
+  mll: 4500
+  drawdown: eod
+  lock_offset: 100
+  consistency: 0.5
+  min_days: 2
+  contracts: 9
+funded:
+  contracts: 9
+  mll: 4500
+  drawdown: eod
+  lock_offset: 100
+  floor_after_payout: 100
+  payout:
+    split: 0.8
+    min_trading_days: 10
+    buffer: 4600
+    min_amount: 1000
+max_funded_accounts: 3
+p_payout_denial: 0.3
+notes:
+- Payout cada 14 días naturales (~10 de trading)
+- '''Consistent Trading Policy'' desaconseja tamaño máximo y alto riesgo: p_payout_denial es una hipótesis'
+- Con alguna funded de 100K/150K el límite total de la firma baja a 3
+firm_max_funded: 5
+firm_max_evals: 10
+inactivity_days: 7

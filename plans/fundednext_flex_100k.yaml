@@ -1,0 +1,44 @@
+id: fundednext_flex_100k
+firm: FundedNext Futures
+name: Flex 100K
+start_balance: 100000
+costs:
+  eval_price: 273.99
+  code_price: 159.99
+  code_reusable: true
+  reset_price: 157.99
+  billing: one_time
+  activation_fee: 0
+  discount: Cupón oficial (2 primeras más baratas; este es el precio a partir de la 3ª)
+eval:
+  profit_target: 5000
+  mll: 2500
+  drawdown: eod
+  lock_offset: 100
+  consistency: 0.4
+  min_days: 1
+  contracts: 5
+funded:
+  contracts: 5
+  mll: 2500
+  drawdown: eod
+  lock_offset: 100
+  floor_after_payout: 100
+  payout:
+    split: 0.95
+    min_green_days: 5
+    green_min: 200
+    min_cycle_profit: 500
+    min_amount: 250
+    max_amount:
+    - 2500
+    pct_of_profit: 0.5
+    max_payouts: 5
+notes:
+- '''Account flipping'' prohíbe trades all-in sin umbral numérico: p_payout_denial es una hipótesis'
+- La cuenta se cierra tras el 5º payout
+max_funded_accounts: 5
+firm_max_activations_30d: 10
+p_payout_denial: 0.3
+inactivity_days: 30
+hold_passed: true
