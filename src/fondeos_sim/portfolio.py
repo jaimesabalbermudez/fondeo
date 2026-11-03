@@ -21,6 +21,8 @@ optimización (`eval_step`, `funded_step`):
   cuenta mantiene su probabilidad de acierto (su stop/objetivo), solo cambia cuánto se mueven juntas.
   rho = 1 es el caso extremo (mismo bracket); con stops/objetivos distintos sobre el mismo movimiento
   la correlación real ronda 0,1-0,8.
+- `copy_from_cash`: con copy="evals", cada día solo copian las evaluaciones los caminos con caja libre
+  >= este valor; el resto opera cada cuenta por su cuenta (empezar prudente y pasar a copiar con caja).
 - `firm_failure_year`: probabilidad anual de que cada firma deje de pagar a todo el mundo (cierre,
   cambio de reglas, impagos). Desde ese día no se cobra nada pendiente de esa firma ni se compra más.
 - Al llegar al horizonte se deja de comprar y se dejan correr las cuentas abiertas ("cierre").
@@ -29,6 +31,8 @@ optimización (`eval_step`, `funded_step`):
   firma, después las que llevan más días paradas (desempate al azar). Una cuenta que supera el plazo
   de inactividad (`inactivity_days` del plan, días naturales -> 5/7 en días de trading) se pierde.
   None = todas las cuentas operan cada día.
+- `days_per_week`: días de la semana (de 5) en que se opera; los demás no hay ningún trade, pero las
+  cuentas siguen sumando días parados (inactividad) y se siguen comprando evaluaciones y cobrando.
 """
 
 from dataclasses import dataclass
@@ -88,7 +92,8 @@ class _Pool:
 def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float, n_paths: int = 2000,
                        copy: str = "none", rho: float = 1.0, payout_delay: int = 2, seed: int = 0,
                        queue_passed: bool = True, max_extra_days: int = 400,
-                       firm_failure_year: float = 0.0, trades_per_day: int | None = None) -> PortfolioResult:
+                       firm_failure_year: float = 0.0, trades_per_day: int | None = None,
+                       copy_from_cash: float = 0.0, days_per_week: int = 5) -> PortfolioResult:
     rng = np.random.default_rng(seed)
     P, k = n_paths, len(allocs)
     horizon = int(round(months * MONTH))
@@ -150,6 +155,7 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
     cash_hist = np.zeros((P, horizon + 1))
     ruin_day = np.full(P, -1)
     min_cash = cash.copy()
+    copying = np.ones(P, bool)   # caminos que hoy copian las evaluaciones (copy="evals")
 
     def firm_sum(arr, f):
         return arr[:, firm_of == f].sum(axis=1)
@@ -242,8 +248,12 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
             return {}
         if copy == "evals":   # un factor común por camino para todas las evaluaciones; funded independientes
             z0 = rng.standard_normal((P, 1))
-            return {("e", j): ndtr(np.sqrt(rho) * z0 + np.sqrt(1 - rho) * rng.standard_normal((P, ep.slots)))
-                    for j, ep in enumerate(epools) if ep is not None}
+            out = {}
+            for j, ep in enumerate(epools):
+                if ep is not None:
+                    e = rng.standard_normal((P, ep.slots))
+                    out[("e", j)] = ndtr(np.where(copying[:, None], np.sqrt(rho) * z0 + np.sqrt(1 - rho) * e, e))
+            return out
         groups = []
         for f in range(n_firms):
             blocks = [(kind, j, pool) for j in np.flatnonzero(firm_of == f)
@@ -336,23 +346,29 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
             fp.occ[paths[done], slots[done]] = False
             np.subtract.at(n_fund[:, j], paths[done], 1)
 
-    def select():
+    def select(day):
         """Marca en e_sel / f_sel las cuentas que operan hoy y actualiza los días sin operar."""
         blocks = [(e_sel[j], e_idle[j], epools[j].occ, j) for j in range(k) if epools[j] is not None]
         blocks += [(f_sel[j], f_idle[j], fpools[j].occ & ~fresh[j], j) for j in range(k)]
+        if day % 5 >= days_per_week:   # día sin operar: nadie opera y todas suman un día parado
+            for sel, idle, occ, _ in blocks:
+                sel[:] = False
+                idle[occ] += 1
+            return
         for sel, _, occ, _ in blocks:
             sel[:] = occ
         if trades_per_day is not None:
             n_e = sum(1 for ep in epools if ep is not None)
             cap = np.full(P, trades_per_day)
-            ranked = range(len(blocks))
+            cand = [(np.nonzero(blocks[b][2]), b) for b in range(len(blocks))]
             if copy == "evals":   # todas las evaluaciones operan, como un único trade copiado
                 any_eval = np.zeros(P, bool)
                 for _, _, occ, _ in blocks[:n_e]:
                     any_eval |= occ.any(axis=1)
-                cap -= any_eval
-                ranked = range(n_e, len(blocks))
-            cand = [(np.nonzero(blocks[b][2]), b) for b in ranked]
+                cap -= any_eval & copying
+                # en los caminos que copian, las evaluaciones no compiten por los huecos del día
+                cand = ([(np.nonzero(blocks[b][2] & ~copying[:, None]), b) for b in range(n_e)]
+                        + cand[n_e:])
             path = np.concatenate([pp for (pp, _), _ in cand])
             if path.size:
                 idle = np.concatenate([blocks[b][1][pp, ss] for (pp, ss), b in cand])
@@ -385,8 +401,9 @@ def simulate_portfolio(allocs: list[Allocation], bankroll: float, months: float,
             open_any = (n_eval.sum(1) + n_fund.sum(1) + n_queue.sum(1)) > 0
             stuck = (ruin_day < 0) & ~open_any & ~(arrivals[:, :, day + 1:].sum(axis=(1, 2)) > 0)
             ruin_day[stuck] = day
+        copying[:] = (cash - committed) >= copy_from_cash
         U = uniforms()
-        select()
+        select(day)
         for j, a in enumerate(allocs):
             step_evals(j, a, day, U)
             step_funded(j, day, U)

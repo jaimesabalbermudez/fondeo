@@ -17,7 +17,7 @@ def _fingerprint() -> str:
     h = hashlib.sha256()
     for folder in (ROOT / "plans", Path(__file__).parent):
         for f in sorted(folder.glob("*.y*ml")) + sorted(folder.glob("*.py")):
-            if f.name in ("dashboard.py", "cli.py"):
+            if f.name in ("dashboard.py", "cli.py", "hoy.py"):
                 continue
             h.update(f.name.encode())
             h.update(f.read_bytes())

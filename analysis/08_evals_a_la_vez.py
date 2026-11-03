@@ -19,7 +19,7 @@ CASES = [("Recomendado: cada cuenta su trade, uno detrás de otro", "none", 0.0)
          ("Evaluaciones a la vez (brackets distintos, ρ=0,7), funded de una en una", "evals", 0.7)]
 
 allocs = allocations(DEFAULT)
-for tpd in (DEFAULT.trades_per_day, None):
+for tpd in (12, None):   # 12 = valor recomendado cuando se hizo el informe
     print(f"\n### Trades al día: {tpd or 'sin límite'}")
     for bankroll in (1000, 2000, 5000):
         print(f"\nBankroll ${bankroll:,} · 12 meses")

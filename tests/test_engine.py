@@ -158,6 +158,24 @@ def test_trades_per_day_cap_and_inactivity():
     assert starved.per_plan[plan.id]["cerradas por inactividad"] > 0
 
 
+def test_days_per_week_trades_less_but_idle_days_count():
+    from dataclasses import replace
+    from fondeos_sim.portfolio import Allocation, simulate_portfolio
+    plan = load_plan(PLANS / "lucid_flex_50k_dll.yaml")
+    al = [Allocation(plan, EvalStrategy(1200, None, 10.0), FundedStrategy(2000, None, 150, 600), parallel=5)]
+    full = simulate_portfolio(al, 20000, 3, n_paths=300, seed=1)
+    two = simulate_portfolio(al, 20000, 3, n_paths=300, seed=1, days_per_week=2)
+    assert two.evals.mean() < 0.6 * full.evals.mean()
+    # una semana de límite (5 días de trading): operando 2 días de 5 nunca se pasa de 3 días parados
+    weekly = [replace(al[0], plan=replace(plan, inactivity_days=7))]
+    assert simulate_portfolio(weekly, 20000, 3, n_paths=300, seed=1, days_per_week=2,
+                              trades_per_day=20).per_plan[plan.id]["cerradas por inactividad"] == 0
+    # con un límite de 2 días naturales (1 de trading) los 3 días parados seguidos sí cierran cuentas
+    strict = [replace(al[0], plan=replace(plan, inactivity_days=2))]
+    assert simulate_portfolio(strict, 20000, 3, n_paths=300, seed=1,
+                              days_per_week=2).per_plan[plan.id]["cerradas por inactividad"] > 0
+
+
 def test_session_trade_unresolved_keeps_zero_edge():
     """Con pocos contratos un objetivo lejano no siempre se resuelve en el día, pero la media sigue en 0."""
     rng = np.random.default_rng(11)

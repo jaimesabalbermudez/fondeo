@@ -20,6 +20,25 @@ uv run fondeos-sim --denegacion 0.3             # fuerza una prob. de payout den
 uv run fondeos-sim --friccion 10 10 8           # $ por trade: evaluación, día gordo, días verdes
 ```
 
+## Plan del día (`fondeos-hoy`)
+
+Aplica la forma de operar recomendada a tus cuentas reales. El estado (`cuentas.yaml`), la contabilidad
+(`contabilidad/`) y los planes guardados (`planes/`) son personales y no se suben al repo: viven en la
+carpeta `FONDEOS_DATOS` si está definida o, si no, en `OneDrive/Fondeo` (así se comparten entre
+ordenadores). El estado se actualiza con las mismas reglas que el motor:
+
+```bash
+uv run fondeos-hoy caja 5000                  # caja libre inicial
+uv run fondeos-hoy compra lucid 5             # añade evaluaciones (y guarda la compra para los tickets)
+uv run fondeos-hoy                            # qué hacer hoy: franjas, TP y stop en puntos, compras, retiros
+uv run fondeos-hoy resultado lucid-1 1210     # al terminar: P&L neto de cada cuenta operada
+uv run fondeos-hoy retiro lucid-1             # payout pedido (por defecto el máximo permitido)
+uv run fondeos-hoy cobro 1800                 # ha llegado el dinero
+```
+
+`--fecha AAAA-MM-DD` cambia el día; `--guardar` deja el plan en `planes/`. La contabilidad se lleva con
+`compra --eur --ticket`, `gasto`, `cobro`, `ticket` y `resumen AÑO` (gastado frente a cobrado).
+
 Modelo: paseo aleatorio sin deriva (edge configurable), un trade por día con stop/TP fijos,
 liquidación en el suelo como stop efectivo, drawdown EOD exacto (Bernoulli) e intradía exacto
 (muestreo browniano en tres etapas). Con edge 0 el valor esperado de una cuenta funded nunca supera

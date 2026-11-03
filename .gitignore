@@ -14,3 +14,12 @@ wheels/
 
 # Material del curso (de terceros): no se publica
 tutorial/
+
+# Estado real de las cuentas y planes diarios (datos personales): no se publica
+cuentas.yaml
+reports/hoy/
+contabilidad/
+planes/
+
+# Configuración local de Claude Code (rutas de este ordenador)
+.claude/

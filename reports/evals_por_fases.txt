@@ -1,0 +1,32 @@
+
+### Modelo base
+
+Bankroll $5,000 · 12 meses · 12 trades/día
+                                                              ruina   mediana     media       p10       p90  evals
+  Cada cuenta su trade, uno detrás de otro0.4%   145,958   147,192    94,984   205,170    822
+  Opción 2: evals a la vez desde el inicio (ρ=0.7)             5.9%   203,379   198,328   101,862   291,177   1084
+  Opción 2: evals a la vez desde el inicio (ρ=1)              17.2%   176,522   163,275    -4,972   279,791    901
+  Opción 3: evals a la vez con caja ≥ $8,000 (ρ=0.7)           0.5%   198,162   200,377   125,551   278,961   1116
+  Opción 3: evals a la vez con caja ≥ $10,000 (ρ=0.7)          0.7%   197,582   199,746   119,516   283,322   1106
+  Opción 3: evals a la vez con caja ≥ $15,000 (ρ=0.7)          0.8%   196,490   197,274   125,288   273,560   1086
+  Opción 3: evals a la vez con caja ≥ $20,000 (ρ=0.7)          0.9%   192,256   194,357   117,334   278,200   1069
+  Opción 3: evals a la vez con caja ≥ $8,000 (ρ=1)             0.8%   185,997   187,849   104,809   275,841   1053
+  Opción 3: evals a la vez con caja ≥ $10,000 (ρ=1)            0.6%   185,938   189,502   107,163   277,758   1044
+  Opción 3: evals a la vez con caja ≥ $15,000 (ρ=1)            0.9%   183,219   184,689   101,475   268,439   1030
+  Opción 3: evals a la vez con caja ≥ $20,000 (ρ=1)            0.4%   182,326   184,183   106,553   263,780   1021
+
+### Estrés: 20% payouts denegados + 30%/año de que cada firma deje de pagar
+
+Bankroll $5,000 · 12 meses · 12 trades/día
+                                                              ruina   mediana     media       p10       p90  evals
+  Cada cuenta su trade, uno detrás de otro8.0%    89,820    89,472    31,443   149,515    713
+  Opción 2: evals a la vez desde el inicio (ρ=0.7)            16.4%   108,976   103,759    -4,953   187,864    823
+  Opción 2: evals a la vez desde el inicio (ρ=1)              32.5%    78,895    78,621    -4,972   174,108    641
+  Opción 3: evals a la vez con caja ≥ $8,000 (ρ=0.7)           8.1%   110,047   108,962    27,072   184,910    859
+  Opción 3: evals a la vez con caja ≥ $10,000 (ρ=0.7)          7.0%   106,273   108,249    31,147   183,397    859
+  Opción 3: evals a la vez con caja ≥ $15,000 (ρ=0.7)          8.0%   103,910   105,259    26,777   180,654    835
+  Opción 3: evals a la vez con caja ≥ $20,000 (ρ=0.7)          8.2%    99,954   101,645    25,158   175,055    821
+  Opción 3: evals a la vez con caja ≥ $8,000 (ρ=1)             8.8%    99,377   102,320    21,405   181,087    813
+  Opción 3: evals a la vez con caja ≥ $10,000 (ρ=1)            8.6%    99,239   101,526    18,611   179,478    804
+  Opción 3: evals a la vez con caja ≥ $15,000 (ρ=1)            8.4%    97,028    98,582    20,752   169,744    800
+  Opción 3: evals a la vez con caja ≥ $20,000 (ρ=1)            8.0%    96,934    98,838    24,983   172,144    790

@@ -168,8 +168,9 @@ def gordo_txt(p, target):
 
 
 def step(n, title, text):
-    md(f'<div class="step"><div class="step-n">{n}</div><div><div class="step-t">{title}</div>'
-                f'<div class="step-d">{text}</div></div></div>', unsafe_allow_html=True)
+    # HTML: el $ va como entidad (\$ se vería tal cual dentro del <div>)
+    st.markdown(f'<div class="step"><div class="step-n">{n}</div><div><div class="step-t">{title}</div>'
+                f'<div class="step-d">{text}</div></div></div>'.replace("$", "&#36;"), unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------- páginas
@@ -208,10 +209,19 @@ def page_guide():
              f"busca un día gordo de +{money(CFG.prudent_gordo)} (en vez del óptimo, mucho mayor). Cobras el "
              "doble de veces y la ruina baja a la mitad.")
     with right:
-        step(4, "Cada cuenta su propio trade, una detrás de otra",
-             "Nunca copies el mismo trade en todas a la vez: si pierden juntas, el bankroll se vacía de golpe. "
-             "Separando los trades el valor esperado es el mismo y el riesgo mucho menor.")
+        if CFG.copy_evals_from is None:
+            step(4, "Cada cuenta su propio trade, una detrás de otra",
+                 "Nunca copies el mismo trade en todas a la vez: si pierden juntas, el bankroll se vacía de golpe. "
+                 "Separando los trades el valor esperado es el mismo y el riesgo mucho menor.")
+        else:
+            step(4, "Cada cuenta su trade; con caja, evaluaciones a la vez",
+                 f"Con caja libre por debajo de {money(CFG.copy_evals_from)}, una cuenta detrás de otra: si pierden "
+                 "juntas, el bankroll se vacía de golpe. Por encima, todas las evaluaciones a la vez, en la misma "
+                 "dirección pero con brackets distintos: cuentan como un solo trade y dejan sitio a las funded, "
+                 "que siempre van de una en una. Nunca el mismo bracket en todas.")
         step(5, f"Unos {CFG.trades_per_day} trades al día, rotando cuentas",
+             "De 13:00 a 17:00 en España: días verdes en premercado (sin nada abierto en los datos de las 14:30), "
+             "evaluaciones desde la apertura y los días gordos al final, con stop y TP puestos. "
              "No hace falta operar todas las cuentas cada día: opera primero las que más tiempo llevan paradas. "
              "Ninguna puede pasar una semana sin un trade (Tradeify, MFFU) ni un mes (Lucid, FundedNext). "
              "Reinvierte y aguanta: el riesgo se concentra en los 2–3 primeros meses.")
@@ -297,20 +307,23 @@ VOL = [("Pre 4:00–9:30", 7.0), ("Apertura 9:30–10:00", 18.8), ("10:00–11:0
 def guide_schedule():
     st.subheader("Horario")
     md('<span class="muted">Sin ventaja, la hora no cambia la probabilidad de ganar un trade: solo lo rápido que se '
-       'resuelve. Como los trades van de uno en uno, la apertura es donde caben más.</span>', unsafe_allow_html=True)
+       f'resuelve. Sesión de 13:00 a 17:00 en España (unos {CFG.trades_per_day} trades).</span>', unsafe_allow_html=True)
     left, right = st.columns([3, 2], gap="large")
     with left:
         md("""
 | Hora Nueva York | Hora España | Qué operar | Por qué |
 |---|---|---|---|
-| 9:31–10:00 | 15:31–16:00 | **Días gordos**, con todos los contratos que permita la firma | Son los más lentos; con 2 NQ, el 10% más lento tarda horas y ~1 de cada 10 no se resuelve en el día |
-| 10:00–11:30 | 16:00–17:30 | **Evaluaciones**, de la de trade más grande a la más pequeña | Aún hay volatilidad: 10–25 min por trade |
-| 11:30–15:00 | 17:30–21:00 | **Días verdes** de las funded | Trades pequeños: la lentitud da igual, y en la apertura se resolverían en segundos (regla de microscalping) |
-| antes de 15:50 | antes de 21:50 | **Todo cerrado** | FundedNext cierra a las 16:10 NY; nada abierto al final de la sesión |
-""", help="Ejemplos: evaluación Lucid ±$1.200 con 1 NQ = 60/60 pts; gordo +$8.000/−$2.000 con 2 NQ = 200/50 pts; "
-          "día verde +$150/−$600 con 5 MNQ = 15/60 pts. Tiempo medio hasta TP o SL = TP·SL/σ².")
-        md("- **Nunca dos trades abiertos a la vez**: si coinciden en la misma dirección los resultados van juntos, "
-           "y en direcciones opuestas es hedging (prohibido).\n"
+| 7:00–9:25 | 13:00–15:25 | **Días verdes** de las funded, uno detrás de otro | Trades pequeños: en premercado tardan ~18 min (de sobra para la regla de microscalping) y dejan libre la apertura |
+| 8:25–8:40 | 14:25–14:40 | **Nada abierto** los días de dato (CPI, NFP...) | El dato de las 8:30 puede saltar el stop de un día verde con mucho deslizamiento |
+| 9:30–10:30 | 15:30–16:30 | **Evaluaciones** (en bloque si hay caja para copiarlas) | La franja más volátil: 10–20 min por trade |
+| 10:30–11:00 | 16:30–17:00 | **Días gordos**, los últimos, con stop y TP puestos | Son los más lentos: se dejan correr al irte |
+| antes de 15:50 | antes de 21:50 | **Todo cerrado** | Programa en la plataforma el cierre automático; los días de media sesión (festivos) MFFU no cierra sola |
+""", help="Ejemplos: evaluación Lucid ±$1.200 con 1 NQ = 60/60 pts; gordo +$6.000 con 2 NQ ≈ 150 pts; "
+          "día verde +$150/−$600 con 5 MNQ = 15/60 pts. Tiempo medio hasta TP o SL = TP·SL/σ². "
+          "`uv run fondeos-hoy` da el plan de cada día con tus cuentas.")
+        md("- **Un trade abierto cada vez**, salvo las evaluaciones en bloque y el día gordo que dejas corriendo al "
+           "irte: todo lo que coincida en el tiempo va en la misma dirección (en direcciones opuestas es hedging, "
+           "prohibido).\n"
            "- **Dirección al azar** (o según el gap): con ventaja cero da igual, y así evitas sesgos.\n"
            "- **Noticias**: no abras un trade en el minuto de un dato importante (8:30, 10:00 o 14:00 NY los días de "
            "CPI, NFP, ISM o FOMC): el deslizamiento se dispara.\n"
@@ -515,6 +528,8 @@ nav = st.navigation([
     st.Page(page_plans, title="Planes", icon="📋", url_path="planes"),
 ])
 with st.sidebar:
-    caption(f"Supuestos: mercado sin ventaja (edge 0), un trade por cuenta y día (máximo {CFG.trades_per_day} al día), precios con códigos "
+    copied = (f"; evaluaciones a la vez con caja ≥ {money(CFG.copy_evals_from)}"
+              if CFG.copy_evals_from is not None else "")
+    caption(f"Supuestos: mercado sin ventaja (edge 0), un trade por cuenta y día (máximo {CFG.trades_per_day} al día{copied}), precios con códigos "
                "reutilizables verificados, comisiones incluidas. Los cálculos se guardan en caché.")
 nav.run()

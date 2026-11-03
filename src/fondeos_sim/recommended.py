@@ -5,14 +5,17 @@ Todo el dashboard usa esta configuración. Los parámetros por defecto salen de
 
 Reglas de operación:
 - Solo firmas con drawdown EOD y sin prohibiciones contra la estrategia (p_payout_denial bajo).
-- Cada cuenta hace su propio trade, una detrás de otra (resultados independientes; nunca copiar el
-  mismo trade en todas a la vez).
+- Cada cuenta hace su propio trade, una detrás de otra (resultados independientes). Con caja libre
+  >= `copy_evals_from`, las evaluaciones se operan todas a la vez (misma dirección, brackets distintos:
+  correlación ~0,7) y cuentan como un solo trade; las funded siguen de una en una
+  (`analysis/09_evals_por_fases.py`). Nunca el mismo bracket en todas.
 - Se empieza por los planes de más ROI y se amplía la cartera cuando crece la caja.
 - Con poca caja se juega "prudente": día gordo más pequeño, que cobra más a menudo.
 - Tamaño: evaluación con 1 NQ, día gordo con el máximo del scaling plan (si no se resuelve en el día se
   cierra a mercado y se sigue al día siguiente), días verdes con 5 MNQ.
-- Como los trades van de uno en uno, solo caben unos 12 al día: cada día operan las cuentas que más
-  tiempo llevan paradas (ninguna supera el plazo de inactividad de su firma).
+- Como los trades van de uno en uno, solo caben unos 14 al día (13:00-17:00 en España: días verdes en
+  premercado, evaluaciones y días gordos en la apertura): cada día operan las cuentas que más tiempo
+  llevan paradas (ninguna supera el plazo de inactividad de su firma).
 """
 
 from dataclasses import dataclass, replace
@@ -46,10 +49,19 @@ class Config:
     )
     prudent_below: float = 3000   # con caja libre por debajo se juega prudente
     prudent_gordo: float = 2000   # día gordo prudente; después días verdes +150 / stop 600
-    trades_per_day: int | None = 12   # trades que caben en una sesión, uno detrás de otro (ver Guía: horario)
+    trades_per_day: int | None = 14   # trades que caben en una sesión, uno detrás de otro (ver Guía: horario)
+    copy_evals_from: float | None = 10000   # con caja libre >= esto, evaluaciones a la vez (None = nunca)
+    copy_rho: float = 0.7             # correlación entre evaluaciones copiadas (brackets distintos)
 
 
 DEFAULT = Config()
+
+
+def copy_kw(cfg: Config = DEFAULT) -> dict:
+    """Argumentos de `simulate_portfolio` para copiar evaluaciones según la caja."""
+    if cfg.copy_evals_from is None:
+        return {}
+    return dict(copy="evals", rho=cfg.copy_rho, copy_from_cash=cfg.copy_evals_from)
 
 
 def plan(plan_id: str) -> Plan:
@@ -89,13 +101,13 @@ def simulate(bankroll: float, months: float = 6, n_paths: int = 2000, cfg: Confi
              **kw) -> PortfolioResult:
     return cached("cartera", (bankroll, months, n_paths, cfg, sorted(kw.items())),
                   lambda: simulate_portfolio(allocations(cfg), bankroll, months, n_paths=n_paths, seed=7,
-                                             trades_per_day=cfg.trades_per_day, **kw))
+                                             trades_per_day=cfg.trades_per_day, **{**copy_kw(cfg), **kw}))
 
 
 def bankroll_needed(target: float, months: float = 6, cfg: Config = DEFAULT) -> tuple[float, float]:
     return cached("bankroll", (target, months, cfg),
                   lambda: bankroll_for_ruin(allocations(cfg), target, months, n_paths=1500,
-                                            trades_per_day=cfg.trades_per_day))
+                                            trades_per_day=cfg.trades_per_day, **copy_kw(cfg)))
 
 
 def precompute():
@@ -115,4 +127,4 @@ def precompute():
 
 
 BANKROLL_LEVELS = (500, 1000, 2000, 3000, 5000, 8000, 12000)
-TRADES_PER_DAY = (6, 9, 12, 15, 20, None)
+TRADES_PER_DAY = (6, 9, 12, 14, 20, None)
