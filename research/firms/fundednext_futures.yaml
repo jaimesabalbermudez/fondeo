@@ -1,5 +1,8 @@
 firm: FundedNext Futures
 as_of: 2026-10-24
+# Gap-fill 2026-10-29: Flex 100K/150K funded, Rapid Pro 25K/100K, Rapid Daily 25K/100K, Direct sizes,
+# price/cap conflicts. Re-fetched the prices, resets, Flex funded, Rapid Pro/Daily challenge+funded,
+# Direct articles and fundednext.com/futures on 2026-10-29 (dateModified unchanged from 2026-10-24 pass).
 sources:
   # Official help center (dates = page dateModified metadata)
   - https://helpfutures.fundednext.com/en/articles/17229807-what-is-fundednext-futures-flex-challenge             # 2026-10-14
@@ -122,10 +125,13 @@ plans:
         strategy_restrictions: "see common_rules.strategy_restrictions"
       100K:
         eval: {price_usd: 273.99, price_notes: "coupon $144.99 (first 2) / $159.99", reset_fee_usd: 157.99, profit_target_usd: 5000, mll: {amount_usd: 2500, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, consistency_pct: 40, max_contracts: "5 mini / 50 micro"}
-        funded: {payout: {cycle_requirement: "5 days >= $200, >= $500 cycle profit", max_payout_per_cycle_usd: 2500, max_pct_of_profit: 50, split_pct: 95}}
+        # funded fields below added 2026-10-29 from Flex FundedNext Account rules (dateModified 2026-09-30)
+        funded: {mll: {amount_usd: 2500, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, mll_after_payout: "first withdrawal resets MLL to $100,100 (lock point)", dll: {amount_usd: null, kind: null}, consistency_pct: null, max_contracts: "5 mini / 50 micro", payout: {cycle_requirement: "5 days >= $200, >= $500 cycle profit", min_profit_to_request_usd: 500, min_payout_usd: 250, max_payout_per_cycle_usd: 2500, max_pct_of_profit: 50, split_pct: 95}, payouts_before_live: "concludes after 5th Performance Reward", lifetime_payout_cap_usd: 12500, inactivity_days: 30}   # lifetime derived 5 x 2,500
       150K:
         eval: {price_usd: 490.99, price_notes: "coupon $259.99 (first 2) / $289.99", reset_fee_usd: 284.99, profit_target_usd: 8000, mll: {amount_usd: 4000, type: eod_trailing, lock_balance_usd: 150100, breach: realtime}, consistency_pct: 40, max_contracts: "8 mini / 80 micro"}
-        funded: {payout: {cycle_requirement: "5 days >= $250, >= $500 cycle profit", max_payout_per_cycle_usd: 4000, max_pct_of_profit: 50, split_pct: 95}}
+        # funded fields below added 2026-10-29 from Flex FundedNext Account rules (dateModified 2026-09-30)
+        funded: {mll: {amount_usd: 4000, type: eod_trailing, lock_balance_usd: 150100, breach: realtime}, mll_after_payout: "first withdrawal resets MLL to $150,100 (lock point)", dll: {amount_usd: null, kind: null}, consistency_pct: null, max_contracts: "8 mini / 80 micro", payout: {cycle_requirement: "5 days >= $250, >= $500 cycle profit", min_profit_to_request_usd: 500, min_payout_usd: 250, max_payout_per_cycle_usd: 4000, max_pct_of_profit: 50, split_pct: 95}, payouts_before_live: "concludes after 5th Performance Reward", lifetime_payout_cap_usd: 20000, inactivity_days: 30}   # lifetime derived 5 x 4,000
+      # 25K: NOT OFFERED for Flex (2026-10-29): prices article lists only 50K/100K/150K, Flex funded rules cover only 50K/100K/150K, fundednext.com/futures shows no Flex 25K.
     notes:
       - "Reward share 95% per help center (2026-10-12) and Flex funded rules. Third-party reviews mention 80% base / 90-95% add-on — outdated; no Flex add-on listed in the official add-on article (only Rapid Pro DLL add-on)."
       - "Flex 50K MLL ($1,500) is smaller than most competitors; lock at $50,100 means trailing stops after EOD balance $51,600."
@@ -172,12 +178,22 @@ plans:
           inactivity_days: 30
         account_limits: {max_funded_accounts: 5, max_eval_accounts: "unlimited; $750K challenge allocation"}
         strategy_restrictions: "see common_rules.strategy_restrictions"
-      25K: {eval: {offer_price_usd: 79.99, profit_target_usd: 1500, mll: {amount_usd: 1000, lock_balance_usd: 25100}, max_contracts: "2/20"}, funded: {max_payout_per_cycle_usd: 800}}
-      100K: {eval: {offer_price_usd: "249.99 or 279.99 (conflict)", profit_target_usd: 5000, mll: {amount_usd: 2500, lock_balance_usd: 100100}, max_contracts: "6/60"}, funded: {max_payout_per_cycle_usd: 2500}}
-    notes: []
+      # 25K/100K expanded 2026-10-29 from prices (2026-10-13), resets (2026-10-13), Rapid Pro Challenge rules (2026-09-30), Rapid Pro FundedNext rules (2026-09-30).
+      25K:
+        eval: {price_usd: 159.98, offer_price_usd: 79.99, price_notes: "with DLL Add-On $59.99 (both articles agree). Reset $84.99 ($64.99 with add-on per resets article 2026-10-13; $67.99 per rules article 2026-09-30).", billing: one_time, reset_fee_usd: 84.99, activation_fee_usd: 0, profit_target_usd: 1500, mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25100, breach: realtime}, dll: {amount_usd: null, kind: null}, consistency_pct: null, max_contracts: "2 mini / 20 micro"}   # DLL $500 pause only with add-on
+        funded: {mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25100, breach: realtime}, mll_after_payout: null, dll: {amount_usd: null, kind: null}, consistency_pct: 40, payout: {cycle_requirement: "40% consistency; >= $500 cycle profit", min_profit_to_request_usd: 500, min_payout_usd: 250, max_payout_per_cycle_usd: 800, split_pct: 90, frequency: "every 3 days once eligible"}, payouts_before_live: "concludes after 5th Performance Reward", lifetime_payout_cap_usd: 4000, inactivity_days: 30}   # lifetime derived 5 x 800; DLL $500 with add-on
+      100K:
+        eval: {price_usd: 499.98, offer_price_usd: 279.99, price_notes: "Offer $279.99 (prices article 2026-10-13) vs $249.99 (rules article 2026-09-30); newer used. With DLL Add-On $229.99 (prices) vs $199.99 (rules). Reset $299.99 (both); with add-on $249.99 (resets) vs $207.99 (rules).", billing: one_time, reset_fee_usd: 299.99, activation_fee_usd: 0, profit_target_usd: 5000, mll: {amount_usd: 2500, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, dll: {amount_usd: null, kind: null}, consistency_pct: null, max_contracts: "6 mini / 60 micro"}   # DLL $1,250 pause only with add-on
+        funded: {mll: {amount_usd: 2500, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, mll_after_payout: null, dll: {amount_usd: null, kind: null}, consistency_pct: 40, payout: {cycle_requirement: "40% consistency; >= $500 cycle profit", min_profit_to_request_usd: 500, min_payout_usd: 250, max_payout_per_cycle_usd: 2500, split_pct: 90, frequency: "every 3 days once eligible"}, payouts_before_live: "concludes after 5th Performance Reward", lifetime_payout_cap_usd: 12500, inactivity_days: 30}   # lifetime derived 5 x 2,500; DLL $1,250 with add-on
+      # 150K: NOT SOLD for Rapid Pro/Daily (2026-10-29): prices article, Rapid rules articles and fundednext.com/futures list only 25K/50K/100K.
+    notes:
+      - "50K price conflict resolution (2026-10-29): $169.99 offer taken as current - it appears in the newer prices article (dateModified 2026-10-13) and matches the resets article; $149.99 comes from the older Challenge rules article (2026-09-30), which also has the older 100K $249.99 and add-on prices. The pattern (all three sizes repriced except 25K) suggests a price increase between 09-30 and 10-13. Not verified at checkout."
+      - "50K cap conflict resolution (2026-10-29): $1,200 kept. Both current help-center funded-rules articles (Rapid Pro and Rapid Daily, 2026-09-30) say $1,200; the $1,500 is only in the fundednext.com/futures FAQ ('up to $800 on 25K, $1,500 on 50K, and $2,500 on 100K'), which also still advertises discontinued Bolt and Legacy pricing and a $69.99 Flex price -> treated as stale."
+      - "Add-on reset prices differ between resets article table (25K $64.99 / 50K $134.99 / 100K $249.99) and Challenge rules article ($67.99 / $117.99 / $207.99); the resets article's own worked example also says $117.99 for 50K. Table values used."
     unknowns:
       - "MLL behaviour after payouts on Rapid Pro/Daily funded."
       - "Max % of profit per withdrawal on Rapid Pro."
+      - "Exact current checkout price (offer prices are coupon-driven and the two help-center articles disagree)."
 
   - plan: Rapid Daily
     sizes:
@@ -215,8 +231,18 @@ plans:
           inactivity_days: 30
         account_limits: {max_funded_accounts: 5, max_eval_accounts: "unlimited; $750K challenge allocation"}
         strategy_restrictions: "see common_rules.strategy_restrictions"
-    notes: []
-    unknowns: ["Whether payout may take balance below the $52,100 buffer."]
+      # 25K/100K added 2026-10-29 from prices (2026-10-13), resets (2026-10-13), Rapid Daily Challenge + FundedNext rules (2026-09-30).
+      25K:
+        eval: {price_usd: 159.98, offer_price_usd: 79.99, price_notes: "Offer $79.99 (both articles). Reset $89.99 (resets article; rules article flags [VERIFY]). No DLL add-on (DLL built in).", billing: one_time, reset_fee_usd: 89.99, activation_fee_usd: 0, profit_target_usd: 1500, mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25100, breach: realtime}, dll: {amount_usd: 500, kind: pause}, consistency_pct: null, max_contracts: "2 mini / 20 micro"}
+        funded: {mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25100, breach: realtime}, mll_after_payout: null, dll: {amount_usd: 500, kind: pause}, consistency_pct: null, payout: {cycle_requirement: "EOD balance >= $26,100 buffer; >= $500 cycle profit", min_profit_to_request_usd: 500, min_payout_usd: 250, max_payout_per_cycle_usd: 800, buffer_usd: 1100, split_pct: 90, frequency: daily}, payouts_before_live: "concludes after 5th Performance Reward", lifetime_payout_cap_usd: 4000, inactivity_days: 30}   # lifetime derived 5 x 800
+      100K:
+        eval: {price_usd: 499.98, offer_price_usd: 279.99, price_notes: "Offer $279.99 (prices article 2026-10-13) vs $249.99 (rules article 2026-09-30); newer used. Reset $299.99 (both; rules flags [VERIFY]).", billing: one_time, reset_fee_usd: 299.99, activation_fee_usd: 0, profit_target_usd: 5000, mll: {amount_usd: 2500, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, dll: {amount_usd: 1250, kind: pause}, consistency_pct: null, max_contracts: "6 mini / 60 micro"}
+        funded: {mll: {amount_usd: 2500, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, mll_after_payout: null, dll: {amount_usd: 1250, kind: pause}, consistency_pct: null, payout: {cycle_requirement: "EOD balance >= $102,600 buffer; >= $500 cycle profit", min_profit_to_request_usd: 500, min_payout_usd: 250, max_payout_per_cycle_usd: 2500, buffer_usd: 2600, split_pct: 90, frequency: daily}, payouts_before_live: "concludes after 5th Performance Reward", lifetime_payout_cap_usd: 12500, inactivity_days: 30}   # lifetime derived 5 x 2,500
+      # 150K: not sold (see Rapid Pro).
+    notes:
+      - "Buffer = starting balance + MLL + $100 (25K $26,100; 50K $52,100; 100K $102,600)."
+      - "50K offer price: same $169.99 vs $149.99 resolution as Rapid Pro (newer prices article used)."
+    unknowns: ["Whether payout may take balance below the buffer."]
 
   - plan: Direct   # straight-to-funded, 50K only
     sizes:
@@ -245,7 +271,8 @@ plans:
           inactivity_days: 7
         account_limits: {max_funded_accounts: 5}
         strategy_restrictions: "see common_rules.strategy_restrictions"
-    notes: []
+    notes:
+      - "2026-10-29: re-confirmed 50K is the ONLY Direct size (prices article 2026-10-13; Direct rules 2026-10-07 'one size, $50,000'; marketing page)."
     unknowns: []
 
   - plan: Legacy   # DISCONTINUED: "no longer available for purchase", no resets for existing

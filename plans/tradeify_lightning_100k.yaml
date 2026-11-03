@@ -1,0 +1,31 @@
+id: tradeify_lightning_100k
+firm: Tradeify
+name: Lightning 100K (directo)
+start_balance: 100000
+costs:
+  eval_price: 660
+  billing: one_time
+  activation_fee: 0
+  discount: Sin código verificado
+eval: null
+funded:
+  contracts: 8
+  mll: 4000
+  drawdown: eod
+  lock_offset: 100
+  floor_after_payout: 100
+  payout:
+    split: 0.9
+    min_cycle_profit: 6000
+    consistency: 0.2
+    min_amount: 1000
+    max_amount:
+    - 2500
+    - 2500
+    - 2500
+    - 3000
+  dll: 2500
+notes:
+- 'Objetivo y consistencia del 1er payout aplicados a todos (los siguientes son más fáciles): conservador'
+max_funded_accounts: 5
+inactivity_days: 7

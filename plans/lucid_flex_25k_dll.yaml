@@ -1,0 +1,50 @@
+id: lucid_flex_25k_dll
+firm: Lucid Trading
+name: Flex 25K (DLL $600, consistencia 40%)
+start_balance: 25000
+costs:
+  eval_price: 65
+  reset_price: 45
+  code_price: 45.5
+  code_reusable: false
+  billing: one_time
+  activation_fee: 0
+  discount: ETFPROMO -30% (terceros); reutilización no verificada
+eval:
+  profit_target: 1250
+  mll: 1000
+  drawdown: eod
+  lock_offset: 100
+  consistency: 0.4
+  min_days: 1
+  contracts: 2
+  dll: 600
+funded:
+  contracts:
+  - - 0
+    - 1
+  - - 1000
+    - 2
+  mll: 1000
+  drawdown: eod
+  lock_offset: 100
+  floor_after_payout: 100
+  payout:
+    split: 0.9
+    min_green_days: 5
+    green_min: 100
+    min_trading_days: 5
+    min_cycle_profit: 1
+    min_amount: 500
+    max_amount:
+    - 1000
+    pct_of_profit: 0.5
+    max_payouts: 5
+  dll: 600
+  dll_scale_pct: 0.6
+notes:
+- Precios de terceros (eltraderfinanciado, 2026-10-29); ETFPROMO -30% no verificado como reutilizable
+- DLL de Flex de terceros
+max_funded_accounts: 5
+firm_max_open: 10
+inactivity_days: 30

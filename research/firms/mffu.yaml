@@ -34,6 +34,22 @@ sources:
   # Official site (prices: page JSON contains price / reset_price / activation_price per product), fetched 2026-10-24
   - https://myfundedfutures.com/
   - https://myfundedfutures.com/plans
+  # --- Added 2026-10-29 for non-50K sizes (25K/100K/150K); 50K entries keep as_of 2026-10-24 ---
+  - https://help.myfundedfutures.com/en/articles/14116402-rapid-plan-25k-a-comprehensive-look                 # mod 2026-08-14
+  - https://help.myfundedfutures.com/en/articles/13286542-rapid-plan-100k-a-comprehensive-look                # mod 2026-07-01
+  - https://help.myfundedfutures.com/en/articles/13286582-rapid-plan-150k-a-comprehensive-look                # mod 2026-07-01
+  - https://help.myfundedfutures.com/en/articles/16727601-rapid-eod-25k-a-comprehensive-look                  # mod 2026-09-02
+  - https://help.myfundedfutures.com/en/articles/17036130-builder-plan-25k-a-comprehensive-look               # mod 2026-09-23
+  - https://help.myfundedfutures.com/en/articles/17005296-builder-plan-100k-comprehensive-guide               # mod 2026-09-25
+  - https://help.myfundedfutures.com/en/articles/17035331-builder-plan-150k-comprehensive-guide               # mod 2026-09-25
+  - https://help.myfundedfutures.com/en/articles/15862870-builder-plan-25k-legacy-no-dll                      # legacy, not used
+  # Official site 2026-10-29: product JSON (price/reset_price/activation_price, profit_targets, max_position_size(_in_funded),
+  # buffer_amount, minimum_withdrawal_amount, minimum_profit_since_last_payout, withdrawal_cap_amount, max_drawdown_limit)
+  # is embedded in the myfundedfutures.com/ homepage RSC payload (not /plans any more). Per-size rule tables:
+  - https://myfundedfutures.com/plans/rapid
+  - https://myfundedfutures.com/plans/rapid-eod
+  - https://myfundedfutures.com/plans/builder
+  - https://myfundedfutures.com/plans/pro
   # Third-party (fallback)
   - https://pipback.com/firms/myfundedfutures/
   - https://tradecovex.com/guides/best-trade-copier-mffu-2026
@@ -144,10 +160,33 @@ plans:
         strategy_restrictions:
           <<: *mffu_restrictions
           news_trading: "T1 news prohibited in sim funded (no positions/orders 2 min before and after FOMC, NFP, CPI, etc.); allowed in eval"
+      # 25K/100K/150K (2026-10-29): help articles 14116402 / 13286542 / 13286582 + site product JSON + /plans/rapid table.
+      # Unlisted fields as 50K: one_time, activation 0, no DLL, eval EOD / funded intraday trailing (balance basis $0, lock $100),
+      # no funded consistency, no per-payout cap, split 90, daily (first 24h after first trade), inactivity 7d, T1 news banned in sim.
+      # promo_usd = list x 0.6 (code CLUB 40%, site banner), rounded like the 50K site price; new customers 50% ('fiftyoff') instead.
+      25K:
+        eval: {price_usd: 145, reset_fee_usd: 145, activation_fee_usd: 0, promo_usd: 87, profit_target_usd: 1500, mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25100, breach: realtime}, dll: null, consistency_pct: 50, min_trading_days: 2, max_contracts: "3 mini / 30 micros"}
+        funded: {mll: {amount_usd: 1000, type: intraday_trailing, lock_balance_usd: 100}, lock_trigger_equity_usd: 1100, dll: null, payout: {buffer_usd: 1100, min_payout_usd: 500, min_profit_to_request_usd: 1600, max_payout_per_cycle_usd: null, split_pct: 90, frequency: daily}, max_contracts: "3 mini / 30 micros", scaling_plan: null}
+        account_limits: {max_funded_accounts: 5, max_eval_accounts: 10}   # 5 across 25K/50K; 3 total if any 100K/150K sim funded held
+        live: {mll_usd: 1000, type: eod_trailing_to_0, max_contracts: "2 mini / 20 micros"}
+      100K:
+        eval: {price_usd: 356, reset_fee_usd: 356, activation_fee_usd: 0, promo_usd: 214, profit_target_usd: 6000, mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, dll: null, consistency_pct: 50, min_trading_days: 2, max_contracts: "8 mini / 80 micros"}
+        funded: {mll: {amount_usd: 3000, type: intraday_trailing, lock_balance_usd: 100}, lock_trigger_equity_usd: 3100, dll: null, payout: {buffer_usd: 3100, min_payout_usd: 500, min_profit_to_request_usd: 3600, max_payout_per_cycle_usd: null, split_pct: 90, frequency: daily}, max_contracts: "8 mini / 80 micros", scaling_plan: null}
+        account_limits: {max_funded_accounts: 3, max_eval_accounts: 10}   # 3 total sim funded across all sizes/plans once any 100K/150K held
+        live: {mll_usd: 3000, type: eod_trailing_to_0, max_contracts: "6 mini / 60 micros"}
+      150K:
+        eval: {price_usd: 463, reset_fee_usd: 463, activation_fee_usd: 0, promo_usd: 278, profit_target_usd: 9000, mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 150100, breach: realtime}, dll: null, consistency_pct: 50, min_trading_days: 2, max_contracts: "10 mini / 100 micros"}
+        funded: {mll: {amount_usd: 4500, type: intraday_trailing, lock_balance_usd: 100}, lock_trigger_equity_usd: 4600, dll: null, payout: {buffer_usd: 4600, min_payout_usd: 500, min_profit_to_request_usd: 5100, max_payout_per_cycle_usd: null, split_pct: 90, frequency: daily}, max_contracts: "10 mini / 100 micros", scaling_plan: null}
+        account_limits: {max_funded_accounts: 3, max_eval_accounts: 10}
+        live: {mll_usd: 4500, type: eod_trailing_to_0, max_contracts: "8 mini / 80 micros"}
     notes:
       - "Live: $0 start, $2,000 EOD drawdown that stops at $0, 3 mini/30 micro, 90/10, daily. Up to $5,000 of sim profits held in 'Reserve' (bonus after 20 profitable live days + $10,000 gross live payouts, or used to cover negative live balance). Multiple Rapid accounts merge into one live account."
+      - "2026-10-29: Rapid 50K still 209/209 in product JSON (unchanged). All four sizes: same $5,000 Reserve cap and $10,000 single-day auto-live trigger (Understanding Rapid Live, not size-scaled)."
+      - "Max-contract CONFLICT 100K/150K funded: the CMS fallback array on /plans/rapid says 10/100 and 15/150, but the rendered table (fed by product JSON max_position_size_in_funded 8/10) and help articles say 8/80 and 10/100. Used 8/80, 10/100."
     unknowns:
       - "Explicit per-payout maximum for intraday Rapid (none stated)."
+      - "Exact site-displayed promo prices for 25K/100K/150K (computed list x 0.6, not seen rendered)."
+      - "Whether the Reserve Performance Bonus thresholds scale with Rapid size (Pro's do: $10k/$20k/$30k gross live payouts); Reserve article covers 50K wording only."
 
   - plan: Rapid EOD
     sizes:
@@ -189,8 +228,18 @@ plans:
         strategy_restrictions:
           <<: *mffu_restrictions
           news_trading: "T1 news prohibited in sim funded"
-    notes: []
-    unknowns: []
+      # Only 25K and 50K exist (no 100K/150K Rapid EOD in product JSON or /plans/rapid-eod, 2026-10-29).
+      # 25K: help article 16727601 (mod 2026-09-02) + product JSON (id 94) + /plans/rapid-eod (rendered: "One-time fee $87 ... $145").
+      25K:
+        eval: {price_usd: 145, reset_fee_usd: 145, activation_fee_usd: 0, promo_usd: 87, profit_target_usd: 1500, mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25100, breach: realtime}, dll: null, consistency_pct: 30, min_trading_days: 4, max_contracts: "2 mini / 20 micros"}
+        funded: {mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 100}, lock_trigger_eod_usd: 1100, dll: null, consistency_pct: null, payout: {buffer_usd: 1100, min_payout_usd: 500, min_profit_to_request_usd: 1600, net_profit_since_last_payout_usd: 250, max_payout_per_cycle_usd: null, split_pct: 90, frequency: daily}, max_contracts: "2 mini / 20 micros", scaling_plan: null, inactivity_days: 7}
+        account_limits: {max_funded_accounts: 3, max_eval_accounts: 10}   # plan-specific: max 3 Rapid EOD 25K sim funded
+        live: {mll_usd: 1000, type: eod_trailing_to_0, max_contracts: "2 mini / 20 micros"}
+    notes:
+      - "Rapid EOD 50K live contracts on /plans/rapid-eod: 4/40 (vs 3/30 for Rapid 50K live in Understanding Rapid Live); article says EOD live follows standard Rapid rules - unresolved."
+      - "Product JSON for Rapid EOD 50K (2026-10-29): price 225, minimum_profit_since_last_payout 500, max_position_size_in_funded 3 - matches existing 50K entry."
+    unknowns:
+      - "Rapid EOD 25K: 'net profit since last payout $250' unlocks a payout but min payout is $500 - unclear whether a request can be made with only $250-$499 new profit (from remaining balance above buffer)."
 
   - plan: Pro   # redesigned Pro (article 2026-10-14)
     sizes:
@@ -235,11 +284,29 @@ plans:
           other:
             - "Pro 'Consistent Trading Policy' (soft, discretionary): 'Avoidance of Maximum Contract Sizes ... resist the urge to employ maximum or oversized contract sizes in every trade'; 'Avoid high-risk, high-reward strategies'; violations may lead to restrictions, penalties or termination. Relevant to all-in single-trade strategies."
             - "Same firm-wide hedging/fair-play/2% price limit rules apply."
+      # 100K/150K (2026-10-29): redesigned-Pro article 17573707 (mod 2026-10-14) + product JSON (ids 133/137) + /plans/pro table.
+      # No Pro 25K exists. Unlisted fields as 50K: one_time, no DLL, funded EOD trailing on size basis, lock at size+100 and static after
+      # first payout, every 14 calendar days from first trade, buffer cleared (one-time pre-buffer withdrawal up to 60%, min $1,000),
+      # $100,000 per-user sim cap, 3 consecutive payouts or $20,000 profit -> live review, split 80, inactivity 7d, T1 news banned in sim.
+      100K:
+        eval: {price_usd: 401, reset_fee_usd: 401, activation_fee_usd: 0, promo_usd: 241, profit_target_usd: 6000, mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, dll: null, consistency_pct: 50, min_trading_days: 2, max_contracts: "6 mini / 60 micros"}
+        funded: {mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100100}, mll_after_payout: "moves to $100,100, static", dll: null, consistency_pct: null, payout: {buffer_usd: 3100, min_payout_usd: 1000, max_payout_per_cycle_usd: 100000, pre_buffer_withdrawal_pct: 60, split_pct: 80, frequency: "every 14 calendar days"}, payouts_before_live: 3, lifetime_payout_cap_usd: 100000, max_contracts: "6 mini / '6 micro' (sic, likely 60)", scaling_plan: null}
+        account_limits: {max_funded_accounts: 3, max_eval_accounts: 10}
+        live: {mll_usd: 3000, type: eod_trailing, max_contracts: 3, reserve_bonus: "20 profitable live days + $20,000 gross live payouts"}
+      150K:
+        eval: {price_usd: 557, reset_fee_usd: 557, activation_fee_usd: 0, promo_usd: 334, profit_target_usd: 9000, mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 150100, breach: realtime}, dll: null, consistency_pct: 50, min_trading_days: 2, max_contracts: "9 mini / 90 micros"}
+        funded: {mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 150100}, mll_after_payout: "moves to $150,100, static", dll: null, consistency_pct: null, payout: {buffer_usd: 4600, min_payout_usd: 1000, max_payout_per_cycle_usd: 100000, pre_buffer_withdrawal_pct: 60, split_pct: 80, frequency: "every 14 calendar days"}, payouts_before_live: 3, lifetime_payout_cap_usd: 100000, max_contracts: "9 mini / '9 micro' (sic, likely 90)", scaling_plan: null}
+        account_limits: {max_funded_accounts: 3, max_eval_accounts: 10}
+        live: {mll_usd: 4500, type: eod_trailing, max_contracts: 4, reserve_bonus: "20 profitable live days + $30,000 gross live payouts"}
     notes:
+      - "2026-10-29: Pro 50K price 265 and Pro 50K 1 Day 379 unchanged in product JSON. Pro account limit: 5 only if holding 25K/50K sizes; any Pro 100K/150K sim funded -> 3 total (help 16498635)."
+      - "/plans/pro FAQ says '$50K-$150K sizes'; Rapid EOD page blurb says '$90K-$150K' - typo."
       - "Live (redesigned Pro): $0 start, -$2,000 EOD trailing MLL, 2 contracts max, 80/20, $250 min payout. Sim profit held as Reserve; bonus after 20 profitable live days + $10,000 gross live payouts."
       - "Legacy Pro accounts keep old rules (5 mini sim funded, static live drawdown, live allocation $2,000-$5,000)."
     unknowns:
       - "Exact amount withdrawable per 14-day cycle after buffer (assumed any amount above buffer, >= $1,000)."
+      - "Pro 100K/150K funded micro limit printed as '6 / 6' and '9 / 9' on both article and site (likely 60/90); product JSON only stores minis (6/9)."
+      - "Promo prices for 100K/150K computed (list x 0.6, CLUB), not seen rendered."
 
   - plan: Builder   # current 'entry' plan (replaces Flex in catalogue)
     sizes:
@@ -281,7 +348,34 @@ plans:
         strategy_restrictions:
           <<: *mffu_restrictions
           news_trading: allowed
+      # 25K/100K/150K (2026-10-29): help articles 17036130 / 17005296 / 17035331 + product JSON (ids 127/128/129) + /plans/builder table.
+      # Builder 25K is the 'v2' product (created 2026-09-20, with soft DLL); 'Builder 25K Legacy No DLL' article = old product, not modelled.
+      # Unlisted fields as 50K: one_time, EOD trailing eval & funded (funded balance basis $0, lock $100; MLL resets to $100 after 1st payout),
+      # soft-pause DLL (not a breach) in eval and sim, no eval consistency, 1 day min, funded 50% consistency per cycle, >= 2 trading days
+      # per cycle, first request >= 48h after first trade, every 48h, split 80, 5 sim payouts then live, inactivity 7d, news allowed.
+      25K:
+        eval: {price_usd: 105, reset_fee_usd: 105, activation_fee_usd: 0, promo_usd: 63, profit_target_usd: 1500, mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25100, breach: realtime}, dll: {amount_usd: 600, kind: pause}, consistency_pct: null, min_trading_days: 1, max_contracts: "2 mini / 20 micros"}
+        funded: {mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 100}, dll: {amount_usd: 600, kind: pause}, consistency_pct: 50, payout: {buffer_usd: 1100, min_profit_to_request_usd: 250, min_payout_usd: 250, max_payout_per_cycle_usd: 1000, split_pct: 80, frequency: "every 48h when criteria met"}, payouts_before_live: 5, lifetime_payout_cap_usd: 5000, max_contracts: "2 mini / 20 micros", scaling_plan: null}   # lifetime implied 5 x 1,000
+        account_limits: {max_funded_accounts: 2, max_eval_accounts: 10}   # plan-specific: 2 Builder 25K sim funded per user
+        live: {mll_usd: 1000, type: "eod_trailing, static once MLL reaches $0", dll_usd: null, min_payout_usd: 250, split_pct: 80}   # live DLL: article 'None', /plans/builder '$600' - conflict
+      100K:
+        eval: {price_usd: 282, reset_fee_usd: 282, activation_fee_usd: 0, promo_usd: 169, profit_target_usd: 6000, mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, dll: {amount_usd: 1750, kind: pause}, consistency_pct: null, min_trading_days: 1, max_contracts: "6 mini / 60 micros"}
+        funded: {mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100}, dll: {amount_usd: 1750, kind: pause}, consistency_pct: 50, payout: {buffer_usd: 3100, min_profit_to_request_usd: 1000, min_payout_usd: 1000, max_payout_per_cycle_usd: 3000, split_pct: 80, frequency: "every 48h when criteria met"}, payouts_before_live: 5, lifetime_payout_cap_usd: 15000, max_contracts: "6 mini / 60 micros", scaling_plan: null}   # lifetime implied 5 x 3,000
+        account_limits: {max_funded_accounts: 1, max_eval_accounts: 10}   # 1 Builder 100K per user; and 3-total rule once any 100K/150K held
+        live: {mll_usd: 3000, type: "eod_trailing, static at +$100", dll_usd: null, max_contracts: "3 mini / 30 micros", min_payout_usd: 250, split_pct: 80}   # live DLL: article 'None', site '$1,750' - conflict
+      150K:
+        eval: {price_usd: 398, reset_fee_usd: 398, activation_fee_usd: 0, promo_usd: 239, profit_target_usd: 9000, mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 150100, breach: realtime}, dll: {amount_usd: 2500, kind: pause}, consistency_pct: null, min_trading_days: 1, max_contracts: "9 mini / 90 micros"}
+        funded: {mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 100}, dll: {amount_usd: 2500, kind: pause}, consistency_pct: 50, payout: {buffer_usd: 4600, min_profit_to_request_usd: 1500, min_payout_usd: 1500, max_payout_per_cycle_usd: 4500, split_pct: 80, frequency: "every 48h when criteria met"}, payouts_before_live: 5, lifetime_payout_cap_usd: 22500, max_contracts: "9 mini / 90 micros", scaling_plan: null}   # cap: article + product JSON 4,500; /plans/builder table says 3,500 (conflict)
+        account_limits: {max_funded_accounts: 1, max_eval_accounts: 10}
+        live: {mll_usd: 4500, type: "eod_trailing, static at +$100", dll_usd: null, max_contracts: "4 mini / 40 micros", min_payout_usd: 250, split_pct: 80}   # live DLL: article 'None', site '$2,500' - conflict
     notes:
       - "Live: $2,000 EOD trailing (static once at $0), $1,000 DLL, 80/20, daily payouts, max 1 live account."
+      - "2026-10-29: Builder 50K prices unchanged in product JSON ($2,000 MLL 153; $1,500 add-on 125, add-on min payout 500, cap 2,000, buffer 1,600). /plans page blurb still says '$25K & $50K Builder' although 100K/150K products and articles exist (100K/150K created 2026-09-20)."
+      - "Builder 150K article text says buffer 'MLL + $100 or $4,500' (typo); its table, product JSON and site say $4,600."
+      - "Builder 25K FAQ example ('$2,600 ... $500 net profit above it') is copy-pasted from 50K; table says $250 above $1,100 buffer."
       - "Studio plans (#001 $10K/$140, #002 $20K/$280, #003 $5K/$75): static MLL ($500/$1,000/$250), no DLL, no consistency, payouts anytime, sim daily profit cap, micros only, 1 account, Hyperprop only - not modelled."
-    unknowns: []
+    unknowns:
+      - "Builder 150K max payout per cycle: $4,500 (article + product JSON withdrawal_cap_amount) vs $3,500 (/plans/builder table). Used 4,500."
+      - "Builder live DLL for 25K/100K/150K: size articles say 'None', /plans/builder says $600/$1,750/$2,500 (50K entry says $1,000 live DLL)."
+      - "Whether Builder 'one account per user' is per size (help 16498635 lists only 25K=2, 50K=1; site says 1 for 50K/100K/150K) or across all Builder sizes (site FAQ: 'one active Builder account per user')."
+      - "Builder 25K/100K/150K promo prices computed (list x 0.6, CLUB), not seen rendered. Payout overview also mentions a $100k total sim cap; per-size lifetime caps above are implied 5 x per-cycle cap."

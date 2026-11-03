@@ -42,27 +42,39 @@ class PlanResult:
     ev_per_slot_day: float
 
 
+def _scale(plan: Plan) -> float:
+    """Tamaño relativo a una cuenta de 50K: la rejilla en $ y el tamaño por trade se escalan con él."""
+    return plan.start_balance / 50_000
+
+
+def _scaled(values, s):
+    """Valores originales (calibrados para 50K) más los mismos escalados al tamaño de la cuenta."""
+    return set(values) | {float(round(v * s)) for v in values}
+
+
 def eval_grid(plan: Plan, fr: Frictions):
-    r = plan.eval
-    targets = {r.profit_target, r.profit_target / 2, r.profit_target / 3, 750.0, 1000.0, 1500.0, 2000.0}
+    r, s = plan.eval, _scale(plan)
+    targets = {r.profit_target, r.profit_target / 2, r.profit_target / 3} | _scaled((750.0, 1000.0, 1500.0, 2000.0), s)
     if r.consistency:
         targets.add(round(r.consistency * r.profit_target))
-    risks = [None, 1500.0, 1000.0]
-    return [EvalStrategy(day_target=t, risk=k, friction=fr.eval) for t, k in product(sorted(targets), risks)]
+    risks = sorted(_scaled((1500.0, 1000.0), s)) + [None]
+    return [EvalStrategy(day_target=t, risk=k, friction=fr.eval * s, contracts=s)
+            for t, k in product(sorted(targets), risks)]
 
 
 def funded_grid(plan: Plan, fr: Frictions):
-    po = plan.funded.payout
-    gordos = {0.0, 1000.0, 2000.0, 3000.0, 4000.0, 6000.0, 8000.0, 10000.0}
+    po, s = plan.funded.payout, _scale(plan)
+    gordos = _scaled((0.0, 1000.0, 2000.0, 3000.0, 4000.0, 6000.0, 8000.0, 10000.0), s)
     if po.buffer:
         gordos |= {po.buffer + max(po.min_amount, po.min_cycle_profit), po.buffer + 1000.0}
     base = max(po.green_min, 150.0)
-    grinds = sorted({base, 300.0, 500.0})
+    grinds = sorted({base} | _scaled((300.0, 500.0), s))
     out = []
     # stop de los días verdes como múltiplo del objetivo; inf = sin stop (arriesgar todo el margen)
-    for g, t, mult, cg in product(sorted(gordos), grinds, (2.0, 4.0, 7.0, 10.0, float("inf")), (0.0, 1000.0, 4000.0)):
+    for g, t, mult, cg in product(sorted(gordos), grinds, (2.0, 4.0, 7.0, 10.0, float("inf")),
+                                  sorted(_scaled((0.0, 1000.0, 4000.0), s))):
         out.append(FundedStrategy(gordo_target=g, grind_target=t, grind_risk=t * mult, cycle_gordo=cg,
-                                  friction_gordo=fr.gordo, friction_grind=fr.grind))
+                                  friction_gordo=fr.gordo, friction_grind=fr.grind * s, grind_contracts=0.5 * s))
     return out
 
 

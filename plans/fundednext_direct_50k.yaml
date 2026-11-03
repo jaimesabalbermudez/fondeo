@@ -1,0 +1,35 @@
+id: fundednext_direct_50k
+firm: FundedNext Futures
+name: Direct 50K (directo)
+start_balance: 50000
+costs:
+  eval_price: 283.99
+  code_price: 169.99
+  code_reusable: true
+  billing: one_time
+  activation_fee: 0
+  discount: Precio de oferta
+eval: null
+funded:
+  contracts: 3
+  mll: 2000
+  drawdown: eod
+  lock_offset: 100
+  floor_after_payout: 100
+  dll: 1000
+  payout:
+    split: 0.9
+    consistency: 0.2
+    buffer: 2100
+    min_amount: 800
+    max_amount:
+    - 1200
+    max_payouts: 5
+max_funded_accounts: 5
+firm_max_activations_30d: 10
+p_payout_denial: 0.3
+inactivity_days: 7
+hold_passed: true
+notes:
+- '''Account flipping'' prohíbe trades all-in sin umbral numérico: p_payout_denial es una hipótesis'
+- Consistencia 20% perpetua

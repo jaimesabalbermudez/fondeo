@@ -1,0 +1,36 @@
+id: mffu_rapid_25k
+firm: MyFundedFutures
+name: Rapid 25K (funded intradía)
+start_balance: 25000
+costs:
+  eval_price: 145
+  code_price: 87
+  code_reusable: false
+  reset_price: 145
+  billing: one_time
+  activation_fee: 0
+  discount: Promo del sitio -40% (CLUB); reutilización no confirmada
+eval:
+  profit_target: 1500
+  mll: 1000
+  drawdown: eod
+  lock_offset: 100
+  consistency: 0.5
+  min_days: 2
+  contracts: 3
+funded:
+  contracts: 3
+  mll: 1000
+  drawdown: intraday
+  lock_offset: 100
+  payout:
+    split: 0.9
+    min_cycle_profit: 1
+    buffer: 1100
+    min_amount: 500
+max_funded_accounts: 5
+notes:
+- Con alguna funded de 100K/150K el límite total de la firma baja a 3
+firm_max_funded: 5
+firm_max_evals: 10
+inactivity_days: 7

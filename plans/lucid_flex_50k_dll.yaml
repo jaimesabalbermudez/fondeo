@@ -1,7 +1,7 @@
 id: lucid_flex_50k_dll
 firm: Lucid Trading
 name: Flex 50K (DLL $1.200, consistencia 40%)
-costs: {eval_price: 115, code_price: 69, code_reusable: true, reset_price: 80, billing: one_time, activation_fee: 0, discount: "Cupón oficial en checkout: $115 -> $69 (lucidtrading.com, captura 2026-10-24); se asume válido en cada compra"}
+costs: {eval_price: 115, code_price: 80.5, code_reusable: true, reset_price: 80, billing: one_time, activation_fee: 0, discount: "Cupón -30% en checkout: $115 -> $80.50; reset $80 (captura de lucidtrading.com del usuario, 2026-10-29)"}
 eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 100, dll: 1200, consistency: 0.40, min_days: 1, contracts: 4}
 funded:
   contracts: [[0, 2], [1000, 3], [2000, 4]]   # máx. NQ: scaling plan funded por profit (se actualiza al cierre)

@@ -1,5 +1,5 @@
 firm: Lucid Trading
-as_of: 2026-10-24
+as_of: 2026-10-24   # 50K entries; 25K/100K/150K added 2026-10-29
 sources:
   # Official help center (support.lucidtrading.com). dateModified taken from each article's metadata.
   - https://support.lucidtrading.com/en/articles/12945790-lucidflex-evaluation-account      # mod 2026-10-19
@@ -45,6 +45,9 @@ sources:
   - https://www.eltraderfinanciado.com/en/news/lucid-trading/lucid-trading-on-demand-payouts-40-dll-october-2026   # 2026-10-19
   - https://www.eltraderfinanciado.com/en/news/lucid-trading/lucid-trading-optional-daily-loss-limit             # updated 2026-10-13, data 2026-08-06
   - https://proptradingvibes.com/blog/lucid-trading-max-drawdown                                                  # mod 2026-10-12
+  # Added 2026-10-29 (25K/100K/150K sizes). Official per-size tables re-read 2026-10-29 from the help-center articles above (no rule changes found vs 2026-10-24).
+  # lucidtrading.com still returns HTTP 403 (Cloudflare) on 2026-10-29 -> all prices, reset fees and Flex DLL amounts below are THIRD-PARTY.
+  - https://www.eltraderfinanciado.com/en/discounts/lucid-trading   # full price/reset table all plans x sizes x configs, "verified daily", seen 2026-10-29
 plans:
   - plan: Flex   # "LucidFlex"
     sizes:
@@ -100,7 +103,21 @@ plans:
             - "Trade with Integrity: prohibits exploiting system errors, sim price discrepancies, 'tactics that do not reflect real-world trading conditions'."
             - "Circumventing the scaling plan (e.g. minis+micros) can lead to profit wiped for the day."
             - "Live: 'yolo' traders not eligible for bonus/escrow and may get longer cooldowns (live only)."
+      # --- Sizes added 2026-10-29. Rules: official help center (Flex eval/funded/payouts/scaling/drawdown articles, re-read 2026-10-29, unchanged vs 2026-10-24).
+      # --- Prices/resets/DLL $: THIRD-PARTY eltraderfinanciado.com/en/discounts/lucid-trading (verified 2026-10-29). Reset fee there = list price -30%.
+      # Lucid sells only 25K/50K/100K/150K for public plans (no other size found in any official table).
+      25K:
+        eval: {price_usd: 65, price_dll_off_usd: 86, price_with_code_usd: {dll_on: 45.50, dll_off: 60.20}, reset_fee_usd: {dll_on: 45, dll_off: 60}, profit_target_usd: 1250, mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25100, breach: realtime}, dll: {amount_usd: 600, kind: pause}, consistency_pct: 40, max_contracts: "2 mini / 20 micros"}   # DLL $ third-party only; 50% consistency add-on +$7..35 (exact per size unknown)
+        funded: {mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25100}, lock_trigger_eod_usd: 26100, dll: {amount_usd: 600, kind: pause}, consistency_pct: null, payout: {cycle_requirement: "5 days >= $100 + positive cycle profit", min_payout_usd: 500, max_payout_per_cycle_usd: 1000, max_pct_of_profit: 50, buffer_usd: 0, split_pct: 90}, payouts_before_live: 5, lifetime_payout_cap_usd: 5000, scaling_plan: "$0-999 -> 1 mini/10 micros; $1,000+ -> 2/20"}   # lifetime cap implied 5 x $1,000
+      100K:
+        eval: {price_usd: 215, price_dll_off_usd: 279, price_with_code_usd: {dll_on: 150.50, dll_off: 195.30}, reset_fee_usd: {dll_on: 150, dll_off: 195}, profit_target_usd: 6000, mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, dll: {amount_usd: 1800, kind: pause}, consistency_pct: 40, max_contracts: "6 mini / 60 micros"}   # prices before 2026-10-18: $258 / $293
+        funded: {mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100100}, lock_trigger_eod_usd: 103100, dll: {amount_usd: 1800, kind: pause}, consistency_pct: null, payout: {cycle_requirement: "5 days >= $200 + positive cycle profit", min_payout_usd: 500, max_payout_per_cycle_usd: 2500, max_pct_of_profit: 50, buffer_usd: 0, split_pct: 90}, payouts_before_live: 5, lifetime_payout_cap_usd: 12500, scaling_plan: "$0-999 -> 3 minis/30 micros; $1,000-1,999 -> 4/40; $2,000-2,999 -> 5/50; $3,000+ -> 6/60"}
+      150K:
+        eval: {price_usd: 323, price_dll_off_usd: 379, price_with_code_usd: {dll_on: 226.10, dll_off: 265.30}, reset_fee_usd: {dll_on: 225, dll_off: 265}, profit_target_usd: 9000, mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 150100, breach: realtime}, dll: {amount_usd: 2700, kind: pause}, consistency_pct: 40, max_contracts: "10 mini / 100 micros"}   # prices before 2026-10-18: $372 / $407
+        funded: {mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 150100}, lock_trigger_eod_usd: 154600, dll: {amount_usd: 2700, kind: pause}, consistency_pct: null, payout: {cycle_requirement: "5 days >= $250 + positive cycle profit", min_payout_usd: 500, max_payout_per_cycle_usd: 3000, max_pct_of_profit: 50, buffer_usd: 0, split_pct: 90}, payouts_before_live: 5, lifetime_payout_cap_usd: 15000, scaling_plan: "$0-999 -> 4 minis/40 micros; $1,000-1,999 -> 5/50; $2,000-2,999 -> 6/60; $3,000-4,499 -> 8/80; $4,500+ -> 10/100"}
     notes:
+      - "2026-10-29 update: ETFPROMO is now listed by eltraderfinanciado as a PERMANENT 30% code on Flex/Pro/Daily/Direct, all sizes (the 40%-on-DLL version expired 2026-10-23). Reset fee (third-party) ~= list price minus 30%, rounded down."
+      - "Third-party DLL amounts for Flex DLL ON: 25K $600 / 50K $1,200 / 100K $1,800 / 150K $2,700 (same as Pro/Daily official tables). Official Flex articles only say 'Optional'."
       - "Flex customization (2026-10): DLL ON/OFF x consistency 40%/50% = 4 configurations, fixed at purchase. DLL ON = cheaper + On Demand (intraday) payouts."
       - "Other sizes (eval target / MLL / max size): 25K $1,250/$1,000/2 mini; 100K $6,000/$3,000/6 mini; 150K $9,000/$4,500/10 mini. Min winning-day profit 25K $100, 100K $200, 150K $250. Lock floors 25,100/100,100/150,100 at trail balances 26,100/103,100/154,600."
       - "Payout max wording conflict (same official article): text says 'request 50% of their account balance up to a maximum', table says '50% of Profit up to $2,000'. Interpreted as 50% of profit."
@@ -114,6 +131,8 @@ plans:
       - "Official Flex DLL dollar amount when DLL ON (third-party: $1,200 on 50K, same as Pro/Daily)."
       - "Whether MLL breach is evaluated on unrealized intraday equity (assumed realtime; not explicitly stated)."
       - "No explicit lifetime payout cap beyond the 5-payout limit."
+      - "Exact 50% consistency add-on price per size (only '+$7..$35 depending on size', third-party)."
+      - "Official reset fees (third-party 50K: DLL ON $80 / DLL OFF $115, i.e. list -30%)."
 
   - plan: Pro    # "LucidPro"
     sizes:
@@ -165,12 +184,26 @@ plans:
           copy_trading: allowed
           other:
             - "40% payout-cycle consistency effectively limits how much one big day can count toward a payout."
+      # --- Sizes added 2026-10-29. Rules: official Pro eval/funded/payouts/DLL/drawdown articles (re-read 2026-10-29). Prices/resets: THIRD-PARTY eltraderfinanciado discounts page 2026-10-29.
+      25K:
+        eval: {price_usd: 108, price_dll_off_usd: 129, price_with_code_usd: {dll_on: 75.60, dll_off: 90.30}, reset_fee_usd: {dll_on: 75, dll_off: 90}, profit_target_usd: 1250, mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25100, breach: realtime}, dll: {amount_usd: null, kind: null}, consistency_pct: null, min_trading_days: 1, max_contracts: "2 mini / 20 micros"}   # DLL CONFLICT: official eval + DLL articles say 25K 'None'; official funded article says fixed DLL $600 (optional); third-party sells a 25K '$600 DLL' config at $108 and 'no limit' at $129
+        funded: {mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25100}, lock_trigger_eod_usd: 26100, dll: {amount_usd: 600, kind: pause, note: "conflict, see eval comment; if present -> LucidScale 60% of peak EOD profit after close > $26,100"}, consistency_pct: 40, payout: {cycle_requirement: "cycle profit >= $250 + largest day <= 40% + balance > buffer", min_profit_to_request_usd: 250, min_payout_usd: 500, max_payout_per_cycle_usd: [1000, 1500, 1500, 1500, 1500], buffer_usd: 1100, split_pct: 90}, payouts_before_live: 5, lifetime_payout_cap_usd: 7000, scaling_plan: "None"}   # min balance for max payout: $27,100 (P1) / $27,600 (P2+)
+      100K:
+        eval: {price_usd: 272, price_dll_off_usd: 322, price_with_code_usd: {dll_on: 190.40, dll_off: 225.40}, reset_fee_usd: {dll_on: 190, dll_off: 225}, profit_target_usd: 6000, mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, dll: {amount_usd: 1800, kind: pause}, consistency_pct: null, min_trading_days: 1, max_contracts: "6 mini / 60 micros"}   # DLL OFF was $307 before 2026-10-18
+        funded: {mll: {amount_usd: 3000, type: eod_trailing, lock_balance_usd: 100100}, lock_trigger_eod_usd: 103100, dll: {amount_usd: 1800, kind: pause}, consistency_pct: 40, payout: {cycle_requirement: "cycle profit >= $750 + largest day <= 40% + balance > buffer", min_profit_to_request_usd: 750, min_payout_usd: 500, max_payout_per_cycle_usd: [2500, 3000, 3000, 3000, 3000], buffer_usd: 3100, split_pct: 90}, payouts_before_live: 5, lifetime_payout_cap_usd: 14500, scaling_plan: "None"}   # min balance for max payout $105,600 / $106,100
+      150K:
+        eval: {price_usd: 365, price_dll_off_usd: 429, price_with_code_usd: {dll_on: 255.50, dll_off: 300.30}, reset_fee_usd: {dll_on: 255, dll_off: 300}, profit_target_usd: 9000, mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 150100, breach: realtime}, dll: {amount_usd: 2700, kind: pause}, consistency_pct: null, min_trading_days: 1, max_contracts: "10 mini / 100 micros"}   # DLL OFF was $410 before 2026-10-18
+        funded: {mll: {amount_usd: 4500, type: eod_trailing, lock_balance_usd: 150100}, lock_trigger_eod_usd: 154600, dll: {amount_usd: 2700, kind: pause}, consistency_pct: 40, payout: {cycle_requirement: "cycle profit >= $1,000 + largest day <= 40% + balance > buffer", min_profit_to_request_usd: 1000, min_payout_usd: 500, max_payout_per_cycle_usd: [3000, 3500, 3500, 3500, 3500], buffer_usd: 4600, split_pct: 90}, payouts_before_live: 5, lifetime_payout_cap_usd: 17000, scaling_plan: "None"}   # min balance for max payout $157,600 / $158,100
     notes:
+      - "2026-10-29: ETFPROMO now a permanent 30% code (third-party); the 50K price_notes 'expired 2026-10-23' refers only to the 40%-off DLL version."
+      - "Pro payouts article (re-read 2026-10-29) does not itself state a payout count; the 5-payout limit comes from the live-structure article."
       - "Pro funded 'No simulated payout caps' marketing line conflicts with per-payout max table and 5-payout limit; per-payout max table is used."
       - "Example official min balances (50K): $52,600 for a $500 payout; $54,100 for $2,000 first payout; $54,600 for $2,500 payout 2+."
     unknowns:
       - "Official prices/reset fees."
       - "Explicit statement of MLL behaviour after payout."
+      - "Whether Pro 25K has a DLL option at all (official eval/DLL articles: None; funded article: $600; third-party sells $600 DLL config)."
+      - "Official reset fees (third-party 50K: DLL ON $120 / DLL OFF $150)."
 
   - plan: Direct   # "LucidDirect" - straight to funded, no evaluation
     sizes:
@@ -217,10 +250,23 @@ plans:
           hedging_stacking: "Firm-wide hedging ban."
           copy_trading: allowed
           other: []
+      # --- Sizes added 2026-10-29. Rules: official Direct funded/payout-objectives/DLL/drawdown/consistency articles (re-read 2026-10-29). Prices: THIRD-PARTY eltraderfinanciado discounts page 2026-10-29 (unchanged since 2026-10-19). No reset (no eval).
+      25K:
+        eval: {price_usd: 329, price_with_code_usd: 230.30, reset_fee_usd: null}
+        funded: {mll: {amount_usd: 1000, type: eod_trailing, lock_balance_usd: 25100, breach: realtime}, lock_trigger_eod_usd: 26100, dll: {amount_usd: null, kind: null}, consistency_pct: 20, payout: {cycle_requirement: "profit goal $1,500 (payout 1) / $1,250 (payouts 2+) + largest day <= 20%", profit_goals_usd: [1500, 1250, 1250, 1250, 1250], min_payout_usd: 500, max_payout_per_cycle_usd: [1000, 1000, 1000, 1000, 1000], buffer_usd: null, split_pct: 90}, payouts_before_live: 5, lifetime_payout_cap_usd: 5000, max_contracts: "2 mini / 20 micros", scaling_plan: "None"}   # 25K has no DLL -> presumably no On Demand payouts (EOD schedule)
+      100K:
+        eval: {price_usd: 700, price_with_code_usd: 490, reset_fee_usd: null}
+        funded: {mll: {amount_usd: 3500, type: eod_trailing, lock_balance_usd: 100100, breach: realtime}, lock_trigger_eod_usd: 103600, dll: {amount_usd: 2100, kind: pause, scaling: "60% of highest EOD profit after close > $103,600"}, consistency_pct: 20, payout: {cycle_requirement: "profit goal $6,000 (payout 1) / $3,500 (payouts 2+) + largest day <= 20%", profit_goals_usd: [6000, 3500, 3500, 3500, 3500], min_payout_usd: 500, max_payout_per_cycle_usd: [2500, 2500, 2500, 3000, 3000], buffer_usd: null, split_pct: 90}, payouts_before_live: 5, lifetime_payout_cap_usd: 13500, max_contracts: "6 mini / 60 micros", scaling_plan: "None"}
+      150K:
+        eval: {price_usd: 836, price_with_code_usd: 585.20, reset_fee_usd: null}
+        funded: {mll: {amount_usd: 5000, type: eod_trailing, lock_balance_usd: 150100, breach: realtime}, lock_trigger_eod_usd: 155100, dll: {amount_usd: 3000, kind: pause, scaling: "60% of highest EOD profit after close > $155,100"}, consistency_pct: 20, payout: {cycle_requirement: "profit goal $9,000 (payout 1) / $4,500 (payouts 2+) + largest day <= 20%", profit_goals_usd: [9000, 4500, 4500, 4500, 4500], min_payout_usd: 500, max_payout_per_cycle_usd: [3000, 3000, 3000, 3500, 3500], buffer_usd: null, split_pct: 90}, payouts_before_live: 5, lifetime_payout_cap_usd: 16000, max_contracts: "10 mini / 100 micros", scaling_plan: "None"}
     notes:
       - "Direct 100K/150K have larger MLL ($3,500/$5,000) than other plans."
+      - "Direct 25K: no DLL at all (official DLL + funded tables say 'None'), so no DLL ON/OFF choice."
+      - "2026-10-29: ETFPROMO 30% applies to Direct (third-party)."
     unknowns:
       - "Whether payout can be taken out of profit that would drop balance below a buffer (no buffer stated)."
+      - "Whether Direct 25K (no DLL) gets On Demand payouts or the EOD schedule."
 
   - plan: Daily   # "LucidDaily" - daily payouts, intraday trailing in funded
     sizes:
@@ -272,10 +318,25 @@ plans:
           copy_trading: allowed
           other:
             - "Maximum Daily Profit $8,000 (50K): reaching it moves trader to live automatically."
+      # --- Sizes added 2026-10-29. Rules: official Daily eval/funded/payouts/drawdown/DLL articles (re-read 2026-10-29). Prices/resets: THIRD-PARTY eltraderfinanciado discounts page 2026-10-29.
+      # price_usd = cheapest config (DLL ON + intraday eval). Other configs in price_configs_usd; *_with_code = ETFPROMO -30%; reset fee ~= discounted price.
+      25K:
+        eval: {price_usd: 72, price_configs_usd: {intraday_dll_on: 72, intraday_dll_off: 93, eod_dll_on: 86, eod_dll_off: 115}, price_with_code_usd: {intraday_dll_on: 50.40, intraday_dll_off: 65.10, eod_dll_on: 60.20, eod_dll_off: 80.50}, reset_fee_usd: {intraday_dll_on: 50, intraday_dll_off: 65, eod_dll_on: 60, eod_dll_off: 80}, profit_target_usd: 1250, mll: {amount_usd: 1000, type: "eod_trailing or intraday_trailing (chosen)", lock_balance_usd: 25100, breach: realtime}, dll: {amount_usd: 600, kind: pause}, consistency_pct: 50, max_contracts: "2 mini / 20 micros"}
+        funded: {mll: {amount_usd: 1000, type: intraday_trailing, lock_balance_usd: 25100}, lock_trigger_usd: 26100, dll: {amount_usd: 600, kind: pause}, consistency_pct: null, payout: {cycle_requirement: "balance > buffer + positive profit since last payout", min_payout_usd: 500, max_payout_per_cycle_usd: null, buffer_usd: 1100, split_pct: 90, frequency: daily}, max_daily_profit_usd: 6000, max_contracts: "2 mini / 20 micros", scaling_plan: null}
+      100K:
+        eval: {price_usd: 158, price_configs_usd: {intraday_dll_on: 158, intraday_dll_off: 215, eod_dll_on: 200, eod_dll_off: 258}, price_with_code_usd: {intraday_dll_on: 110.60, intraday_dll_off: 150.50, eod_dll_on: 140, eod_dll_off: 180.60}, reset_fee_usd: {intraday_dll_on: 110, intraday_dll_off: 150, eod_dll_on: 140, eod_dll_off: 180}, profit_target_usd: 6000, mll: {amount_usd: 3000, type: "eod_trailing or intraday_trailing (chosen)", lock_balance_usd: 100100, breach: realtime}, dll: {amount_usd: 1800, kind: pause}, consistency_pct: 50, max_contracts: "6 mini / 60 micros"}
+        funded: {mll: {amount_usd: 3000, type: intraday_trailing, lock_balance_usd: 100100}, lock_trigger_usd: 103100, dll: {amount_usd: 1800, kind: pause}, consistency_pct: null, payout: {cycle_requirement: "balance > buffer + positive profit since last payout", min_payout_usd: 500, max_payout_per_cycle_usd: null, buffer_usd: 3100, split_pct: 90, frequency: daily}, max_daily_profit_usd: 10000, max_contracts: "6 mini / 60 micros", scaling_plan: null}
+      150K:
+        eval: {price_usd: 229, price_configs_usd: {intraday_dll_on: 229, intraday_dll_off: 300, eod_dll_on: 286, eod_dll_off: 358}, price_with_code_usd: {intraday_dll_on: 160.30, intraday_dll_off: 210, eod_dll_on: 200.20, eod_dll_off: 250.60}, reset_fee_usd: {intraday_dll_on: 160, intraday_dll_off: 210, eod_dll_on: 200, eod_dll_off: 250}, profit_target_usd: 9000, mll: {amount_usd: 4500, type: "eod_trailing or intraday_trailing (chosen)", lock_balance_usd: 150100, breach: realtime}, dll: {amount_usd: 2700, kind: pause}, consistency_pct: 50, max_contracts: "10 mini / 100 micros"}
+        funded: {mll: {amount_usd: 4500, type: intraday_trailing, lock_balance_usd: 150100}, lock_trigger_usd: 154600, dll: {amount_usd: 2700, kind: pause}, consistency_pct: null, payout: {cycle_requirement: "balance > buffer + positive profit since last payout", min_payout_usd: 500, max_payout_per_cycle_usd: null, buffer_usd: 4600, split_pct: 90, frequency: daily}, max_daily_profit_usd: 12000, max_contracts: "10 mini / 100 micros", scaling_plan: null}
     notes:
       - "Included for completeness; not a priority plan."
+      - "2026-10-29 third-party 50K full config prices: intraday DLL ON $94 / OFF $129, EOD DLL ON $122 / OFF $165 (with ETFPROMO -30%: 65.80 / 90.30 / 85.40 / 115.50)."
+      - "Daily DLL is fixed per session (does not trail); official Daily DLL article dated 2026-08-19 gives same amounts for eval and funded: 25K $600 / 50K $1,200 / 100K $1,800 / 150K $2,700."
+      - "eltraderfinanciado (2026-10-19) says a Daily version with EOD drawdown in funded is expected before late November 2026 (not yet in official articles)."
     unknowns:
-      - "Consistency 40% vs 50% option conflict between official articles."
+      - "Consistency 40% vs 50% option conflict between official articles (still present 2026-10-29: eval article 50% all sizes; customization article 40% standard / 50% add-on). Third-party price table has no consistency dimension."
+      - "Official reset fees; price of the consistency option per size."
 
   - plan: Maxx   # invitation-only, not purchasable by public
     sizes:

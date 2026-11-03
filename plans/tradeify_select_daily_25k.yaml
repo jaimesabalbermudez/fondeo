@@ -1,0 +1,42 @@
+id: tradeify_select_daily_25k
+firm: Tradeify
+name: Select Daily 25K
+start_balance: 25000
+costs:
+  eval_price: 109
+  reset_price: 75
+  billing: one_time
+  activation_fee: 0
+  discount: Códigos ~40% no aplican a resets; reutilización no verificada
+eval:
+  profit_target: 1500
+  mll: 1000
+  drawdown: eod
+  lock_offset: 100
+  consistency: 0.4
+  min_days: 3
+  contracts: 1
+funded:
+  contracts:
+  - - 0
+    - 1
+  - - 1500
+    - 2
+  mll: 1000
+  drawdown: eod
+  lock_offset: 100
+  floor_after_payout: 100
+  dll: 500
+  payout:
+    split: 0.9
+    min_cycle_profit: 62.5
+    buffer: 1100
+    min_amount: 250
+    max_amount:
+    - 600
+firm_max_purchases_30d: 15
+hold_passed: true
+notes:
+- 'Payout diario <= 2x el profit desde el último payout: aproximado con min_cycle_profit'
+max_funded_accounts: 5
+inactivity_days: 7

@@ -15,6 +15,10 @@ def _fmt_eval(r):
     return f"+${s.day_target:,.0f}/día, stop {risk}"
 
 
+def _stop(risk):
+    return "todo" if risk is None or risk == float("inf") else f"${risk:,.0f}"
+
+
 def _fmt_funded(r):
     s = r.funded_strat
     gordo = f"gordo +${s.gordo_target:,.0f}" if s.gordo_target else "sin gordo"
@@ -68,7 +72,7 @@ def main():
     table = report(results, a.solo_eod)
     print("\n" + table)
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(a.out).write_text(table + "\n")
+    Path(a.out).write_text(table + "\n", encoding="utf-8")
     print(f"\nGuardado en {a.out}")
 
 

@@ -1,0 +1,36 @@
+id: lucid_direct_150k
+firm: Lucid Trading
+name: Direct 150K (directo)
+start_balance: 150000
+costs:
+  eval_price: 836
+  code_price: 585.2
+  code_reusable: false
+  billing: one_time
+  activation_fee: 0
+  discount: Código típico -30% (terceros)
+eval: null
+funded:
+  contracts: 10
+  mll: 5000
+  drawdown: eod
+  lock_offset: 100
+  payout:
+    split: 0.9
+    min_cycle_profit: 9000
+    consistency: 0.2
+    min_amount: 500
+    max_amount:
+    - 3000
+    - 3000
+    - 3000
+    - 3500
+    max_payouts: 5
+  dll: 3000
+  dll_scale_pct: 0.6
+notes:
+- Precios de terceros (eltraderfinanciado, 2026-10-29); ETFPROMO -30% no verificado como reutilizable
+- 'Objetivo del 1er payout aplicado a todos los ciclos: conservador'
+max_funded_accounts: 5
+firm_max_open: 10
+inactivity_days: 30

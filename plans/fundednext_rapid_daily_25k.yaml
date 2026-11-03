@@ -1,0 +1,43 @@
+id: fundednext_rapid_daily_25k
+firm: FundedNext Futures
+name: Rapid Daily 25K
+start_balance: 25000
+costs:
+  eval_price: 159.98
+  code_price: 79.99
+  code_reusable: true
+  reset_price: 89.99
+  billing: one_time
+  activation_fee: 0
+  discount: Precio de oferta del help center (permanente en la práctica)
+eval:
+  profit_target: 1500
+  mll: 1000
+  drawdown: eod
+  lock_offset: 100
+  min_days: 1
+  contracts: 2
+  dll: 500
+funded:
+  contracts: 2
+  mll: 1000
+  drawdown: eod
+  lock_offset: 100
+  payout:
+    split: 0.9
+    min_cycle_profit: 500
+    min_amount: 250
+    max_amount:
+    - 800
+    max_payouts: 5
+    buffer: 1100
+  dll: 500
+notes:
+- '''Account flipping'' prohíbe trades all-in sin umbral numérico: p_payout_denial es una hipótesis'
+- La cuenta se cierra tras el 5º payout
+- Suelo tras payout no documentado
+max_funded_accounts: 5
+firm_max_activations_30d: 10
+p_payout_denial: 0.3
+inactivity_days: 30
+hold_passed: true

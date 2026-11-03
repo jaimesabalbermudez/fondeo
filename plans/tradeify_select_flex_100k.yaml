@@ -1,0 +1,39 @@
+id: tradeify_select_flex_100k
+firm: Tradeify
+name: Select Flex 100K
+start_balance: 100000
+costs:
+  eval_price: 265
+  reset_price: 169
+  billing: one_time
+  activation_fee: 0
+  discount: Códigos ~40% no aplican a resets; reutilización no verificada
+eval:
+  profit_target: 6000
+  mll: 3000
+  drawdown: eod
+  lock_offset: 100
+  consistency: 0.4
+  min_days: 3
+  contracts: 8
+funded:
+  contracts: 8
+  mll: 3000
+  drawdown: eod
+  lock_offset: 100
+  floor_after_payout: 100
+  payout:
+    split: 0.9
+    min_green_days: 5
+    green_min: 200
+    min_cycle_profit: 1
+    min_amount: 250
+    max_amount:
+    - 3500
+    pct_of_profit: 0.5
+firm_max_purchases_30d: 15
+hold_passed: true
+notes:
+- 'Scaling plan funded no documentado para este tamaño: se asume el máximo de la evaluación'
+max_funded_accounts: 5
+inactivity_days: 7

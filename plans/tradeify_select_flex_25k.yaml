@@ -1,0 +1,41 @@
+id: tradeify_select_flex_25k
+firm: Tradeify
+name: Select Flex 25K
+start_balance: 25000
+costs:
+  eval_price: 109
+  reset_price: 75
+  billing: one_time
+  activation_fee: 0
+  discount: Códigos ~40% no aplican a resets; reutilización no verificada
+eval:
+  profit_target: 1500
+  mll: 1000
+  drawdown: eod
+  lock_offset: 100
+  consistency: 0.4
+  min_days: 3
+  contracts: 1
+funded:
+  contracts:
+  - - 0
+    - 1
+  - - 1500
+    - 2
+  mll: 1000
+  drawdown: eod
+  lock_offset: 100
+  floor_after_payout: 100
+  payout:
+    split: 0.9
+    min_green_days: 5
+    green_min: 100
+    min_cycle_profit: 1
+    min_amount: 250
+    max_amount:
+    - 1250
+    pct_of_profit: 0.5
+firm_max_purchases_30d: 15
+hold_passed: true
+max_funded_accounts: 5
+inactivity_days: 7
