@@ -6,9 +6,15 @@ proyecto (código, informes, conversación) está en español.
 
 ## Contexto privado
 
-Este repo es público. El contexto personal (bankroll, correo de compras, preferencias, decisiones
-pendientes) está en `OneDrive/Fondeo/contexto.md`, junto a los datos (ver abajo). Léelo al empezar si
-existe. Nunca subas al repo datos personales, importes reales ni tickets.
+Este repo es público y lo pueden usar varias personas, cada una con sus propias cuentas (a su nombre,
+desde su ordenador y su conexión). El contexto de cada persona (quién es, bankroll, horario, correo de
+compras, decisiones pendientes) está en `contexto.md`, dentro de su carpeta de datos (ver abajo).
+
+Al empezar, ejecuta `uv run fondeos-hoy datos`: dice qué carpeta de datos se usa en este ordenador y si
+hay `contexto.md`. Si existe, léelo. Si no existe, pregunta a la persona lo básico (nombre, bankroll,
+horario, correo con el que compra, firmas que usa) y créalo ahí. Nunca mezcles los datos de dos personas
+ni operes o registres por una persona en las cuentas de otra. Nunca subas al repo datos personales,
+importes reales ni tickets.
 
 ## Dónde está cada cosa
 
@@ -37,9 +43,11 @@ La caché (`.cache/`) se invalida con cualquier cambio en `plans/` o en el paque
 
 ## Datos personales (fuera del repo)
 
-`fondeos-hoy` guarda el estado (`cuentas.yaml`), la contabilidad (`contabilidad/`, con tickets por año)
-y los planes (`planes/`) en `FONDEOS_DATOS` si está definida; si no, en `OneDrive/Fondeo` (sincroniza
-entre ordenadores); si no, en la raíz del repo (ignorado por Git).
+`fondeos-hoy` guarda el contexto (`contexto.md`), el estado (`cuentas.yaml`), la contabilidad
+(`contabilidad/`, con tickets por año) y los planes (`planes/`) en `FONDEOS_DATOS` si está definida;
+si no, en `OneDrive/Fondeo` del usuario de ese ordenador (sincroniza entre sus ordenadores); si no, en
+la raíz del repo (ignorado por Git). Si el OneDrive acaba de iniciarse, espera a que `Fondeo` termine
+de sincronizar antes de registrar nada, o OneDrive creará copias en conflicto.
 
 ## Forma de operar recomendada (`recommended.py`)
 
@@ -50,16 +58,17 @@ entre ordenadores); si no, en la raíz del repo (ignorado por Git).
   días verdes (+150, 5 MNQ) hasta el payout.
 - Cada cuenta su trade, uno detrás de otro; con caja libre ≥ 10.000, evaluaciones a la vez (misma
   dirección, brackets distintos, ρ≈0,7). Las funded siempre de una en una. ~14 trades por día.
-- Horario de Lucas, 13:00–17:00 (España): días verdes en premercado, nada abierto en el dato de las
+- Horario por defecto, 13:00–17:00 (España): días verdes en premercado, nada abierto en el dato de las
   14:30, evaluaciones desde la apertura (15:30) y días gordos al final, con stop y TP puestos.
 - Reglas que no se pueden saltar: nada de hedging entre cuentas (largo en una y corto en otra),
   Topstep prohíbe el stacking, FundedNext el all-in ("account flipping"), inactividad semanal en
-  Tradeify y MFFU.
+  Tradeify y MFFU. Cada cuenta la opera su titular; entre personas, nada de trades coordinados
+  (el mismo trade a la vez o direcciones opuestas), ni pagos ni cobros cruzados.
 
 ## Convenciones
 
 - Importes en $ y relativos al balance inicial cuando son offsets; los objetivos de los trades son
   netos de comisiones (fricción $10 por NQ, $8 por 5 MNQ).
-- Cualquier cifra que se dé a Lucas sale de una simulación o de un informe del repo, con sus supuestos
+- Cualquier cifra que se dé sale de una simulación o de un informe del repo, con sus supuestos
   (edge 0, retiros pagados) y, si importa, con el caso de estrés (20% de payouts denegados y 30%
   anual de que cada firma deje de pagar).

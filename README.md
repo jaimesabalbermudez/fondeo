@@ -36,7 +36,8 @@ uv run fondeos-hoy retiro lucid-1             # payout pedido (por defecto el m�
 uv run fondeos-hoy cobro 1800                 # ha llegado el dinero
 ```
 
-`--fecha AAAA-MM-DD` cambia el día; `--guardar` deja el plan en `planes/`. La contabilidad se lleva con
+`uv run fondeos-hoy datos` dice qué carpeta de datos se usa en ese ordenador (cada persona tiene la suya,
+con su `contexto.md`). `--fecha AAAA-MM-DD` cambia el día; `--guardar` deja el plan en `planes/`. La contabilidad se lleva con
 `compra --eur --ticket`, `gasto`, `cobro`, `ticket` y `resumen AÑO` (gastado frente a cobrado).
 
 Modelo: paseo aleatorio sin deriva (edge configurable), un trade por día con stop/TP fijos,

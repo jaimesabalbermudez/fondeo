@@ -17,6 +17,7 @@ tutorial/
 
 # Estado real de las cuentas y planes diarios (datos personales): no se publica
 cuentas.yaml
+contexto.md
 reports/hoy/
 contabilidad/
 planes/

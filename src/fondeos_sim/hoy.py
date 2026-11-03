@@ -544,6 +544,7 @@ def main(argv=None):
     g.add_argument("--usd", type=float, default=None)
     g.add_argument("--eur", type=float, default=None)
     g.add_argument("--ticket", default=None)
+    sub.add_parser("datos", help="dónde están los datos personales y qué hay")
     s = sub.add_parser("resumen", help="gastado vs cobrado del año fiscal")
     s.add_argument("anyo", type=int, nargs="?", default=None)
     r = sub.add_parser("resultado", help="P&L neto de hoy de una cuenta")
@@ -561,6 +562,11 @@ def main(argv=None):
     a = ap.parse_args(argv)
 
     today = a.fecha or date.today()
+    if a.cmd == "datos":
+        print(f"Carpeta de datos: {DATA}")
+        for name in ("contexto.md", "cuentas.yaml", "contabilidad", "planes"):
+            print(f"  {name:13} {'sí' if (DATA / name).exists() else 'no existe'}")
+        return
     state = load()
     if a.cmd is None:
         text = render(state, today)
