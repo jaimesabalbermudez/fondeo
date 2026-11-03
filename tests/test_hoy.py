@@ -105,5 +105,5 @@ def test_yearly_ledger_spent_vs_paid(tmp_path):
 
 def test_purchases_respect_cash_and_firm_limits():
     buys = {pid: (n, price) for pid, n, price in hoy.purchases(state(600), TODAY, strats)}
-    # Lucid con código reutilizable ($69); Tradeify a precio de lista ($165): con lo que queda solo cabe 1
-    assert buys == {"lucid_flex_50k_dll": (5, 69), "tradeify_select_flex_50k": (1, 165)}
+    # Lucid con cupón reutilizable ($80,50); Tradeify a precio de lista ($165): con lo que queda solo cabe 1
+    assert buys == {"lucid_flex_50k_dll": (5, 80.5), "tradeify_select_flex_50k": (1, 165)}
