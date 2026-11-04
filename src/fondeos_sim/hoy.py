@@ -37,6 +37,7 @@ import csv
 import math
 import os
 import platform
+import re
 import shutil
 import time
 from contextlib import contextmanager
@@ -251,9 +252,12 @@ def activate_funded(plan, fs: FundedStrategy, state, today, cfg: rec.Config = re
             "activada": today.isoformat(), "ultimo_trade": today.isoformat()}
 
 
-def _mark_day(acc, day: str):
-    """Guarda el día como registrado (así otro ordenador no lo vuelve a aplicar)."""
+def _mark_day(acc, day: str, pnl: float | None = None):
+    """Guarda el día como registrado (así otro ordenador no lo vuelve a aplicar) y su P&L en el historial."""
     acc["registrados"] = (acc.get("registrados", []) + [day])[-60:]
+    if pnl is not None:
+        acc.setdefault("historial", []).append({"fecha": day, "pnl": round(float(pnl), 2),
+                                                "balance": round(float(acc["balance"]), 2)})
 
 
 def record_result(acc, pnl, state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -> str:
@@ -270,7 +274,7 @@ def record_result(acc, pnl, state, today, strats=default_strats, cfg: rec.Config
     acc["balance"] += pnl
     acc["maximo"] = max(acc.get("maximo", start), acc["balance"])
     acc["ultimo_trade"] = day
-    _mark_day(acc, day)
+    _mark_day(acc, day, pnl)
     if acc["balance"] <= acc["suelo"] + 1e-9:
         acc["fase"] = "perdida"
         acc["perdida"] = day
@@ -280,7 +284,7 @@ def record_result(acc, pnl, state, today, strats=default_strats, cfg: rec.Config
         acc["dias"] = acc.get("dias", 0) + 1
         acc["mejor_dia"] = max(acc.get("mejor_dia", 0.0), pnl)
         if eval_need(acc, plan) <= 1e-9 and acc["dias"] >= plan.eval.min_days:
-            keep = {k: acc[k] for k in ("id", "plan", "comprada", "numero", "registrados") if k in acc}
+            keep = {k: acc[k] for k in ("id", "plan", "comprada", "numero", "registrados", "historial") if k in acc}
             funded = activate_funded(plan, fs, state, today, cfg)
             acc.clear()
             acc.update(keep | funded)
@@ -314,6 +318,11 @@ def record_close(acc, balance, state, today, floor=None, strats=default_strats, 
         acc["maximo"] = max(acc.get("maximo", balance), balance)
         if floor is not None:
             acc["suelo"] = floor
+        for h in reversed(acc.get("historial", [])):
+            if h["fecha"] == day:
+                h["pnl"] = round(h["pnl"] + balance - old, 2)
+                h["balance"] = round(float(balance), 2)
+                break
         return f"{acc['id']}: el {day} ya estaba registrado; corrijo el balance de ${old:,.0f} a ${balance:,.0f} (dato de la firma)."
     phase = acc["fase"]
     msg = record_result(acc, balance - acc["balance"], state, today, strats, cfg)
@@ -488,6 +497,67 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
     L += ["## Al terminar", "", "Registra el P&L neto de cada cuenta que hayas operado:", "",
           "```bash", *(f"uv run fondeos-hoy resultado {t.acc['id']} <pnl>" for t in chosen), "```"]
     return "\n".join(L)
+
+
+# ---------------------------------------------------------------- dashboard de cuentas
+def person_folders() -> dict[str, Path]:
+    """Carpetas de datos de este ordenador con su persona: {"Lucas": .../Fondeo, "Lucas 2": ...}.
+
+    Busca la de FONDEOS_DATOS, las `Fondeo*` de OneDrive y la raíz del repo; el nombre sale del título de
+    su contexto.md ("# Contexto ... de <nombre>") o, si no, del nombre de la carpeta."""
+    cands = [DATA]
+    if os.environ.get("OneDrive") and Path(os.environ["OneDrive"]).is_dir():
+        cands += sorted(Path(os.environ["OneDrive"]).glob("Fondeo*"))
+    cands.append(ROOT)
+    out = {}
+    for folder in dict.fromkeys(cands):
+        if not (folder / "cuentas.yaml").is_file():
+            continue
+        label = folder.name.replace("Fondeo-", "") if folder.name.startswith("Fondeo-") else folder.name
+        ctx = folder / "contexto.md"
+        if ctx.is_file():
+            title = ctx.read_text(encoding="utf-8").splitlines()[0] if ctx.stat().st_size else ""
+            m = re.search(r"\bde (.+?)(?: \(|$)", title)
+            label = m.group(1).strip() if m else label
+        out.setdefault(label, folder)
+    return out
+
+
+def day_history(acc, plan) -> list[dict]:
+    """P&L de cada día registrado de la cuenta. Las cuentas registradas antes de que existiera el
+    historial (un único día, aún en evaluación) lo deducen del balance."""
+    if acc.get("historial"):
+        return acc["historial"]
+    reg = acc.get("registrados", [])
+    if len(reg) == 1 and acc["fase"] == "eval":
+        return [{"fecha": reg[0], "pnl": acc["balance"] - _start(acc, plan), "balance": acc["balance"]}]
+    return []
+
+
+def activity(state, firm_of, history=lambda a: a.get("historial", [])) -> list[dict]:
+    """Movimientos con fecha (más reciente primero): compras, gastos, cobros, retiros, días operados,
+    cuentas aprobadas y perdidas. `firm_of(plan_id)` da la firma de cada plan y `history(cuenta)` sus días."""
+    ev = []
+    for c in state.get("compras", []):
+        ev.append({"fecha": str(c["fecha"]), "tipo": "Compra de evaluación", "detalle": f"{c.get('cuenta', '')} · {firm_of(c['plan'])}",
+                   "usd": -float(c["precio"])})
+    for g in state.get("gastos", []):
+        ev.append({"fecha": str(g["fecha"]), "tipo": "Gasto", "detalle": g["concepto"],
+                   "usd": None if g.get("usd") is None else -float(g["usd"]), "eur": g.get("eur")})
+    for c in state.get("cobros", []):
+        ev.append({"fecha": str(c["fecha"]), "tipo": "Cobro", "detalle": c.get("cuenta", ""), "usd": float(c["usd"])})
+    for r in state.get("retiros", []):
+        ev.append({"fecha": str(r["fecha"]), "tipo": "Retiro pedido", "detalle": f"{r['cuenta']} · neto {_money(r['neto'])}",
+                   "usd": None})
+    for a in state.get("cuentas", []):
+        firm = firm_of(a["plan"])
+        for h in history(a):
+            ev.append({"fecha": h["fecha"], "tipo": "Día operado", "detalle": f"{a['id']} · {firm}", "pnl": h["pnl"]})
+        if a.get("activada"):
+            ev.append({"fecha": str(a["activada"]), "tipo": "Evaluación aprobada", "detalle": f"{a['id']} · {firm}"})
+        if a.get("perdida"):
+            ev.append({"fecha": str(a["perdida"]), "tipo": "Cuenta perdida", "detalle": f"{a['id']} · {firm}"})
+    return sorted(ev, key=lambda e: e["fecha"], reverse=True)
 
 
 # ---------------------------------------------------------------- contabilidad

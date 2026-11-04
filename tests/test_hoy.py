@@ -149,3 +149,29 @@ def test_write_lock_blocks_other_computer(tmp_path):
     with hoy.write_lock(tmp_path):
         assert (tmp_path / ".bloqueo").exists()
     assert not (tmp_path / ".bloqueo").exists()
+
+
+def test_history_activity_and_people(tmp_path, monkeypatch):
+    plan = rec.plan("lucid_flex_50k_dll")
+    acc = hoy.new_eval("lucid-1", plan, TODAY)
+    st = {**state(1000, acc), "gastos": [], "cobros": [], "retiros": [],
+          "compras": [{"fecha": "2026-11-03", "plan": plan.id, "cuenta": "lucid-1", "precio": 80.5}]}
+    hoy.record_close(acc, 51207, st, TODAY, floor=49207, strats=strats)
+    hoy.record_close(acc, 50607, st, TODAY + timedelta(days=1), strats=strats)
+    assert [h["pnl"] for h in acc["historial"]] == [1207, -600]
+    hoy.record_close(acc, 50700, st, TODAY + timedelta(days=1), strats=strats)       # la firma corrige el día
+    assert acc["historial"][-1] == {"fecha": "2026-11-04", "pnl": -507, "balance": 50700}
+    ev = hoy.activity(st, lambda pid: "Lucid")
+    assert ev[0]["tipo"] == "Día operado" and sorted(e["tipo"] for e in ev[1:]) == ["Compra de evaluación", "Día operado"]
+    # cuentas registradas antes del historial: el único día se deduce del balance
+    old = {**hoy.new_eval("lucid-2", plan, TODAY), "balance": 51207.0, "registrados": ["2026-11-03"]}
+    assert hoy.day_history(old, plan)[0]["pnl"] == 1207
+    # una carpeta por persona, con el nombre del título de su contexto.md
+    for folder, title in (("Fondeo", "# Contexto privado de Lucas (fondeo)"), ("Fondeo-Lucas 2", "# Contexto de Lucas 2")):
+        (tmp_path / folder).mkdir()
+        (tmp_path / folder / "cuentas.yaml").write_text("caja: 0\n", encoding="utf-8")
+        (tmp_path / folder / "contexto.md").write_text(title + "\n", encoding="utf-8")
+    monkeypatch.setenv("OneDrive", str(tmp_path))
+    monkeypatch.setattr(hoy, "DATA", tmp_path / "Fondeo")
+    people = hoy.person_folders()
+    assert people["Lucas"] == tmp_path / "Fondeo" and people["Lucas 2"] == tmp_path / "Fondeo-Lucas 2"

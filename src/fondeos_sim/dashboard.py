@@ -5,6 +5,7 @@ operar recomendada (`recommended.py`); los cálculos caros viven en la caché de
 (`uv run fondeos-precalcular` los deja hechos).
 """
 
+import re
 from dataclasses import replace
 
 import altair as alt
@@ -522,8 +523,284 @@ def page_plans():
                 md("**Notas**")
                 md("\n".join(f"- {n}" for n in p.notes))
 
+# ---------------------------------------------------------------- mis cuentas (datos reales, fuera del repo)
+st.markdown("""
+<style>
+  .kpi {border: 1px solid rgba(140,194,255,0.18); border-radius: 14px; padding: 1rem 1.15rem 1.05rem;
+        background: linear-gradient(160deg, rgba(78,161,255,0.07), rgba(255,138,61,0.04)); margin-bottom: 1rem;}
+  .kpi-top {display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.7rem;}
+  .kpi-ico {width: 2.5rem; height: 2.5rem; border-radius: 11px; display: flex; align-items: center;
+            justify-content: center; font-size: 1.25rem;}
+  .kpi-d {font-size: 0.82rem; font-weight: 650; text-align: right;}
+  .kpi-l {opacity: 0.72; font-size: 0.9rem; margin-bottom: 0.15rem;}
+  .kpi-v {font-size: 1.75rem; font-weight: 700; letter-spacing: -0.01em;}
+  .up {color: #3ecf8e;} .down {color: #ff6b6b;} .neutral {color: #8cc2ff;}
+  .row {display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.6rem 0.2rem;
+        border-bottom: 1px solid rgba(140,194,255,0.1);}
+  .row:last-child {border-bottom: none;}
+  .row-t {font-weight: 600;} .row-s {opacity: 0.65; font-size: 0.85rem;}
+  .row-r {text-align: right; font-weight: 650;} .rank {display: inline-flex; width: 1.7rem; height: 1.7rem;
+        border-radius: 50%; align-items: center; justify-content: center; background: rgba(255,138,61,0.18);
+        color: #ffb37d; font-weight: 700; margin-right: 0.7rem;}
+</style>
+""", unsafe_allow_html=True)
+
+GREEN, RED, PURPLE = "#3ecf8e", "#ff6b6b", "#a78bfa"
+HIDDEN = "•••••"
+
+
+def html(text):
+    st.markdown(text.replace("$", "&#36;"), unsafe_allow_html=True)
+
+
+def kpi(col, icon, tint, label, value, delta="", tone="neutral"):
+    with col:
+        html(f'<div class="kpi"><div class="kpi-top"><div class="kpi-ico" style="background:{tint}">{icon}</div>'
+             f'<div class="kpi-d {tone}">{delta}</div></div><div class="kpi-l">{label}</div>'
+             f'<div class="kpi-v">{value}</div></div>')
+
+
+@st.cache_resource
+def real_plan(pid):
+    try:
+        return rec.plan(pid)
+    except Exception:   # plan que ya no existe en plans/
+        return None
+
+
+def firm_of(pid):
+    p = real_plan(pid)
+    return p.firm if p else pid
+
+
+def next_step(hoy, acc, p):
+    """(progreso 0-1, texto) del siguiente paso de la cuenta."""
+    start = acc.get("inicio", p.start_balance)
+    if acc["fase"] == "eval":
+        need = hoy.eval_need(acc, p)
+        total = acc["balance"] - start + max(need, 0)
+        return (max(acc["balance"] - start, 0) / total if total else 1.0), f"faltan {money(max(need, 0))} para aprobar"
+    if acc["fase"] == "funded":
+        due = hoy.payout_due(acc, p)
+        if due:
+            return 1.0, f"¡pide retiro de {money(due)}!"
+        if not acc.get("gordo_hecho"):
+            goal = acc["nivel_gordo"] - start
+            return max(acc["balance"] - start, 0) / goal if goal > 0 else 0.0, \
+                f"día gordo: faltan {money(acc['nivel_gordo'] - acc['balance'])}"
+        n = p.funded.payout.min_green_days or 1
+        return min(acc.get("dias_verdes", 0) / n, 1.0), f"{acc.get('dias_verdes', 0)} de {n} días verdes"
+    return 0.0, {"perdida": "perdida", "cerrada": "cerrada (pasa a live)"}.get(acc["fase"], acc["fase"])
+
+
+def page_accounts():
+    from datetime import date
+
+    from fondeos_sim import hoy
+
+    st.title("Mis cuentas")
+    folders = hoy.person_folders()
+    if not folders:
+        md('<div class="lead">En este ordenador no hay datos de cuentas reales. Se crean con '
+           '`uv run fondeos-hoy` y viven fuera del repo (OneDrive/Fondeo), así que aquí no se publican.</div>',
+           unsafe_allow_html=True)
+        return
+    names = list(folders)
+    top = st.columns([2.2, 1, 1.6], vertical_alignment="bottom")
+    who = top[0].segmented_control("Persona", names, default=names[0]) or names[0] if len(names) > 1 else names[0]
+    hide = top[1].toggle("Ocultar valores")
+    year = date.today().year
+    period = top[2].date_input("Periodo", (date(year, 1, 1), date(year, 12, 31)), format="DD/MM/YYYY")
+    if not isinstance(period, tuple) or len(period) != 2:
+        st.stop()
+    d0, d1 = period
+    state = hoy.load(folders[who] / "cuentas.yaml")
+    upd = state.get("actualizado")
+    md(f'<div class="lead">Resumen de {who} · datos de <code>{folders[who]}</code>'
+       + (f' · actualizados {str(upd["fecha"]).replace("T", " ")[:16]} ({upd["equipo"]})' if upd else "")
+       + "</div>", unsafe_allow_html=True)
+
+    def inr(x):
+        return d0 <= hoy._date(x) <= d1
+
+    def v(x):
+        return HIDDEN if hide else x
+
+    buys = [c for c in state["compras"] if inr(c["fecha"])]
+    costs = [g for g in state["gastos"] if inr(g["fecha"])]
+    paid_rows = [c for c in state["cobros"] if inr(c["fecha"])]
+    payouts = [r for r in state["retiros"] if inr(r["fecha"])]
+    accs = state["cuentas"]
+    spent = sum(float(c["precio"]) for c in buys) + sum(float(g.get("usd") or 0) for g in costs)
+    eur_only = sum(float(g["eur"]) for g in costs if g.get("usd") is None and g.get("eur") is not None)
+    paid = sum(float(c["usd"]) for c in paid_rows)
+    net = paid - spent
+    roi = net / spent if spent else 0.0
+    in_eval = sum(a["fase"] == "eval" for a in accs)
+    funded = sum(a["fase"] == "funded" for a in accs)
+    passed = sum(1 for a in accs if a.get("activada"))
+    lost = sum(1 for a in accs if a["fase"] == "perdida" and not a.get("activada"))
+    ratio = passed / (passed + lost) if passed + lost else None
+
+    k = st.columns(3)
+    kpi(k[0], "📊", "rgba(78,161,255,0.16)", "Evaluaciones compradas", len(buys), f"↑ {in_eval} en curso")
+    kpi(k[1], "🏆", "rgba(62,207,142,0.16)", "Cuentas fondeadas", funded, f"{funded} activas", "up")
+    kpi(k[2], "🎯", "rgba(167,139,250,0.18)", "Funding ratio", "—" if ratio is None else f"{ratio:.0%}",
+        f"{passed} aprobadas · {lost} perdidas")
+    k = st.columns(3)
+    kpi(k[0], "💸", "rgba(255,107,107,0.16)", "Gastos totales", v(money(spent)),
+        f"↓ Promedio {v(money(spent / len(buys)))} por evaluación" if buys else "", "down")
+    kpi(k[1], "💵", "rgba(62,207,142,0.16)", "Ganancias totales (cobradas)", v(money(paid)),
+        f"↑ Promedio {v(money(paid / len(paid_rows)))} por cobro" if paid_rows else "Sin cobros aún", "up")
+    kpi(k[2], "📈", "rgba(255,138,61,0.16)", "Beneficio neto", v(money(net)),
+        f"{'↑' if net >= 0 else '↓'} ROI {roi:+.1%}", "up" if net >= 0 else "down")
+    if eur_only:
+        caption(f"Además hay gastos solo en euros (sin importe en $): {v(hoy._eur(eur_only))} en el periodo "
+                "(p. ej. formación). Están en la contabilidad anual (`fondeos-hoy resumen`).")
+
+    # ---- evolución del capital
+    days = []
+    for a in accs:
+        p = real_plan(a["plan"])
+        for h in (hoy.day_history(a, p) if p else []):
+            if inr(h["fecha"]):
+                days.append({"fecha": pd.Timestamp(h["fecha"]), "pnl": float(h["pnl"])})
+    flows = ([{"fecha": pd.Timestamp(c["fecha"]), "gasto": float(c["precio"]), "cobro": 0.0} for c in buys]
+             + [{"fecha": pd.Timestamp(g["fecha"]), "gasto": float(g["usd"]), "cobro": 0.0} for g in costs if g.get("usd") is not None]
+             + [{"fecha": pd.Timestamp(c["fecha"]), "gasto": 0.0, "cobro": float(c["usd"])} for c in paid_rows])
+    with st.container(border=True):
+        st.subheader("Evolución del capital")
+        caption("Capital = cobrado − gastado (dinero real). P&L en cuentas = lo ganado o perdido operando "
+                "(simulado, aún no cobrado).")
+        if not flows and not days:
+            st.info("Aún no hay movimientos en este periodo.")
+        else:
+            f = pd.DataFrame(flows or [{"fecha": pd.Timestamp(d0), "gasto": 0.0, "cobro": 0.0}]).groupby("fecha").sum()
+            d = pd.DataFrame(days or [{"fecha": pd.Timestamp(d0), "pnl": 0.0}]).groupby("fecha").sum()
+            end = min(pd.Timestamp(d1), pd.Timestamp(date.today()))
+            idx = pd.date_range(min(f.index.min(), d.index.min()), max(end, f.index.max(), d.index.max()), freq="D")
+            s = pd.DataFrame(index=idx).join(f).join(d).fillna(0.0).cumsum()
+            s["Capital"] = s["cobro"] - s["gasto"]
+            s = s.rename(columns={"cobro": "Ganancias", "gasto": "Gastos", "pnl": "P&L en cuentas"})
+            long = s[["Capital", "Ganancias", "Gastos", "P&L en cuentas"]].reset_index(names="Fecha").melt(
+                "Fecha", var_name="Serie", value_name="$")
+            colors = alt.Scale(domain=["Capital", "Ganancias", "Gastos", "P&L en cuentas"],
+                               range=[PURPLE, GREEN, RED, ORANGE])
+            st.altair_chart(alt.Chart(long).mark_line(point=True, strokeWidth=2.2).encode(
+                x=alt.X("Fecha:T", title=None, axis=alt.Axis(format="%d %b", labelAngle=0, tickCount="day")),
+                y=alt.Y("$:Q", title=None, axis=alt.Axis(labels=not hide, format="$,.0f")),
+                color=alt.Color("Serie:N", scale=colors, legend=alt.Legend(orient="top", title=None)),
+                tooltip=["Fecha:T", "Serie:N"] + ([] if hide else [alt.Tooltip("$:Q", format="$,.0f")]),
+            ).properties(height=320), width="stretch")
+
+    by_day = pd.DataFrame(days).groupby("fecha")["pnl"].sum() if days else pd.Series(dtype=float)
+    m = st.columns(4)
+    m[0].metric("Mejor día", v(money(by_day.max())) if len(by_day) else "—", "Mayor ganancia diaria (todas las cuentas)",
+                delta_color="off", border=True)
+    m[1].metric("Peor día", v(money(by_day.min())) if len(by_day) else "—", "Peor resultado diario", delta_color="off",
+                border=True)
+    m[2].metric("Promedio diario", v(money(by_day.mean())) if len(by_day) else "—",
+                f"{len(by_day)} días operados", delta_color="off", border=True)
+    m[3].metric("Retiros", len(payouts), v(f"{money(sum(r['neto'] for r in payouts))} netos pedidos"),
+                delta_color="off", border=True)
+
+    # ---- cuentas
+    st.subheader("Tus cuentas")
+    rows = []
+    order = {"funded": 0, "eval": 1, "cerrada": 2, "perdida": 3}
+    natural = lambda s: [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", s)]   # noqa: E731  lucid-2 < lucid-10
+    for a in sorted(accs, key=lambda a: (order.get(a["fase"], 9), natural(a["id"]))):
+        p = real_plan(a["plan"])
+        prog, txt = next_step(hoy, a, p) if p else (0.0, "")
+        fase = {"eval": "🧪 Evaluación", "funded": "💰 Fondeada", "perdida": "✖ Perdida",
+                "cerrada": "🏁 Cerrada"}.get(a["fase"], a["fase"])
+        rows.append({"Cuenta": a["id"], "Fase": fase, "Progreso": prog,
+                     "Siguiente paso": v(txt) if "$" in txt else txt,
+                     "Balance": v(money(a["balance"])), "Suelo": v(money(a["suelo"])),
+                     "Margen": v(money(a["balance"] - a["suelo"])) if a["fase"] in ("eval", "funded") else "",
+                     "Días": len(a.get("registrados", [])), "Firma": p.firm if p else a["plan"],
+                     "Plan": p.name if p else "", "Nº en la firma": a.get("numero", "")})
+    if rows:
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch", column_config={
+            "Progreso": st.column_config.ProgressColumn("Progreso", min_value=0.0, max_value=1.0, format="percent")})
+    else:
+        st.info("Todavía no hay cuentas. Se añaden con `fondeos-hoy compra` (o la tarea diaria desde el correo).")
+
+    # ---- por empresa
+    st.subheader("Análisis por empresa")
+    firms = {}
+    for c in buys:
+        f = firms.setdefault(firm_of(c["plan"]), {"Cuentas": 0, "Activas": 0, "Gastos": 0.0, "Cobrado": 0.0, "Retiros": 0})
+        f["Gastos"] += float(c["precio"])
+    for a in accs:
+        f = firms.setdefault(firm_of(a["plan"]), {"Cuentas": 0, "Activas": 0, "Gastos": 0.0, "Cobrado": 0.0, "Retiros": 0})
+        f["Cuentas"] += 1
+        f["Activas"] += a["fase"] in ("eval", "funded")
+    plan_of = {a["id"]: a["plan"] for a in accs}
+    for c in paid_rows:
+        pid = c.get("plan") or plan_of.get(c.get("cuenta"))
+        if pid:
+            firms.setdefault(firm_of(pid), {"Cuentas": 0, "Activas": 0, "Gastos": 0.0, "Cobrado": 0.0, "Retiros": 0})["Cobrado"] += float(c["usd"])
+    for r in payouts:
+        if r.get("plan"):
+            firms.setdefault(firm_of(r["plan"]), {"Cuentas": 0, "Activas": 0, "Gastos": 0.0, "Cobrado": 0.0, "Retiros": 0})["Retiros"] += 1
+    if not firms:
+        st.info("Sin datos de empresas en este periodo.")
+    else:
+        df = pd.DataFrame(firms).T
+        df["Beneficio"] = df["Cobrado"] - df["Gastos"]
+        df["ROI"] = np.where(df["Gastos"] > 0, df["Beneficio"] / df["Gastos"].replace(0, np.nan), 0.0)
+        c1, c2 = st.columns(2)
+        for col, title, key, fmt in ((c1, "🏆 Top empresas por ROI", "ROI", lambda r: f"{r['ROI']:+.1%}"),
+                                     (c2, "💰 Top empresas por cobros", "Cobrado", lambda r: v(money(r["Cobrado"])))):
+            with col.container(border=True):
+                st.markdown(f"**{title}**")
+                top3 = df.sort_values(key, ascending=False).head(3)
+                html("".join(
+                    f'<div class="row"><div><span class="rank">{i}</span><span class="row-t">{name_}</span>'
+                    f'<div class="row-s" style="margin-left:2.4rem">{int(r["Cuentas"])} cuentas · {int(r["Retiros"])} retiros</div></div>'
+                    f'<div class="row-r">{fmt(r)}<div class="row-s">{v(money(r["Beneficio"]))}</div></div></div>'
+                    for i, (name_, r) in enumerate(top3.iterrows(), 1)))
+        table = df.reset_index(names="Empresa")
+        table["Cuentas"] = table["Cuentas"].astype(int).astype(str) + " (" + table["Activas"].astype(int).astype(str) + " activas)"
+        for c in ("Gastos", "Cobrado", "Beneficio"):
+            table[c] = table[c].map(lambda x: v(money(x)))
+        table["ROI"] = table["ROI"].map(lambda x: f"{x:+.1%}")
+        with st.container(border=True):
+            st.markdown("**Todas las empresas**")
+            st.dataframe(table[["Empresa", "Cuentas", "Gastos", "Cobrado", "Beneficio", "ROI"]], hide_index=True,
+                         width="stretch")
+
+    # ---- actividad
+    with st.container(border=True):
+        st.markdown("**🕒 Actividad reciente**")
+        hist = lambda a: hoy.day_history(a, real_plan(a["plan"])) if real_plan(a["plan"]) else []   # noqa: E731
+        ev = [e for e in hoy.activity(state, firm_of, hist) if inr(e["fecha"])]
+        if not ev:
+            st.caption("Sin actividad en este periodo.")
+        icons = {"Compra de evaluación": "🛒", "Gasto": "🧾", "Cobro": "💵", "Retiro pedido": "📤", "Día operado": "📊",
+                 "Evaluación aprobada": "🏆", "Cuenta perdida": "✖"}
+        today = date.today()
+        out = []
+        for e in ev[:12]:
+            amt = e.get("pnl", e.get("usd"))
+            amt_txt = "" if amt is None else (f'<span class="{"up" if amt >= 0 else "down"}">'
+                                              f'{"+" if amt >= 0 else ""}{v(money(amt))}</span>')
+            if amt is None and e.get("eur") is not None:
+                amt_txt = v(hoy._eur(-float(e["eur"])))
+            ago = (today - hoy._date(e["fecha"])).days
+            out.append(f'<div class="row"><div><span class="row-t">{icons.get(e["tipo"], "•")} {e["tipo"]}</span>'
+                       f'<div class="row-s">{e["detalle"]}</div></div><div class="row-r">{amt_txt}'
+                       f'<div class="row-s">{"hoy" if ago == 0 else f"hace {ago} d"}</div></div></div>')
+        if out:
+            html("".join(out))
+        if len(ev) > 12:
+            caption(f"{len(ev) - 12} movimientos más en el periodo.")
+
+
 nav = st.navigation([
     st.Page(page_guide, title="Guía", icon="🧭", default=True),
+    st.Page(page_accounts, title="Mis cuentas", icon="💼", url_path="cuentas"),
     st.Page(page_sim, title="Simulación", icon="📈", url_path="simulacion"),
     st.Page(page_plans, title="Planes", icon="📋", url_path="planes"),
 ])
