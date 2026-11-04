@@ -36,9 +36,12 @@ import argparse
 import csv
 import math
 import os
+import platform
 import shutil
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 import numpy as np
@@ -97,7 +100,26 @@ def load(path: Path = STATE) -> dict:
 
 def save(state: dict, path: Path = STATE):
     path.parent.mkdir(parents=True, exist_ok=True)
+    state["actualizado"] = {"fecha": datetime.now().isoformat(timespec="seconds"), "equipo": platform.node()}
     path.write_text(yaml.safe_dump(state, sort_keys=False, allow_unicode=True), encoding="utf-8")
+
+
+@contextmanager
+def write_lock(folder: Path = DATA, stale_s: int = 600):
+    """Evita que dos ordenadores escriban a la vez en la misma carpeta (sincronizada por OneDrive)."""
+    folder.mkdir(parents=True, exist_ok=True)
+    lock, me = folder / ".bloqueo", platform.node()
+    if lock.exists():
+        owner = lock.read_text(encoding="utf-8").strip()
+        age = time.time() - lock.stat().st_mtime
+        if owner != me and age < stale_s:
+            raise SystemExit(f"{owner} está actualizando estos datos (hace {age:.0f} s). Espera unos minutos y "
+                             "deja que OneDrive sincronice antes de volver a intentarlo.")
+    lock.write_text(me, encoding="utf-8")
+    try:
+        yield
+    finally:
+        lock.unlink(missing_ok=True)
 
 
 def _date(x) -> date:
@@ -226,24 +248,36 @@ def activate_funded(plan, fs: FundedStrategy, state, today, cfg: rec.Config = re
             "activada": today.isoformat(), "ultimo_trade": today.isoformat()}
 
 
+def _mark_day(acc, day: str):
+    """Guarda el día como registrado (así otro ordenador no lo vuelve a aplicar)."""
+    acc["registrados"] = (acc.get("registrados", []) + [day])[-60:]
+
+
 def record_result(acc, pnl, state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -> str:
-    """Registra el P&L neto de hoy (mismas reglas que engine.eval_step / funded_step)."""
+    """Registra el P&L neto de hoy (mismas reglas que engine.eval_step / funded_step). Un día ya
+    registrado no se vuelve a aplicar."""
+    day = today.isoformat()
+    if day in acc.get("registrados", []):
+        return f"{acc['id']}: el {day} ya estaba registrado; no lo aplico otra vez."
+    if acc["fase"] not in ("eval", "funded"):
+        return f"{acc['id']}: la cuenta está {acc['fase']}; no hay nada que registrar."
     plan, es, fs = strats(acc["plan"])
     start = _start(acc, plan)
     rules = plan.eval if acc["fase"] == "eval" else plan.funded
     acc["balance"] += pnl
     acc["maximo"] = max(acc.get("maximo", start), acc["balance"])
-    acc["ultimo_trade"] = today.isoformat()
+    acc["ultimo_trade"] = day
+    _mark_day(acc, day)
     if acc["balance"] <= acc["suelo"] + 1e-9:
         acc["fase"] = "perdida"
-        acc["perdida"] = today.isoformat()
+        acc["perdida"] = day
         return f"{acc['id']}: ha tocado el suelo, cuenta perdida."
     acc["suelo"] = _trail(rules, start, acc["balance"], acc["suelo"])
     if acc["fase"] == "eval":
         acc["dias"] = acc.get("dias", 0) + 1
         acc["mejor_dia"] = max(acc.get("mejor_dia", 0.0), pnl)
         if eval_need(acc, plan) <= 1e-9 and acc["dias"] >= plan.eval.min_days:
-            keep = {"id": acc["id"], "plan": acc["plan"], "comprada": acc.get("comprada")}
+            keep = {k: acc[k] for k in ("id", "plan", "comprada", "numero", "registrados") if k in acc}
             funded = activate_funded(plan, fs, state, today, cfg)
             acc.clear()
             acc.update(keep | funded)
@@ -259,6 +293,29 @@ def record_result(acc, pnl, state, today, strats=default_strats, cfg: rec.Config
     due = payout_due(acc, plan)
     if due:
         msg += f" Ya puedes pedir un retiro de ${due:,.0f} (${due * po.split:,.0f} netos)."
+    return msg
+
+
+def record_close(acc, balance, state, today, floor=None, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -> str:
+    """Cierre del día según el correo de la firma (balance y suelo de su web, la fuente de verdad).
+
+    Si el día aún no está registrado, aplica el P&L (balance - balance anterior) con las reglas del
+    motor. Si ya lo estaba (p. ej. lo registró el otro ordenador o el usuario a mano), solo corrige
+    balance y suelo a lo que dice la firma."""
+    day = today.isoformat()
+    if day in acc.get("registrados", []):
+        if acc["fase"] not in ("eval", "funded") or abs(acc["balance"] - balance) < 1:
+            return f"{acc['id']}: el {day} ya estaba registrado y cuadra con la firma."
+        old = acc["balance"]
+        acc["balance"] = balance
+        acc["maximo"] = max(acc.get("maximo", balance), balance)
+        if floor is not None:
+            acc["suelo"] = floor
+        return f"{acc['id']}: el {day} ya estaba registrado; corrijo el balance de ${old:,.0f} a ${balance:,.0f} (dato de la firma)."
+    phase = acc["fase"]
+    msg = record_result(acc, balance - acc["balance"], state, today, strats, cfg)
+    if floor is not None and acc["fase"] == phase and phase in ("eval", "funded"):
+        acc["suelo"] = floor
     return msg
 
 
@@ -365,7 +422,11 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
           f"- Cuentas: {n_eval} evaluaciones, {len(active) - n_eval} funded",
           f"- Evaluaciones: **{'todas a la vez' if copying else 'una detrás de otra'}**"
           + ("" if cfg.copy_evals_from is None else f" (a la vez con caja ≥ {_money(cfg.copy_evals_from)})"),
-          f"- Trades hoy: {len(chosen)}" + (f" ({len(later)} pasan a mañana)" if later else ""), ""]
+          f"- Trades hoy: {len(chosen)}" + (f" ({len(later)} pasan a mañana)" if later else "")]
+    upd = state.get("actualizado")
+    if upd:
+        L.append(f"- Datos actualizados: {str(upd['fecha']).replace('T', ' ')[:16]} ({upd['equipo']})")
+    L.append("")
 
     todo = []
     for acc in active:
@@ -518,8 +579,9 @@ def write_summary(state, year: int, ledger: Path = LEDGER) -> Path:
 
 
 def _find(state, acc_id):
+    """Cuenta por su nombre (lucid-1) o por su número en la firma (LFE05098099680001)."""
     for a in state["cuentas"]:
-        if a["id"] == acc_id:
+        if acc_id in (a["id"], a.get("numero")):
             return a
     raise SystemExit(f"No hay ninguna cuenta '{acc_id}' en {STATE.name}")
 
@@ -547,9 +609,18 @@ def main(argv=None):
     sub.add_parser("datos", help="dónde están los datos personales y qué hay")
     s = sub.add_parser("resumen", help="gastado vs cobrado del año fiscal")
     s.add_argument("anyo", type=int, nargs="?", default=None)
-    r = sub.add_parser("resultado", help="P&L neto de hoy de una cuenta")
+    r = sub.add_parser("resultado", help="P&L neto del día (--fecha) de una cuenta")
     r.add_argument("cuenta")
     r.add_argument("pnl", type=float)
+    x = sub.add_parser("cierre", help="cierre del día (--fecha) según el correo de la firma: balance y suelo")
+    x.add_argument("cuenta", help="nombre (lucid-1) o número en la firma")
+    x.add_argument("balance", type=float)
+    x.add_argument("--suelo", type=float, default=None, help="balance mínimo que da la firma")
+    n = sub.add_parser("numero", help="asocia el número de cuenta de la firma")
+    n.add_argument("cuenta")
+    n.add_argument("numero")
+    q = sub.add_parser("perdida", help="la firma da la cuenta por perdida (--fecha)")
+    q.add_argument("cuenta")
     p = sub.add_parser("retiro", help="payout pedido (bruto)")
     p.add_argument("cuenta")
     p.add_argument("importe", type=float, nargs="?", default=None)
@@ -567,15 +638,28 @@ def main(argv=None):
         for name in ("contexto.md", "cuentas.yaml", "contabilidad", "planes"):
             print(f"  {name:13} {'sí' if (DATA / name).exists() else 'no existe'}")
         return
-    state = load()
     if a.cmd is None:
-        text = render(state, today)
+        text = render(load(), today)
         print(text)
         if a.guardar:
             out = PLANS_OUT / f"{today.isoformat()}.md"
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(text + "\n", encoding="utf-8")
         return
+    if a.cmd == "resumen":
+        state = load()
+        folder = write_summary(state, a.anyo or today.year)
+        print(summary(state, a.anyo or today.year))
+        print(f"\nGuardado en {folder}")
+        return
+    with write_lock():
+        state = load()
+        _apply(a, state, today)
+        save(state)
+
+
+def _apply(a, state, today):
+    """Comandos que cambian el estado (se ejecutan con el bloqueo puesto)."""
     if a.cmd == "compra":
         pid = resolve_plan(a.plan)
         plan = default_strats(pid)[0]
@@ -598,6 +682,17 @@ def main(argv=None):
         print(f"Añadidas {a.n} evaluaciones de {plan.firm} ({_money(price)} c/u). Caja: {_money(state['caja'])}")
     elif a.cmd == "resultado":
         print(record_result(_find(state, a.cuenta), a.pnl, state, today))
+    elif a.cmd == "cierre":
+        print(record_close(_find(state, a.cuenta), a.balance, state, today, floor=a.suelo))
+    elif a.cmd == "numero":
+        _find(state, a.cuenta)["numero"] = a.numero
+        print(f"{a.cuenta}: número de cuenta {a.numero}")
+    elif a.cmd == "perdida":
+        acc = _find(state, a.cuenta)
+        if acc["fase"] in ("eval", "funded"):
+            acc["fase"], acc["perdida"] = "perdida", today.isoformat()
+            _mark_day(acc, today.isoformat())
+        print(f"{acc['id']}: cuenta perdida ({acc.get('perdida')}).")
     elif a.cmd == "retiro":
         acc = _find(state, a.cuenta)
         amount = a.importe if a.importe is not None else payout_due(acc, default_strats(acc["plan"])[0])
@@ -633,12 +728,6 @@ def main(argv=None):
         state["gastos"].append(entry)
         amounts = " / ".join(x for x in (a.usd is not None and _money(a.usd), a.eur is not None and _eur(a.eur)) if x)
         print(f"Gasto registrado: {concept} {amounts}")
-    elif a.cmd == "resumen":
-        folder = write_summary(state, a.anyo or today.year)
-        print(summary(state, a.anyo or today.year))
-        print(f"\nGuardado en {folder}")
-        return
     elif a.cmd == "caja":
         state["caja"] = a.importe
         print(f"Caja: {_money(state['caja'])}")
-    save(state)

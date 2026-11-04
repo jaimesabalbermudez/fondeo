@@ -32,10 +32,15 @@ uv run fondeos-hoy caja 5000                  # caja libre inicial
 uv run fondeos-hoy compra lucid 5             # añade evaluaciones (y guarda la compra para los tickets)
 uv run fondeos-hoy                            # qué hacer hoy: franjas, TP y stop en puntos, compras, retiros
 uv run fondeos-hoy resultado lucid-1 1210     # al terminar: P&L neto de cada cuenta operada
+uv run fondeos-hoy numero lucid-1 LFE05098099680001          # nº de cuenta en la firma
+uv run fondeos-hoy --fecha 2026-11-03 cierre LFE05098099680001 51207 --suelo 49207   # Daily Wire
 uv run fondeos-hoy retiro lucid-1             # payout pedido (por defecto el máximo permitido)
 uv run fondeos-hoy cobro 1800                 # ha llegado el dinero
 ```
 
+Pensado para usarse desde dos ordenadores con la misma carpeta de OneDrive: cada día registrado queda
+marcado en la cuenta (otro `resultado` o `cierre` del mismo día no se aplica dos veces; un `cierre` con
+otra cifra corrige al dato de la firma) y un bloqueo (`.bloqueo`) impide escribir a la vez.
 `uv run fondeos-hoy datos` dice qué carpeta de datos se usa en ese ordenador (cada persona tiene la suya,
 con su `contexto.md`). `--fecha AAAA-MM-DD` cambia el día; `--guardar` deja el plan en `planes/`. La contabilidad se lleva con
 `compra --eur --ticket`, `gasto`, `cobro`, `ticket` y `resumen AÑO` (gastado frente a cobrado).
