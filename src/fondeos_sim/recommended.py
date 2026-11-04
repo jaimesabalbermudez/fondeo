@@ -41,11 +41,14 @@ class Slot:
 
 @dataclass(frozen=True)
 class Config:
+    # Se empieza solo con Lucid (el máximo por hogar: 10 cuentas) y se añaden firmas al crecer la caja:
+    # con 4 firmas el riesgo de que una deje de pagar pesa la mitad (simulación del 2026-11-04 con $5.000:
+    # Tradeify con $6.000 y MFFU + FundedNext con $10.000 dan la ruina más baja con casi el máximo beneficio).
     slots: tuple[Slot, ...] = (
-        Slot("lucid_flex_50k_dll", 5),
-        Slot("tradeify_select_flex_50k", 5),
-        Slot("mffu_rapid_eod_50k", 3, 3000),
-        Slot("fundednext_flex_50k", 5, 3000),
+        Slot("lucid_flex_50k_dll_c50", 10),
+        Slot("tradeify_select_flex_50k", 5, 6000),
+        Slot("mffu_rapid_eod_50k", 3, 10000),
+        Slot("fundednext_flex_50k", 5, 10000),
     )
     prudent_below: float = 3000   # con caja libre por debajo se juega prudente
     prudent_gordo: float = 2000   # día gordo prudente; después días verdes +150 / stop 600

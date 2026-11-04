@@ -51,8 +51,9 @@ de sincronizar antes de registrar nada, o OneDrive creará copias en conflicto.
 
 ## Forma de operar recomendada (`recommended.py`)
 
-- Cartera: Lucid Flex 50K (DLL) y Tradeify Select Flex 50K desde el inicio (5 evaluaciones a la vez
-  cada una); MFFU Rapid EOD 50K y FundedNext Flex 50K al llegar a cierta caja libre.
+- Cartera: se empieza solo con Lucid Flex 50K (DLL, consistencia 50%: 10 cuentas, el máximo por hogar);
+  Tradeify Select Flex 50K (5) con caja libre ≥ 6.000 $; MFFU Rapid EOD 50K (3) y FundedNext Flex 50K
+  (5) con ≥ 10.000 $. Con cuatro firmas la ruina con estrés baja de ~27% a ~10% (simulación 2026-11-04).
 - Evaluación: 1 NQ, objetivo diario recortado por la consistencia (Lucid/Tradeify: +1.200, 3 días),
   stop = DLL o todo el margen. Funded: un día gordo (prudente de +2.000 con caja < 3.000) y luego
   días verdes (+150, 5 MNQ) hasta el payout.

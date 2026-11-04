@@ -13,6 +13,12 @@ FUNDED = FundedStrategy(gordo_target=6000, grind_target=150, grind_risk=600, fri
                         friction_grind=8, grind_contracts=0.5)
 
 
+# cartera de antes del 2026-11-04 (Lucid y Tradeify desde el inicio, MFFU y FundedNext con $3.000):
+# fija para que estos tests no dependan de la cartera recomendada del momento
+OLD = rec.Config(slots=(rec.Slot("lucid_flex_50k_dll", 5), rec.Slot("tradeify_select_flex_50k", 5),
+                        rec.Slot("mffu_rapid_eod_50k", 3, 3000), rec.Slot("fundednext_flex_50k", 5, 3000)))
+
+
 def strats(pid):
     return rec.plan(pid), EVAL.get(pid, EvalStrategy(1000, None, friction=10)), FUNDED
 
@@ -39,7 +45,7 @@ def test_three_green_eval_days_pass_and_activate_prudent_funded():
     for i in range(3):
         t = hoy.eval_trade(acc, plan, EVAL[plan.id])
         targets.append(t.target)
-        hoy.record_result(acc, t.target, st, TODAY + timedelta(days=i), strats)
+        hoy.record_result(acc, t.target, st, TODAY + timedelta(days=i), strats, OLD)
     assert targets == [1200, 1200, 600]                   # consistencia 40%: el tercer día solo faltan $600
     assert acc["fase"] == "funded" and acc["modo"] == "prudente"
     assert acc["nivel_gordo"] == 52000                     # día gordo prudente de +$2.000
@@ -104,7 +110,7 @@ def test_yearly_ledger_spent_vs_paid(tmp_path):
 
 
 def test_purchases_respect_cash_and_firm_limits():
-    buys = {pid: (n, price) for pid, n, price in hoy.purchases(state(600), TODAY, strats)}
+    buys = {pid: (n, price) for pid, n, price in hoy.purchases(state(600), TODAY, strats, OLD)}
     # Lucid con cupón reutilizable ($80,50); Tradeify a precio de lista ($165): con lo que queda solo cabe 1
     assert buys == {"lucid_flex_50k_dll": (5, 80.5), "tradeify_select_flex_50k": (1, 165)}
 
@@ -175,3 +181,16 @@ def test_history_activity_and_people(tmp_path, monkeypatch):
     monkeypatch.setattr(hoy, "DATA", tmp_path / "Fondeo")
     people = hoy.person_folders()
     assert people["Lucas"] == tmp_path / "Fondeo" and people["Lucas 2"] == tmp_path / "Fondeo-Lucas 2"
+
+
+def test_default_portfolio_starts_with_lucid_and_grows_with_cash():
+    """Cartera recomendada: 10 Lucid al empezar; Tradeify con $6.000 y MFFU + FundedNext con $10.000."""
+    def buys(cash):
+        return {pid: n for pid, n, _ in hoy.purchases(state(cash), TODAY, strats)}
+    assert buys(5000) == {"lucid_flex_50k_dll_c50": 10}
+    assert set(buys(8000)) == {"lucid_flex_50k_dll_c50", "tradeify_select_flex_50k"}
+    assert set(buys(20000)) == {"lucid_flex_50k_dll_c50", "tradeify_select_flex_50k", "mffu_rapid_eod_50k",
+                                "fundednext_flex_50k"}
+    # una cuenta de un plan fuera de la cartera (lucid-1, Flex 40%) aprueba sin romper nada
+    plan = rec.plan("lucid_flex_50k_dll")
+    assert hoy.activate_funded(plan, FUNDED, state(1000), TODAY)["modo"] == "prudente"

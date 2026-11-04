@@ -198,13 +198,16 @@ def page_guide():
     left, right = st.columns(2, gap="large")
     first = list(dict.fromkeys(opt(s.plan_id).plan.firm for s in CFG.slots if s.from_cash == 0))
     later = list(dict.fromkeys(opt(s.plan_id).plan.firm for s in CFG.slots if s.from_cash > 0))
-    expand = min((s.from_cash for s in CFG.slots if s.from_cash), default=0)
+    stages = {}   # caja libre -> firmas que se añaden
+    for s in sorted((s for s in CFG.slots if s.from_cash), key=lambda s: s.from_cash):
+        stages.setdefault(s.from_cash, []).append(opt(s.plan_id).plan.firm)
+    adds = "; ".join(f"{' y '.join(dict.fromkeys(f))} con {money(c)}" for c, f in stages.items())
     with left:
         step(1, "Solo firmas EOD que permiten la estrategia",
              "Drawdown de fin de día y sin prohibiciones contra el 'todo o nada': " + ", ".join(first + later) + ".")
         step(2, f"Empieza con {' y '.join(first)}",
-             f"Son las de mejor rendimiento por dólar. Añade {' y '.join(later)} cuando tu caja libre "
-             f"llegue a {money(expand)}.")
+             "Son las de mejor rendimiento por dólar. Añade firmas según crezca tu caja libre: "
+             f"{adds}. Con cuatro firmas, que una deje de pagar pesa la mitad.")
         step(3, "Con poca caja, juega prudente",
              f"Mientras tu caja libre esté por debajo de {money(CFG.prudent_below)}, en las cuentas funded "
              f"busca un día gordo de +{money(CFG.prudent_gordo)} (en vez del óptimo, mucho mayor). Cobras el "

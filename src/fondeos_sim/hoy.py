@@ -242,8 +242,9 @@ def new_eval(acc_id, plan, today) -> dict:
 
 def activate_funded(plan, fs: FundedStrategy, state, today, cfg: rec.Config = rec.DEFAULT) -> dict:
     """La evaluación aprobada pasa a funded. Con poca caja juega prudente toda la vida de la cuenta."""
-    slot = next(s for s in cfg.slots if s.plan_id == plan.id)
-    modo = "prudente" if state["caja"] < cfg.prudent_below and slot.from_cash < cfg.prudent_below else "optimo"
+    slot = next((s for s in cfg.slots if s.plan_id == plan.id), None)   # None: plan fuera de la cartera
+    from_cash = slot.from_cash if slot else 0.0
+    modo = "prudente" if state["caja"] < cfg.prudent_below and from_cash < cfg.prudent_below else "optimo"
     s = funded_strategy({"modo": modo}, fs, cfg)
     start = float(plan.start_balance)
     return {"fase": "funded", "modo": modo, "balance": start, "suelo": start - plan.funded.mll, "maximo": start,
@@ -368,8 +369,9 @@ def purchases(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT
         n = s.parallel - n_eval
         if plan.firm_max_open:
             n = min(n, plan.firm_max_open - len(firm))
-        if plan.max_funded_accounts:
-            n = min(n, plan.max_funded_accounts - sum(a["fase"] == "funded" and a["plan"] == s.plan_id for a in active))
+        if plan.max_funded_accounts and sum(a["fase"] == "funded" and a["plan"] == s.plan_id
+                                            for a in active) >= plan.max_funded_accounts:
+            n = 0   # sin hueco funded no se compran más (como el simulador); las evaluaciones no cuentan
         if plan.firm_max_purchases_30d:
             recent = sum(1 for c in state["compras"] if c["plan"] == s.plan_id and (today - _date(c["fecha"])).days < 30)
             n = min(n, plan.firm_max_purchases_30d - recent)
