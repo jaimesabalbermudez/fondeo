@@ -78,8 +78,11 @@ def default_strats(plan_id: str):
 
 
 def resolve_plan(name: str, cfg: rec.Config = rec.DEFAULT) -> str:
-    """'lucid' -> 'lucid_flex_50k_dll' (por prefijo entre los planes de la cartera)."""
+    """'lucid' -> 'lucid_flex_50k_dll' (por prefijo entre los planes de la cartera). Un id exacto de
+    plans/ fuera de la cartera también vale (p. ej. una variante comprada con otro extra)."""
     ids = [s.plan_id for s in cfg.slots]
+    if name not in ids and (rec.PLANS_DIR / f"{name}.yaml").exists():
+        return name
     hits = [i for i in ids if i == name] or [i for i in ids if i.startswith(name.lower())]
     if len(hits) != 1:
         raise SystemExit(f"Plan '{name}' ambiguo o desconocido; usa uno de: {', '.join(ids)}")

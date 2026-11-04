@@ -1,0 +1,20 @@
+id: lucid_flex_50k_dll_c50
+firm: Lucid Trading
+name: Flex 50K (DLL $1.200, consistencia 50%)
+costs: {eval_price: 124.8, code_price: 90.3, code_reusable: true, reset_price: 90, billing: one_time, activation_fee: 0, discount: "Cupón -30% en checkout + extra de consistencia 50% ($9,80): $90,30; reset $90 (pedidos 12171922-12172107 y captura de lucidtrading.com, 2026-11-04)"}
+eval: {profit_target: 3000, mll: 2000, drawdown: eod, lock_offset: 100, dll: 1200, consistency: 0.50, min_days: 1, contracts: 4}
+funded:
+  contracts: [[0, 2], [1000, 3], [2000, 4]]   # máx. NQ: scaling plan funded por profit (se actualiza al cierre)
+  mll: 2000
+  drawdown: eod
+  lock_offset: 100
+  dll: 1200
+  dll_scale_pct: 0.6       # LucidScale: por encima del trail inicial ($52.100) DLL = 60% del mayor profit EOD
+  floor_after_payout: 100
+  payout: {split: 0.9, min_green_days: 5, green_min: 150, min_trading_days: 5, min_cycle_profit: 1, min_amount: 500,
+           max_amount: [2000], pct_of_profit: 0.5, max_payouts: 5}
+max_funded_accounts: 5
+firm_max_open: 10          # evaluaciones + funded <= 10 por hogar
+inactivity_days: 30         # días naturales sin operar -> cuenta cerrada (research/firms)
+notes: ["Igual que lucid_flex_50k_dll salvo la consistencia de la evaluación (50%, extra de pago): se puede pasar en 2 días",
+        "Funded idéntica a la versión del 40% (la consistencia solo aplica a la evaluación)"]
