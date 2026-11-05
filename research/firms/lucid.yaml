@@ -90,6 +90,19 @@ plans:
         account_limits:
           max_funded_accounts: 5                # per household, all funded types combined
           max_eval_accounts: 10                 # evals + funded combined may not exceed 10
+          # Checked 2026-11-05 (articles 11404617 "Maximum Number of Accounts" and 11404632 "Inactivity
+          # Policy", both written 2026-08-26; 16558826 "New Live Structure", updated ~mid-Oct):
+          # - "You may keep 5 evaluation accounts in reserve while you have 5 funded accounts." and
+          #   "You may trade evaluation accounts while they are in reserve."
+          # - Not stated anywhere: what happens if an evaluation is PASSED while 5 funded are active
+          #   (parked, converted later, closed or blocked). Planner keeps evals in reserve without passing.
+          # - Inactivity: "Accounts that have not been traded resulting in at least a net profit or loss of
+          #   1$ within 30 calendar days will be deemed abandoned and will be permanently deleted"; covers
+          #   evaluations and funded. Breached evaluations are deleted after 30 days if not reset.
+          # - Moving live: "All simulated prop accounts are closed when a trader is moved live, or opts out
+          #   of trading live via cash-out" (reserve evaluations included: "If you are not comfortable with
+          #   evaluations being closed, do not keep evaluations in reserve"). All funded accounts with >= 1
+          #   payout move together; if one household member trades live, others may not trade sim.
         strategy_restrictions:
           max_loss_per_trade: null              # no per-trade loss cap / negative P&L rule found
           min_rr_or_profit_rules: null

@@ -221,3 +221,15 @@ def test_evals_wait_when_funded_slots_are_full():
     near[0]["ultimo_trade"] = "2026-10-06"   # 28 días parada (límite 30)
     chosen, _, _, _ = hoy.day_plan(st, TODAY, strats, rec.Config(trades_per_day=20))
     assert any(t.acc["id"] == "lucid-0" and t.kind == "minimo" for t in chosen)
+
+
+def test_no_purchases_when_a_funded_account_is_about_to_go_live():
+    """Lucid cierra todas las cuentas simuladas al pasar a live: con una fondeada en su 4º retiro de 5 no se
+    compran más evaluaciones de Lucid y el plan lo avisa."""
+    plan = rec.plan("lucid_flex_50k_dll")
+    acc = {"id": "lucid-1", "plan": plan.id, **hoy.activate_funded(plan, FUNDED, state(10000), TODAY), "payouts": 4}
+    st = state(5000, acc)
+    assert "lucid_flex_50k_dll" not in {pid for pid, _, _ in hoy.purchases(st, TODAY, strats, OLD)}
+    assert "Cerca de live" in hoy.render(st, TODAY, strats, OLD)
+    acc["payouts"] = 3
+    assert "lucid_flex_50k_dll" in {pid for pid, _, _ in hoy.purchases(st, TODAY, strats, OLD)}

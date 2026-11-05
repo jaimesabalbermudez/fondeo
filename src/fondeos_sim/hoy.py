@@ -355,15 +355,32 @@ def record_payout(acc, amount, state, today, strats=default_strats) -> str:
     return msg
 
 
+def near_live(state, strats=default_strats) -> list[tuple[dict, object]]:
+    """Fondeadas a un retiro de su máximo: con él, la firma puede pasarte a live (Lucid cierra entonces
+    todas las cuentas simuladas, evaluaciones en reserva incluidas)."""
+    out = []
+    for acc in state["cuentas"]:
+        if acc["fase"] == "funded":
+            plan = strats(acc["plan"])[0]
+            mx = plan.funded.payout.max_payouts
+            if mx and acc.get("payouts", 0) >= mx - 1:
+                out.append((acc, plan))
+    return out
+
+
 def purchases(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -> list[tuple[str, int, float]]:
-    """Evaluaciones a comprar hoy: (plan, cuántas, precio) con la caja libre y los límites de cada firma."""
+    """Evaluaciones a comprar hoy: (plan, cuántas, precio) con la caja libre y los límites de cada firma.
+    No se compran de una firma con alguna fondeada a punto de pasar a live."""
     cash = state["caja"]
     active = [a for a in state["cuentas"] if a["fase"] in ("eval", "funded")]
+    live_soon = {plan.firm for _, plan in near_live(state, strats)}
     out = []
     for s in cfg.slots:
         if cash < s.from_cash:
             continue
         plan = strats(s.plan_id)[0]
+        if plan.firm in live_soon:
+            continue
         firm = [a for a in active if strats(a["plan"])[0].firm == plan.firm]
         n_eval = sum(a["fase"] == "eval" and a["plan"] == s.plan_id for a in active)
         n = s.parallel - n_eval
@@ -504,6 +521,10 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
             if due:
                 todo.append(f"**Pide retiro** en {acc['id']}: {_money(due)} brutos "
                             f"({_money(due * plan.funded.payout.split)} netos) → `fondeos-hoy retiro {acc['id']}`")
+    for acc, plan in near_live(state, strats):
+        todo.append(f"**Cerca de live**: {acc['id']} lleva {acc.get('payouts', 0)} retiros de "
+                    f"{plan.funded.payout.max_payouts}. Al pasar a live, {plan.firm} cierra todas tus cuentas simuladas "
+                    "(también las evaluaciones en reserva): no compres más evaluaciones de esta firma.")
     for pid, n, price in purchases(state, today, strats, cfg):
         plan = strats(pid)[0]
         todo.append(f"**Compra** {n} × {plan.firm} {plan.name} a {_money(price)} → "
@@ -518,8 +539,9 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
     def table(ts):
         rows = ["| Cuenta | Tipo | Tamaño | Busca | TP (pts) | Stop (pts) | P(ganar) |", "|---|---|---|---|---|---|---|"]
         for t in ts:
-            if t.kind == "minimo":
-                rows.append(f"| {t.acc['id']} | día mínimo | 1 MNQ | cualquier trade | — | — | — |")
+            if t.kind == "minimo":   # Lucid: la inactividad pide un trade con al menos $1 de P&L neto en 30 días
+                rows.append(f"| {t.acc['id']} | trade mínimo | 1 MNQ | cerrar con ≥ $1 de ganancia o pérdida neta "
+                            "| — | — | — |")
                 continue
             tipo = {"verde": "día verde", "eval": "evaluación", "gordo": "día gordo"}[t.kind]
             rows.append(f"| {t.acc['id']} | {tipo} | {t.size} | +{_money(t.target)} / −{_money(t.risk + t.friction)} "

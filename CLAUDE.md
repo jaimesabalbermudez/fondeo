@@ -61,6 +61,14 @@ de sincronizar antes de registrar nada, o OneDrive creará copias en conflicto.
   dirección, brackets distintos, ρ≈0,7). Las funded siempre de una en una. ~14 trades por día.
 - Horario por defecto, 13:00–17:00 (España): días verdes en premercado, nada abierto en el dato de las
   14:30, evaluaciones desde la apertura (15:30) y días gordos al final, con stop y TP puestos.
+- Límite de fondeadas (Lucid, revisado en su web el 2026-11-05): 10 cuentas por hogar sumando
+  evaluaciones y fondeadas, 5 fondeadas como máximo; se pueden tener 5 evaluaciones "en reserva" con 5
+  fondeadas. Lucid no dice qué pasa si apruebas con las 5 fondeadas ocupadas, así que `fondeos-hoy` deja
+  esas evaluaciones en espera (no se operan) y con huecos libres solo deja hacer el trade final a tantas
+  como huecos. Inactividad: un trade con al menos ±1 $ de P&L neto cada 30 días naturales (si no, la
+  borran). Al pasar a live (tras retiros), Lucid cierra TODAS las cuentas simuladas, también las
+  evaluaciones en reserva: con una fondeada a un retiro del máximo no se compran más evaluaciones.
+  Tradeify también cierra todo al pasar a Elite Live (tras 3 retiros en una cuenta o 10 en total).
 - Reglas que no se pueden saltar: nada de hedging entre cuentas (largo en una y corto en otra),
   Topstep prohíbe el stacking, FundedNext el all-in ("account flipping"), inactividad semanal en
   Tradeify y MFFU. Cada cuenta la opera su titular; entre personas, nada de trades coordinados
