@@ -189,8 +189,14 @@ def eval_trade(acc, plan, es: EvalStrategy) -> Trade | None:
             return None
         return Trade(acc, "minimo", 0.1, 0, 0, 0, 0, 0, 1.0)   # solo falta contar días
     c = float(min(es.contracts, r.max_contracts(acc["balance"] - start)))
-    return bracket(acc, "eval", acc["balance"], acc["suelo"], es.risk, min(es.day_target, need), es.friction,
-                   r.dll, c)
+    target = min(es.day_target, need)
+    # Si lo que falta pasa del objetivo diario por muy poco (p. ej. $1.507 frente a $1.500), se busca todo y
+    # se aprueba hoy en vez de dejar unos dólares para un tercer día, siempre que cumpla la consistencia.
+    profit = acc["balance"] - start
+    if need > target and need <= 1.05 * es.day_target and (
+            not r.consistency or need <= r.consistency * (profit + need) + 1e-6):
+        target = need
+    return bracket(acc, "eval", acc["balance"], acc["suelo"], es.risk, target, es.friction, r.dll, c)
 
 
 def funded_strategy(acc, fs: FundedStrategy, cfg: rec.Config = rec.DEFAULT) -> FundedStrategy:

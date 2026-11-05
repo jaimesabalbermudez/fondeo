@@ -233,3 +233,16 @@ def test_no_purchases_when_a_funded_account_is_about_to_go_live():
     assert "Cerca de live" in hoy.render(st, TODAY, strats, OLD)
     acc["payouts"] = 3
     assert "lucid_flex_50k_dll" in {pid for pid, _, _ in hoy.purchases(st, TODAY, strats, OLD)}
+
+
+def test_eval_finishes_today_when_need_barely_exceeds_day_target():
+    """lucid-8 del 4-nov: +$1.507 el primer día con consistencia 50% -> le faltan $1.507; se busca todo hoy."""
+    plan = rec.plan("lucid_flex_50k_dll_c50")
+    acc = {**hoy.new_eval("lucid-8", plan, TODAY), "balance": 51507.0, "suelo": 49507.0, "mejor_dia": 1507.0, "dias": 1}
+    t = hoy.eval_trade(acc, plan, EvalStrategy(1500, None, friction=10))
+    assert t.target == pytest.approx(1507)
+    hoy.record_result(acc, t.target, state(1000, acc), TODAY, strats)
+    assert acc["fase"] == "funded"
+    # si falta bastante más que el objetivo diario, se mantiene el objetivo diario
+    acc2 = {**hoy.new_eval("lucid-9", plan, TODAY), "balance": 50900.0, "mejor_dia": 900.0, "dias": 1}
+    assert hoy.eval_trade(acc2, plan, EvalStrategy(1500, None, friction=10)).target == 1500
