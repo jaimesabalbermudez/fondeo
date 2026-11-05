@@ -385,8 +385,58 @@ def purchases(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT
     return out
 
 
+def funded_room(state, strats=default_strats) -> dict[str, tuple[int, int]]:
+    """Por firma: (fondeadas activas, máximo de fondeadas a la vez). Lucid: 5 por hogar en todos sus planes."""
+    room = {}
+    for acc in state["cuentas"]:
+        if acc["fase"] not in ("eval", "funded"):
+            continue
+        plan = strats(acc["plan"])[0]
+        cap = plan.firm_max_funded or plan.max_funded_accounts
+        if not cap:
+            continue
+        n, c = room.get(plan.firm, (0, cap))
+        room[plan.firm] = (n + (acc["fase"] == "funded"), min(c, cap))
+    return room
+
+
+def _hold_evals(trades, state, strats):
+    """Sin hueco funded no tiene sentido aprobar: las evaluaciones de esa firma esperan. Con huecos, solo
+    hacen el trade que las aprobaría tantas como huecos queden (las más avanzadas primero). Una cuenta
+    en espera a punto de incumplir la inactividad hace un trade mínimo. Devuelve (trades, en espera)."""
+    room = funded_room(state, strats)
+    free = {f: max(c - n, 0) for f, (n, c) in room.items()}
+    keep, waiting = [], []
+    finals = sorted((t for t in trades if t.kind == "eval" and t.acc.get("_final")),
+                    key=lambda t: t.target)   # menos le falta, antes
+    allowed = set()
+    for t in finals:
+        f = strats(t.acc["plan"])[0].firm
+        if free.get(f, 1) > 0:
+            allowed.add(id(t))
+            if f in free:
+                free[f] -= 1
+    for t in trades:
+        f = strats(t.acc["plan"])[0].firm
+        full = f in room and room[f][0] >= room[f][1]
+        hold = t.kind in ("eval", "minimo") and (full or (t.acc.get("_final") and id(t) not in allowed))
+        if not hold:
+            keep.append(t)
+            continue
+        n, c = room[f]
+        why = (f"{f}: {n} de {c} fondeadas ocupadas" if full else
+               f"{f}: quedan {c - n} huecos funded y otras evaluaciones están más cerca de aprobar")
+        waiting.append((t.acc, why))
+        if t.urgent:   # no perderla por inactividad
+            keep.append(Trade(t.acc, "minimo", 0.1, 0, 0, 0, 0, 0, 1.0, urgent=True, idle=t.idle))
+    for t in trades:
+        t.acc.pop("_final", None)
+    return keep, waiting
+
+
 def day_plan(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT):
-    """Trades de hoy (ya elegidos y ordenados por franja) y los que pasan a mañana."""
+    """Trades de hoy (ya elegidos y ordenados por franja), los que pasan a mañana y las evaluaciones en
+    espera de hueco funded."""
     trades = []
     for acc in state["cuentas"]:
         if acc["fase"] not in ("eval", "funded"):
@@ -395,10 +445,14 @@ def day_plan(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT)
         t = eval_trade(acc, plan, es) if acc["fase"] == "eval" else funded_trade(acc, plan, funded_strategy(acc, fs, cfg))
         if t is None:
             continue
+        if t.kind == "eval":   # ganar hoy la aprueba
+            acc["_final"] = (t.target >= eval_need(acc, plan) - 1e-6
+                             and acc.get("dias", 0) + 1 >= plan.eval.min_days)
         t.idle = (today - _date(acc.get("ultimo_trade", today))).days
         lim = plan.inactivity_days
         t.urgent = lim is not None and t.idle + 3 >= lim
         trades.append(t)
+    trades, waiting = _hold_evals(trades, state, strats)
     copying = cfg.copy_evals_from is not None and state["caja"] >= cfg.copy_evals_from
     cap = cfg.trades_per_day or len(trades)
     evals = [t for t in trades if t.kind in ("eval", "minimo")]
@@ -412,7 +466,7 @@ def day_plan(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT)
         chosen, later = ranked[:cap], ranked[cap:]
     order = {"verde": 0, "eval": 1, "minimo": 1, "gordo": 2}
     chosen.sort(key=lambda t: (order[t.kind], not t.urgent, -t.idle))
-    return chosen, later, copying
+    return chosen, later, copying, waiting
 
 
 def _money(x):
@@ -424,7 +478,7 @@ def _eur(x):
 
 
 def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -> str:
-    chosen, later, copying = day_plan(state, today, strats, cfg)
+    chosen, later, copying, waiting = day_plan(state, today, strats, cfg)
     active = [a for a in state["cuentas"] if a["fase"] in ("eval", "funded")]
     dias = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
     L = [f"# Plan del {dias[today.weekday()]} {today.isoformat()}", ""]
@@ -496,6 +550,15 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
               "(la firma cierra lo que siga abierto al final de la sesión).", ""] + table(gordos) + [""]
     if later:
         L += ["## Pasan a mañana", "", ", ".join(t.acc["id"] for t in later), ""]
+    if waiting:
+        L += ["## En espera: no las operes", "",
+              "Aprobarlas ahora no sirve: no podrías activar la funded. Se vuelven a operar en cuanto se libere un "
+              "hueco (una funded que se pierda o que termine sus retiros). Si alguna se acerca al plazo de "
+              "inactividad, arriba sale con un trade mínimo para no perderla.", ""]
+        by_reason = {}
+        for acc, why in waiting:
+            by_reason.setdefault(why, []).append(acc["id"])
+        L += [f"- {why}: {', '.join(ids)}" for why, ids in by_reason.items()] + [""]
     L += ["## Al terminar", "", "Registra el P&L neto de cada cuenta que hayas operado:", "",
           "```bash", *(f"uv run fondeos-hoy resultado {t.acc['id']} <pnl>" for t in chosen), "```"]
     return "\n".join(L)

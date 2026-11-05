@@ -576,11 +576,16 @@ def firm_of(pid):
     return p.firm if p else pid
 
 
-def next_step(hoy, acc, p):
-    """(progreso 0-1, texto) del siguiente paso de la cuenta."""
+def next_step(hoy, acc, p, room=None):
+    """(progreso 0-1, texto) del siguiente paso de la cuenta. `room`: {firma: (fondeadas, máximo)}."""
     start = acc.get("inicio", p.start_balance)
     if acc["fase"] == "eval":
         need = hoy.eval_need(acc, p)
+        n, cap = (room or {}).get(p.firm, (0, None))
+        if cap is not None and n >= cap:
+            total = acc["balance"] - start + max(need, 0)
+            return ((max(acc["balance"] - start, 0) / total if total else 1.0),
+                    f"en espera: {n} de {cap} fondeadas ocupadas")
         total = acc["balance"] - start + max(need, 0)
         return (max(acc["balance"] - start, 0) / total if total else 1.0), f"faltan {money(max(need, 0))} para aprobar"
     if acc["fase"] == "funded":
@@ -712,9 +717,10 @@ def page_accounts():
     rows = []
     order = {"funded": 0, "eval": 1, "cerrada": 2, "perdida": 3}
     natural = lambda s: [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", s)]   # noqa: E731  lucid-2 < lucid-10
+    room = hoy.funded_room(state, lambda pid: (real_plan(pid), None, None))
     for a in sorted(accs, key=lambda a: (order.get(a["fase"], 9), natural(a["id"]))):
         p = real_plan(a["plan"])
-        prog, txt = next_step(hoy, a, p) if p else (0.0, "")
+        prog, txt = next_step(hoy, a, p, room) if p else (0.0, "")
         fase = {"eval": "🧪 Evaluación", "funded": "💰 Fondeada", "perdida": "✖ Perdida",
                 "cerrada": "🏁 Cerrada"}.get(a["fase"], a["fase"])
         rows.append({"Cuenta": a["id"], "Fase": fase, "Progreso": prog,

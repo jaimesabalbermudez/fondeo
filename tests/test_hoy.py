@@ -80,9 +80,9 @@ def test_copying_evals_takes_one_slot():
     plan = rec.plan("lucid_flex_50k_dll")
     evals = [hoy.new_eval(f"lucid-{k}", plan, TODAY) for k in range(4)]
     funded = {"id": "lucid-9", "plan": plan.id, **hoy.activate_funded(plan, FUNDED, state(10000), TODAY)}
-    chosen, later, copying = hoy.day_plan(state(20000, *evals, funded), TODAY, strats, cfg)
+    chosen, later, copying, _ = hoy.day_plan(state(20000, *evals, funded), TODAY, strats, cfg)
     assert copying and len(chosen) == 5 and not later      # 4 evaluaciones en un bloque + 1 funded
-    chosen, later, copying = hoy.day_plan(state(5000, *evals, funded), TODAY, strats, cfg)
+    chosen, later, copying, _ = hoy.day_plan(state(5000, *evals, funded), TODAY, strats, cfg)
     assert not copying and len(chosen) == 2 and len(later) == 3
 
 
@@ -194,3 +194,30 @@ def test_default_portfolio_starts_with_lucid_and_grows_with_cash():
     # una cuenta de un plan fuera de la cartera (lucid-1, Flex 40%) aprueba sin romper nada
     plan = rec.plan("lucid_flex_50k_dll")
     assert hoy.activate_funded(plan, FUNDED, state(1000), TODAY)["modo"] == "prudente"
+
+
+def test_evals_wait_when_funded_slots_are_full():
+    """Lucid: 5 fondeadas por hogar. Con 5 fondeadas, las evaluaciones esperan; con 1 hueco, solo una
+    evaluación hace el trade que la aprobaría (la que menos tiene por ganar)."""
+    plan = rec.plan("lucid_flex_50k_dll")
+    funded = [{"id": f"lucid-f{k}", "plan": plan.id, **hoy.activate_funded(plan, FUNDED, state(10000), TODAY)}
+              for k in range(5)]
+    near = [{**hoy.new_eval(f"lucid-{k}", plan, TODAY), "balance": 51200.0 + 1200 * (k > 1), "dias": 1 + (k > 1),
+             "mejor_dia": 1200.0} for k in range(4)]   # lucid-2 y lucid-3: les faltan $600 para aprobar
+    st = state(10000, *funded, *near)
+    chosen, _, _, waiting = hoy.day_plan(st, TODAY, strats, rec.Config(trades_per_day=20))
+    assert {a["id"] for a, _ in waiting} == {"lucid-0", "lucid-1", "lucid-2", "lucid-3"}
+    assert all(t.acc["fase"] == "funded" for t in chosen)
+    assert "En espera" in hoy.render(st, TODAY, strats, rec.Config(trades_per_day=20))
+    # una funded perdida libera un hueco: lucid-0 y lucid-1 vuelven a operar; de las dos que aprobarían
+    # hoy, solo una hace su trade final
+    funded[0]["fase"] = "perdida"
+    chosen, _, _, waiting = hoy.day_plan(st, TODAY, strats, rec.Config(trades_per_day=20))
+    evals = {t.acc["id"] for t in chosen if t.kind == "eval"}
+    assert {"lucid-0", "lucid-1"} <= evals and len(evals & {"lucid-2", "lucid-3"}) == 1
+    assert len(waiting) == 1 and "otras evaluaciones" in waiting[0][1]
+    # en espera y a punto de incumplir la inactividad: trade mínimo
+    funded[0]["fase"] = "funded"
+    near[0]["ultimo_trade"] = "2026-10-06"   # 28 días parada (límite 30)
+    chosen, _, _, _ = hoy.day_plan(st, TODAY, strats, rec.Config(trades_per_day=20))
+    assert any(t.acc["id"] == "lucid-0" and t.kind == "minimo" for t in chosen)
