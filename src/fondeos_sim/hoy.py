@@ -338,6 +338,45 @@ def record_close(acc, balance, state, today, floor=None, strats=default_strats, 
     return msg
 
 
+def parse_daily_wire(text: str) -> tuple[date, list[dict]]:
+    """Resumen diario de Lucid ("LucidEval Daily Wire"). Un correo trae VARIAS cuentas, cada una con su
+    Account Number, Account Balance, Session PnL, Days Traded y Minimum Balance."""
+    m = re.search(r"DAILY SNAPSHOT\s+(\d{1,2})/(\d{1,2})/(\d{4})", text)
+    if not m:
+        raise ValueError("No es un Daily Wire: falta 'YOUR DAILY SNAPSHOT MM/DD/AAAA'")
+    day = date(int(m.group(3)), int(m.group(1)), int(m.group(2)))
+
+    def money(label, block):
+        v = re.search(label + r"\s*(-?)\s*\$\s*(-?[\d,]+(?:\.\d+)?)", block)
+        if not v:
+            raise ValueError(f"Falta '{label}' en una cuenta del Daily Wire")
+        x = float(v.group(2).replace(",", ""))
+        return -abs(x) if v.group(1) == "-" or v.group(2).startswith("-") else x
+
+    accounts = []
+    for num, block in re.findall(r"Account Number:\s*([A-Z0-9-]+)(.*?)(?=Account Number:|\Z)", text, re.S):
+        days = re.search(r"Days Traded\s*(\d+)", block)
+        accounts.append({"numero": num, "balance": money("Account Balance", block),
+                         "pnl": money("Session PnL", block), "suelo": money("Minimum Balance", block),
+                         "dias": int(days.group(1)) if days else None})
+    return day, accounts
+
+
+def record_daily_wire(text, state, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -> list[str]:
+    """Registra todas las cuentas de un Daily Wire (las que no operaron ese día, Session PnL 0, se saltan)."""
+    day, accounts = parse_daily_wire(text)
+    out = []
+    for a in accounts:
+        acc = next((x for x in state["cuentas"] if a["numero"] in (x["id"], x.get("numero"))), None)
+        if acc is None:
+            out.append(f"{a['numero']}: no hay ninguna cuenta con ese número; asócialo con `fondeos-hoy numero`.")
+        elif abs(a["pnl"]) < 0.5:
+            out.append(f"{acc['id']}: no operó el {day.isoformat()}.")
+        else:
+            out.append(record_close(acc, a["balance"], state, day, floor=a["suelo"], strats=strats, cfg=cfg))
+    return out
+
+
 def record_payout(acc, amount, state, today, strats=default_strats) -> str:
     plan, _, fs = strats(acc["plan"])
     r, po, start = plan.funded, plan.funded.payout, _start(acc, plan)
@@ -782,6 +821,8 @@ def main(argv=None):
     x.add_argument("cuenta", help="nombre (lucid-1) o número en la firma")
     x.add_argument("balance", type=float)
     x.add_argument("--suelo", type=float, default=None, help="balance mínimo que da la firma")
+    w = sub.add_parser("daily-wire", help="registra TODAS las cuentas de un Daily Wire de Lucid (texto del correo)")
+    w.add_argument("archivo", help="archivo con el texto del correo ('-' = entrada estándar)")
     n = sub.add_parser("numero", help="asocia el número de cuenta de la firma")
     n.add_argument("cuenta")
     n.add_argument("numero")
@@ -850,6 +891,11 @@ def _apply(a, state, today):
         print(record_result(_find(state, a.cuenta), a.pnl, state, today))
     elif a.cmd == "cierre":
         print(record_close(_find(state, a.cuenta), a.balance, state, today, floor=a.suelo))
+    elif a.cmd == "daily-wire":
+        import sys
+        text = sys.stdin.read() if a.archivo == "-" else Path(a.archivo).read_text(encoding="utf-8")
+        for line in record_daily_wire(text, state):
+            print(line)
     elif a.cmd == "numero":
         _find(state, a.cuenta)["numero"] = a.numero
         print(f"{a.cuenta}: número de cuenta {a.numero}")

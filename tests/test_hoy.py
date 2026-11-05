@@ -246,3 +246,75 @@ def test_eval_finishes_today_when_need_barely_exceeds_day_target():
     # si falta bastante más que el objetivo diario, se mantiene el objetivo diario
     acc2 = {**hoy.new_eval("lucid-9", plan, TODAY), "balance": 50900.0, "mejor_dia": 900.0, "dias": 1}
     assert hoy.eval_trade(acc2, plan, EvalStrategy(1500, None, friction=10)).target == 1500
+
+
+WIRE = """LucidEval
+YOUR DAILY SNAPSHOT 11/04/2026
+
+Account Number: LFE05098099680008
+
+Account Balance
+$51,507
+Total Profit
+$1,507
+Session PnL
+$1,507
+
+Days Traded
+1
+Profit Target
+$3,013
+Minimum Balance
+$49,507
+
+Account Number: LFE05098099680007
+
+Account Balance
+$48,807
+Total Profit
+-$1,194
+Session PnL
+-$1,194
+
+Days Traded
+1
+Profit Target
+$3,000
+Minimum Balance
+$48,000
+
+Account Number: LFE05098099680011
+
+Account Balance
+$50,000
+Total Profit
+$0
+Session PnL
+$0
+
+Days Traded
+0
+Profit Target
+$3,000
+Minimum Balance
+$48,000
+
+For a full breakdown of your stats (including all accounts and historical performance), please visit your trading dashboard.
+"""
+
+
+def test_daily_wire_registers_every_account_in_the_email():
+    """Lucid manda varias cuentas en un mismo Daily Wire: se registran todas (el fallo del 4-nov)."""
+    day, accs = hoy.parse_daily_wire(WIRE)
+    assert day == date(2026, 11, 4)
+    assert [(a["numero"], a["balance"], a["pnl"], a["suelo"]) for a in accs] == [
+        ("LFE05098099680008", 51507, 1507, 49507), ("LFE05098099680007", 48807, -1194, 48000),
+        ("LFE05098099680011", 50000, 0, 48000)]
+    plan = rec.plan("lucid_flex_50k_dll_c50")
+    a8 = {**hoy.new_eval("lucid-8", plan, TODAY), "numero": "LFE05098099680008"}
+    a7 = {**hoy.new_eval("lucid-7", plan, TODAY), "numero": "LFE05098099680007"}
+    st = state(1000, a8, a7)
+    out = hoy.record_daily_wire(WIRE, st, strats)
+    assert a8["balance"] == 51507 and a7["balance"] == 48807 and a7["suelo"] == 48000 and a7["fase"] == "eval"
+    assert "no hay ninguna cuenta" in out[2]          # número sin asociar: se avisa, no se inventa
+    assert all("cuadra" in m for m in hoy.record_daily_wire(WIRE, st, strats)[:2])   # el otro ordenador

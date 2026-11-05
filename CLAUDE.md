@@ -61,6 +61,9 @@ de sincronizar antes de registrar nada, o OneDrive creará copias en conflicto.
   dirección, brackets distintos, ρ≈0,7). Las funded siempre de una en una. ~14 trades por día.
 - Horario por defecto, 13:00–17:00 (España): días verdes en premercado, nada abierto en el dato de las
   14:30, evaluaciones desde la apertura (15:30) y días gordos al final, con stop y TP puestos.
+- Cierres: el "Daily Wire" de Lucid trae VARIAS cuentas en un mismo correo (el 4-nov, 5 por correo).
+  Se registra entero con `fondeos-hoy daily-wire <archivo con el texto del correo>`, nunca a mano
+  cuenta a cuenta (así se perdieron 8 cierres el 4-nov).
 - Límite de fondeadas (Lucid, revisado en su web el 2026-11-05): 10 cuentas por hogar sumando
   evaluaciones y fondeadas, 5 fondeadas como máximo; se pueden tener 5 evaluaciones "en reserva" con 5
   fondeadas. Lucid no dice qué pasa si apruebas con las 5 fondeadas ocupadas, así que `fondeos-hoy` deja
