@@ -209,13 +209,14 @@ def test_evals_wait_when_funded_slots_are_full():
     assert {a["id"] for a, _ in waiting} == {"lucid-0", "lucid-1", "lucid-2", "lucid-3"}
     assert all(t.acc["fase"] == "funded" for t in chosen)
     assert "En espera" in hoy.render(st, TODAY, strats, rec.Config(trades_per_day=20))
-    # una funded perdida libera un hueco: lucid-0 y lucid-1 vuelven a operar; de las dos que aprobarían
-    # hoy, solo una hace su trade final
+    # una funded perdida libera un hueco: todas vuelven a operar; de las dos que aprobarían hoy, la
+    # segunda es condicional (solo si la primera no ha aprobado) y van primero
     funded[0]["fase"] = "perdida"
     chosen, _, _, waiting = hoy.day_plan(st, TODAY, strats, rec.Config(trades_per_day=20))
-    evals = {t.acc["id"] for t in chosen if t.kind == "eval"}
-    assert {"lucid-0", "lucid-1"} <= evals and len(evals & {"lucid-2", "lucid-3"}) == 1
-    assert len(waiting) == 1 and "otras evaluaciones" in waiting[0][1]
+    evals = [t for t in chosen if t.kind == "eval"]
+    assert {t.acc["id"] for t in evals} == {"lucid-0", "lucid-1", "lucid-2", "lucid-3"} and not waiting
+    assert [t.final for t in evals[:2]] == [True, True] and [t.conditional for t in evals[:2]] == [0, 1]
+    assert "condicionales" in hoy.render(st, TODAY, strats, rec.Config(trades_per_day=20))
     # en espera y a punto de incumplir la inactividad: trade mínimo
     funded[0]["fase"] = "funded"
     near[0]["ultimo_trade"] = "2026-10-06"   # 28 días parada (límite 30)

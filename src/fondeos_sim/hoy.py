@@ -147,6 +147,8 @@ class Trade:
     p_win: float
     urgent: bool = False
     idle: int = 0
+    conditional: int = 0   # >0: trade final que solo se hace si hoy han aprobado menos de N de esa firma
+    final: bool = False    # ganar hoy aprueba la evaluación
 
     @property
     def size(self) -> str:
@@ -463,9 +465,11 @@ def funded_room(state, strats=default_strats) -> dict[str, tuple[int, int]]:
 
 
 def _hold_evals(trades, state, strats):
-    """Sin hueco funded no tiene sentido aprobar: las evaluaciones de esa firma esperan. Con huecos, solo
-    hacen el trade que las aprobaría tantas como huecos queden (las más avanzadas primero). Una cuenta
-    en espera a punto de incumplir la inactividad hace un trade mínimo. Devuelve (trades, en espera)."""
+    """Sin hueco funded no tiene sentido aprobar: las evaluaciones de esa firma esperan. Con huecos, hacen
+    el trade que las aprobaría tantas como huecos queden (las que menos tienen por ganar primero); las demás
+    que podrían aprobar hoy van después y solo se operan si, al llegar a ellas, aún queda hueco (los trades
+    van uno detrás de otro, así que se sabe cuántas han aprobado). Una cuenta en espera a punto de
+    incumplir la inactividad hace un trade mínimo. Devuelve (trades, en espera)."""
     room = funded_room(state, strats)
     free = {f: max(c - n, 0) for f, (n, c) in room.items()}
     keep, waiting = [], []
@@ -481,18 +485,18 @@ def _hold_evals(trades, state, strats):
     for t in trades:
         f = strats(t.acc["plan"])[0].firm
         full = f in room and room[f][0] >= room[f][1]
-        hold = t.kind in ("eval", "minimo") and (full or (t.acc.get("_final") and id(t) not in allowed))
-        if not hold:
+        if t.kind in ("eval", "minimo") and not full and t.acc.get("_final") and id(t) not in allowed:
+            t.conditional = room[f][1] - room[f][0]   # solo si hoy han aprobado menos que los huecos libres
+        if not (t.kind in ("eval", "minimo") and full):
             keep.append(t)
             continue
         n, c = room[f]
-        why = (f"{f}: {n} de {c} fondeadas ocupadas" if full else
-               f"{f}: quedan {c - n} huecos funded y otras evaluaciones están más cerca de aprobar")
+        why = f"{f}: {n} de {c} fondeadas ocupadas"
         waiting.append((t.acc, why))
         if t.urgent:   # no perderla por inactividad
             keep.append(Trade(t.acc, "minimo", 0.1, 0, 0, 0, 0, 0, 1.0, urgent=True, idle=t.idle))
     for t in trades:
-        t.acc.pop("_final", None)
+        t.final = bool(t.acc.pop("_final", False))
     return keep, waiting
 
 
@@ -527,7 +531,9 @@ def day_plan(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT)
         ranked = sorted(trades, key=lambda t: (not t.urgent, -t.idle))
         chosen, later = ranked[:cap], ranked[cap:]
     order = {"verde": 0, "eval": 1, "minimo": 1, "gordo": 2}
-    chosen.sort(key=lambda t: (order[t.kind], not t.urgent, -t.idle))
+    # primero las que aprueban hoy (y de ellas, las condicionales al final), después el resto
+    chosen.sort(key=lambda t: (order[t.kind], 0 if t.final and not t.conditional else 1 if t.conditional else 2,
+                               t.target if t.final else 0, not t.urgent, -t.idle))
     return chosen, later, copying, waiting
 
 
@@ -589,6 +595,8 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
                             "| — | — | — |")
                 continue
             tipo = {"verde": "día verde", "eval": "evaluación", "gordo": "día gordo"}[t.kind]
+            if t.conditional:
+                tipo += f" (solo si hoy han aprobado menos de {t.conditional})"
             rows.append(f"| {t.acc['id']} | {tipo} | {t.size} | +{_money(t.target)} / −{_money(t.risk + t.friction)} "
                         f"| {t.tp_pts:g} | {t.sl_pts:g} | {t.p_win:.0%} |")
         return rows
@@ -607,7 +615,14 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
         how = ("**Todas a la vez** en la apertura, en la misma dirección (nunca largo y corto a la vez) "
                "y con brackets distintos." if copying else "Una detrás de otra: no abras la siguiente hasta "
                "cerrar la anterior.")
-        L += ["## 15:30 · Apertura: evaluaciones", "", how, ""] + table(evals) + [""]
+        L += ["## 15:30 · Apertura: evaluaciones", "", how, ""]
+        cond = [t for t in evals if t.conditional]
+        if cond:
+            L += [f"Hoy pueden aprobar {sum(t.final for t in evals)} evaluaciones y solo quedan {cond[0].conditional} "
+                  "huecos de fondeada: opera primero las que aprueban, en este orden, y las marcadas como "
+                  "condicionales solo si al llegar a ellas aún no han aprobado tantas como huecos. Si ya están "
+                  "todos los huecos ocupados, sáltalas (siguen en reserva).", ""]
+        L += table(evals) + [""]
         est = len(evals) * MINUTES["eval"] if not copying else MINUTES["eval"]
         if est > OPEN_MIN:
             L += [f"Estimación: ~{est} min; si no te da tiempo, deja las últimas para mañana.", ""]
