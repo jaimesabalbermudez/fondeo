@@ -618,6 +618,16 @@ def _eur(x):
     return f"{x:,.2f} €".replace(",", "_").replace(".", ",").replace("_", ".")
 
 
+def label(acc, bold=False) -> str:
+    """Cómo se nombra una cuenta al operar: fase + últimos 3 dígitos del número de la firma ("EVAL 009"),
+    que es lo que se ve en la plataforma; varias cuentas acaban igual (LFE…001 y LFF…001), por eso la fase."""
+    num = str(acc.get("numero") or "")
+    if not num:
+        return acc["id"]
+    short = f"{'FUNDED' if acc['fase'] == 'funded' else 'EVAL'} {num[-3:]}"
+    return f"{f'**{short}**' if bold else short} ({acc['id']})"
+
+
 def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -> str:
     chosen, later, copying, waiting = day_plan(state, today, strats, cfg)
     active = [a for a in state["cuentas"] if a["fase"] in ("eval", "funded")]
@@ -643,23 +653,23 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
             plan = strats(acc["plan"])[0]
             due = payout_due(acc, plan)
             if due:
-                todo.append(f"**Pide retiro** en {acc['id']}: {_money(due)} brutos "
+                todo.append(f"**Pide retiro** en {label(acc)}:{_money(due)} brutos "
                             f"({_money(due * plan.funded.payout.split)} netos) → `fondeos-hoy retiro {acc['id']}`")
     for acc in active:
         plan = strats(acc["plan"])[0]
         last = state.get("ultimo_resumen", {}).get(plan.firm)
         if last and acc.get("en_resumen") != last and str(acc.get("comprada", "")) < last:
-            todo.append(f"**¿Perdida?** {acc['id']} no sale en el resumen de {plan.firm} del {last} y otras cuentas sí. "
+            todo.append(f"**¿Perdida?** {label(acc)} no sale en el resumen de {plan.firm} del {last} y otras cuentas sí. "
                         f"Si la operaste ese día, seguramente tocó el suelo ({plan.firm} no lo avisa): compruébalo y "
                         f"márcala con `fondeos-hoy --fecha {last} perdida {acc['id']}`.")
     for acc, plan in near_live(state, strats):
-        todo.append(f"**Cerca de live**: {acc['id']} lleva {acc.get('payouts', 0)} retiros de "
+        todo.append(f"**Cerca de live**: {label(acc)} lleva {acc.get('payouts', 0)} retiros de "
                     f"{plan.funded.payout.max_payouts}. Al pasar a live, {plan.firm} cierra todas tus cuentas simuladas "
                     "(también las evaluaciones en reserva): no compres más evaluaciones de esta firma.")
     for t in chosen + later:
         if t.urgent:
             lim = strats(t.acc["plan"])[0].inactivity_days
-            todo.append(f"**Inactividad**: {t.acc['id']} lleva {t.idle} días sin operar (límite {lim}); opérala hoy")
+            todo.append(f"**Inactividad**: {label(t.acc)} lleva {t.idle} días sin operar (límite {lim}); opérala hoy")
     if todo:
         L += ["## Antes de empezar", ""] + [f"- {x}" for x in todo] + [""]
 
@@ -667,13 +677,13 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
         rows = ["| Cuenta | Tipo | Tamaño | Busca | TP (pts) | Stop (pts) | P(ganar) |", "|---|---|---|---|---|---|---|"]
         for t in ts:
             if t.kind == "minimo":   # Lucid: la inactividad pide un trade con al menos $1 de P&L neto en 30 días
-                rows.append(f"| {t.acc['id']} | trade mínimo | 1 MNQ | cerrar con ≥ $1 de ganancia o pérdida neta "
+                rows.append(f"| {label(t.acc, bold=True)} | trade mínimo | 1 MNQ | cerrar con ≥ $1 de ganancia o pérdida neta "
                             "| — | — | — |")
                 continue
             tipo = {"verde": "día verde", "eval": "evaluación", "gordo": "día gordo"}[t.kind]
             if t.conditional:
                 tipo += f" (solo si hoy han aprobado menos de {t.conditional})"
-            rows.append(f"| {t.acc['id']} | {tipo} | {t.size} | +{_money(t.target)} / −{_money(t.risk + t.friction)} "
+            rows.append(f"| {label(t.acc, bold=True)} | {tipo} | {t.size} | +{_money(t.target)} / −{_money(t.risk + t.friction)} "
                         f"| {t.tp_pts:g} | {t.sl_pts:g} | {t.p_win:.0%} |")
         return rows
 
@@ -707,12 +717,12 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
               "Los últimos del día, de uno en uno, con stop y TP puestos: déjalos correr al irte "
               "(la firma cierra lo que siga abierto al final de la sesión).", ""] + table(gordos) + [""]
     if later:
-        L += ["## Pasan a mañana", "", ", ".join(t.acc["id"] for t in later), ""]
+        L += ["## Pasan a mañana", "", ", ".join(label(t.acc) for t in later), ""]
     near = closest_to_funding(state, today, strats)
     if near:
         L += ["## Más cerca de fondearse", "",
               "| Cuenta | Le falta | Margen sobre el suelo | Días ganadores | P(aprobar sin fallar) |", "|---|---|---|---|---|"]
-        L += [f"| {r['acc']['id']} | {_money(r['falta'])} | {_money(r['margen'])} | {r['dias']}: "
+        L += [f"| {label(r['acc'], bold=True)} | {_money(r['falta'])} | {_money(r['margen'])} | {r['dias']}: "
               + " → ".join(f"+{_money(x)}" for x in r["pasos"]) + f" | {r['p']:.0%} |" for r in near] + [""]
     L += ["## Compras de hoy", ""] + [f"- {x}" for x in purchase_status(state, today, strats, cfg)] + [""]
     if waiting:
@@ -722,7 +732,7 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
               "inactividad, arriba sale con un trade mínimo para no perderla.", ""]
         by_reason = {}
         for acc, why in waiting:
-            by_reason.setdefault(why, []).append(acc["id"])
+            by_reason.setdefault(why, []).append(label(acc))
         L += [f"- {why}: {', '.join(ids)}" for why, ids in by_reason.items()] + [""]
     L += ["## Al terminar", "", "Registra el P&L neto de cada cuenta que hayas operado:", "",
           "```bash", *(f"uv run fondeos-hoy resultado {t.acc['id']} <pnl>" for t in chosen), "```"]

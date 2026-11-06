@@ -345,7 +345,7 @@ def test_account_missing_from_the_daily_wire_is_flagged():
     st = state(1000, a8, a2)
     hoy.record_daily_wire(WIRE, st, strats)                     # el resumen trae lucid-8, no lucid-2
     text = hoy.render(st, date(2026, 11, 5), strats)
-    assert "¿Perdida?** lucid-2" in text and "¿Perdida?** lucid-8" not in text
+    assert "¿Perdida?** EVAL 002 (lucid-2)" in text and "(lucid-8) no sale" not in text
 
 
 def test_plan_shows_purchases_and_closest_evaluations():
