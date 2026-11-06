@@ -78,6 +78,18 @@ de sincronizar antes de registrar nada, o OneDrive creará copias en conflicto.
   borran). Al pasar a live (tras retiros), Lucid cierra TODAS las cuentas simuladas, también las
   evaluaciones en reserva: con una fondeada a un retiro del máximo no se compran más evaluaciones.
   Tradeify también cierra todo al pasar a Elite Live (tras 3 retiros en una cuenta o 10 en total).
+- Riesgo de payouts denegados por el patrón de la funded (aviso, la estrategia NO se cambia): en
+  nov-2026 The Trading Pit denegó un payout a un trader conocido por "rotación de cuentas" (Anexo B y
+  cláusulas 6.5.1/6.7 de sus T&C): día 1 con posición desproporcionada usando todo el drawdown (+3.974 $,
+  el 82% del beneficio), luego un trade al día de ~+215 $ solo para cumplir los 5 días de +150 $. Anularon
+  el trade ganador, denegaron el pago y avisaron de cerrar todas sus cuentas si se repite. Es exactamente
+  nuestro día gordo + días verdes. Lucid y Tradeify no lo prohíben en sus normas publicadas (sin límite de
+  pérdida por trade; Tradeify permite la martingala), pero ambas tienen revisión discrecional de payouts y
+  no se han leído sus T&C completos. Si una firma deniega o avisa por esto: no repetir el patrón en esa
+  firma y pasar sus funded a riesgo constante. Simulación del 2026-11-06 (Lucid Flex 50K, funded): actual
+  1.136 $ por funded, +265 $ por evaluación; riesgo constante 1 NQ +800/−800 al día 650 $ y +113 $;
+  5 MNQ +500/−500, 584 $ y +92 $; verdes simétricos +150/−150 ya no compensan (−2 $). El riesgo
+  constante gana más si la probabilidad de denegación del patrón actual supera ~45%.
 - Reglas que no se pueden saltar: nada de hedging entre cuentas (largo en una y corto en otra),
   Topstep prohíbe el stacking, FundedNext el all-in ("account flipping"), inactividad semanal en
   Tradeify y MFFU. Cada cuenta la opera su titular; entre personas, nada de trades coordinados
