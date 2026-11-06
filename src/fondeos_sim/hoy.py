@@ -525,6 +525,54 @@ def _hold_evals(trades, state, strats):
     return keep, waiting
 
 
+def closest_to_funding(state, today, strats=default_strats) -> list[dict]:
+    """Evaluaciones ordenadas por probabilidad de aprobar ganando todos los días que les faltan (camino
+    directo, con los objetivos del plan; perder un día no siempre quema la cuenta, así que es un mínimo)."""
+    import copy
+    from datetime import timedelta
+    rows = []
+    for acc in state["cuentas"]:
+        if acc["fase"] != "eval":
+            continue
+        plan, es, fs = strats(acc["plan"])
+        a, s, p, steps, d = copy.deepcopy(acc), copy.deepcopy(state), 1.0, [], today
+        while a["fase"] == "eval" and len(steps) < 8:
+            t = eval_trade(a, plan, es)
+            if t is None or t.kind != "eval":
+                break
+            p *= t.p_win
+            steps.append(t.target)
+            record_result(a, t.target, s, d, lambda pid: (plan, es, fs))
+            d += timedelta(days=1)
+        rows.append({"acc": acc, "falta": max(eval_need(acc, plan), 0.0), "margen": acc["balance"] - acc["suelo"],
+                     "dias": len(steps), "p": p if a["fase"] != "eval" else 0.0, "pasos": steps})
+    return sorted(rows, key=lambda r: -r["p"])
+
+
+def purchase_status(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -> list[str]:
+    """Qué se puede comprar hoy en cada plan de la cartera y, si no, por qué."""
+    buys = {pid: (n, price) for pid, n, price in purchases(state, today, strats, cfg)}
+    active = [a for a in state["cuentas"] if a["fase"] in ("eval", "funded")]
+    live_soon = {plan.firm for _, plan in near_live(state, strats)}
+    out = []
+    for s in cfg.slots:
+        plan = strats(s.plan_id)[0]
+        name = f"{plan.firm} {plan.name}"
+        firm_open = sum(strats(a["plan"])[0].firm == plan.firm for a in active)
+        if s.plan_id in buys:
+            n, price = buys[s.plan_id]
+            out.append(f"✅ **{name}**: hasta {n} a {_money(price)} → `fondeos-hoy compra {s.plan_id} {n}`")
+        elif plan.firm in live_soon:
+            out.append(f"⏳ {name}: una fondeada está a punto de pasar a live (cerraría las evaluaciones)")
+        elif plan.firm_max_open and firm_open >= plan.firm_max_open:
+            out.append(f"❌ {name}: límite de la firma alcanzado ({firm_open} de {plan.firm_max_open} cuentas por hogar)")
+        elif state["caja"] < s.from_cash:
+            out.append(f"⏳ {name}: con caja libre ≥ {_money(s.from_cash)} (tienes {_money(state['caja'])})")
+        else:
+            out.append(f"❌ {name}: sin hueco funded, límite de compras o sin caja para una más")
+    return out
+
+
 def day_plan(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT):
     """Trades de hoy (ya elegidos y ordenados por franja), los que pasan a mañana y las evaluaciones en
     espera de hueco funded."""
@@ -608,10 +656,6 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
         todo.append(f"**Cerca de live**: {acc['id']} lleva {acc.get('payouts', 0)} retiros de "
                     f"{plan.funded.payout.max_payouts}. Al pasar a live, {plan.firm} cierra todas tus cuentas simuladas "
                     "(también las evaluaciones en reserva): no compres más evaluaciones de esta firma.")
-    for pid, n, price in purchases(state, today, strats, cfg):
-        plan = strats(pid)[0]
-        todo.append(f"**Compra** {n} × {plan.firm} {plan.name} a {_money(price)} → "
-                    f"`fondeos-hoy compra {pid} {n}` (guarda el ticket)")
     for t in chosen + later:
         if t.urgent:
             lim = strats(t.acc["plan"])[0].inactivity_days
@@ -664,6 +708,13 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
               "(la firma cierra lo que siga abierto al final de la sesión).", ""] + table(gordos) + [""]
     if later:
         L += ["## Pasan a mañana", "", ", ".join(t.acc["id"] for t in later), ""]
+    near = closest_to_funding(state, today, strats)
+    if near:
+        L += ["## Más cerca de fondearse", "",
+              "| Cuenta | Le falta | Margen sobre el suelo | Días ganadores | P(aprobar sin fallar) |", "|---|---|---|---|---|"]
+        L += [f"| {r['acc']['id']} | {_money(r['falta'])} | {_money(r['margen'])} | {r['dias']}: "
+              + " → ".join(f"+{_money(x)}" for x in r["pasos"]) + f" | {r['p']:.0%} |" for r in near] + [""]
+    L += ["## Compras de hoy", ""] + [f"- {x}" for x in purchase_status(state, today, strats, cfg)] + [""]
     if waiting:
         L += ["## En espera: no las operes", "",
               "Aprobarlas ahora no sirve: no podrías activar la funded. Se vuelven a operar en cuanto se libere un "

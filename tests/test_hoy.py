@@ -346,3 +346,18 @@ def test_account_missing_from_the_daily_wire_is_flagged():
     hoy.record_daily_wire(WIRE, st, strats)                     # el resumen trae lucid-8, no lucid-2
     text = hoy.render(st, date(2026, 11, 5), strats)
     assert "¿Perdida?** lucid-2" in text and "¿Perdida?** lucid-8" not in text
+
+
+def test_plan_shows_purchases_and_closest_evaluations():
+    """El plan dice qué se puede comprar (y por qué no) y qué evaluaciones están más cerca de aprobar."""
+    plan = rec.plan("lucid_flex_50k_dll_c50")
+    near = {**hoy.new_eval("lucid-1", plan, TODAY), "balance": 51507.0, "suelo": 49507.0, "mejor_dia": 1507.0, "dias": 1}
+    far = hoy.new_eval("lucid-2", plan, TODAY)
+    st = state(4000, near, far)
+    rows = hoy.closest_to_funding(st, TODAY, strats)
+    assert [r["acc"]["id"] for r in rows] == ["lucid-1", "lucid-2"] and rows[0]["dias"] < rows[1]["dias"]
+    status = hoy.purchase_status(st, TODAY, strats)
+    assert any("Lucid" in s and s.startswith("✅") for s in status)
+    assert any("Tradeify" in s and "6.000" in s for s in status)   # aún sin caja para Tradeify
+    text = hoy.render(st, TODAY, strats)
+    assert "## Más cerca de fondearse" in text and "## Compras de hoy" in text
