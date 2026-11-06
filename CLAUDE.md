@@ -64,6 +64,12 @@ de sincronizar antes de registrar nada, o OneDrive creará copias en conflicto.
 - Cierres: el "Daily Wire" de Lucid trae VARIAS cuentas en un mismo correo (el 4-nov, 5 por correo).
   Se registra entero con `fondeos-hoy daily-wire <archivo con el texto del correo>`, nunca a mano
   cuenta a cuenta (así se perdieron 8 cierres el 4-nov).
+- Panel de Lucid (https://dash.lucidtrading.com/#/account-summary, sesión iniciada por Lucas en el
+  navegador integrado; nunca escribir credenciales): una tarjeta por cuenta con tipo (EVAL/FUNDED),
+  número, estado ACTIVE o BREACHED (perdida: Lucid no lo avisa por correo), ACCOUNT BALANCE / suelo,
+  PROFIT TARGET (con su consistencia) y "$X left". Una evaluación aprobada dice "You've passed the
+  evaluation!" con el botón "Upgrade to Funded": la funded no existe hasta que Lucas lo pulsa (Claude no
+  lo pulsa) y tendrá un número nuevo, que hay que asociar con `fondeos-hoy numero`.
 - Límite de fondeadas (Lucid, revisado en su web el 2026-11-05): 10 cuentas por hogar sumando
   evaluaciones y fondeadas, 5 fondeadas como máximo; se pueden tener 5 evaluaciones "en reserva" con 5
   fondeadas. Lucid no dice qué pasa si apruebas con las 5 fondeadas ocupadas, así que `fondeos-hoy` deja
