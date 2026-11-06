@@ -390,6 +390,9 @@ def record_daily_wire(text, state, strats=default_strats, cfg: rec.Config = rec.
     out = []
     for a in accounts:
         acc = next((x for x in state["cuentas"] if a["numero"] in (x["id"], x.get("numero"))), None)
+        if acc is not None:   # Lucid no avisa de las cuentas perdidas: solo dejan de salir en el resumen
+            acc["en_resumen"] = day.isoformat()
+            state.setdefault("ultimo_resumen", {})[strats(acc["plan"])[0].firm] = day.isoformat()
         if acc is None:
             out.append(f"{a['numero']}: no hay ninguna cuenta con ese número; asócialo con `fondeos-hoy numero`.")
         elif abs(a["pnl"]) < 0.5:
@@ -594,6 +597,13 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
             if due:
                 todo.append(f"**Pide retiro** en {acc['id']}: {_money(due)} brutos "
                             f"({_money(due * plan.funded.payout.split)} netos) → `fondeos-hoy retiro {acc['id']}`")
+    for acc in active:
+        plan = strats(acc["plan"])[0]
+        last = state.get("ultimo_resumen", {}).get(plan.firm)
+        if last and acc.get("en_resumen") != last and str(acc.get("comprada", "")) < last:
+            todo.append(f"**¿Perdida?** {acc['id']} no sale en el resumen de {plan.firm} del {last} y otras cuentas sí. "
+                        f"Si la operaste ese día, seguramente tocó el suelo ({plan.firm} no lo avisa): compruébalo y "
+                        f"márcala con `fondeos-hoy --fecha {last} perdida {acc['id']}`.")
     for acc, plan in near_live(state, strats):
         todo.append(f"**Cerca de live**: {acc['id']} lleva {acc.get('payouts', 0)} retiros de "
                     f"{plan.funded.payout.max_payouts}. Al pasar a live, {plan.firm} cierra todas tus cuentas simuladas "

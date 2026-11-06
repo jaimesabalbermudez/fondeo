@@ -335,3 +335,14 @@ def test_firm_target_decides_the_pass_even_with_rounding():
     assert a8["fase"] == "eval" and hoy.eval_need(a8, plan) == pytest.approx(1)     # el redondeo
     out = hoy.record_daily_wire(wire, st, strats)                                    # el día ya estaba
     assert a8["fase"] == "funded" and "según la firma" in out[0] and a8["numero"] == "LFE05098099680008"
+
+
+def test_account_missing_from_the_daily_wire_is_flagged():
+    """Lucid no avisa de las cuentas perdidas: lucid-2 y lucid-7 dejaron de salir en el resumen del 5-nov."""
+    plan = rec.plan("lucid_flex_50k_dll_c50")
+    a8 = {**hoy.new_eval("lucid-8", plan, TODAY), "numero": "LFE05098099680008"}
+    a2 = {**hoy.new_eval("lucid-2", plan, TODAY), "numero": "LFE05098099680002"}
+    st = state(1000, a8, a2)
+    hoy.record_daily_wire(WIRE, st, strats)                     # el resumen trae lucid-8, no lucid-2
+    text = hoy.render(st, date(2026, 11, 5), strats)
+    assert "¿Perdida?** lucid-2" in text and "¿Perdida?** lucid-8" not in text
