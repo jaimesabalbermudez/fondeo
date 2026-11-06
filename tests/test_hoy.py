@@ -319,3 +319,19 @@ def test_daily_wire_registers_every_account_in_the_email():
     assert a8["balance"] == 51507 and a7["balance"] == 48807 and a7["suelo"] == 48000 and a7["fase"] == "eval"
     assert "no hay ninguna cuenta" in out[2]          # número sin asociar: se avisa, no se inventa
     assert all("cuadra" in m for m in hoy.record_daily_wire(WIRE, st, strats)[:2])   # el otro ordenador
+
+
+def test_firm_target_decides_the_pass_even_with_rounding():
+    """lucid-4/8 del 5-nov: la firma da Total Profit $3,013 = Profit Target $3,013 (su mejor día real era
+    ~$1.506,50); con el redondeo del correo el cálculo propio pedía $1 más. Manda la firma."""
+    wire = WIRE.replace("11/04/2026", "11/05/2026").replace(
+        "Account Balance\n$51,507\nTotal Profit\n$1,507\nSession PnL\n$1,507",
+        "Account Balance\n$53,013\nTotal Profit\n$3,013\nSession PnL\n$1,506")
+    plan = rec.plan("lucid_flex_50k_dll_c50")
+    a8 = {**hoy.new_eval("lucid-8", plan, TODAY), "numero": "LFE05098099680008", "balance": 51507.0,
+          "mejor_dia": 1507.0, "dias": 1, "registrados": ["2026-11-04"]}
+    st = state(1000, a8)
+    hoy.record_close(a8, 53013, st, date(2026, 11, 5), floor=50100, strats=strats)   # sin dato de objetivo
+    assert a8["fase"] == "eval" and hoy.eval_need(a8, plan) == pytest.approx(1)     # el redondeo
+    out = hoy.record_daily_wire(wire, st, strats)                                    # el día ya estaba
+    assert a8["fase"] == "funded" and "según la firma" in out[0] and a8["numero"] == "LFE05098099680008"

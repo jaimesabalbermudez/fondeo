@@ -269,6 +269,16 @@ def _mark_day(acc, day: str, pnl: float | None = None):
                                                 "balance": round(float(acc["balance"]), 2)})
 
 
+def _promote(acc, plan, fs, state, today, cfg: rec.Config = rec.DEFAULT) -> str:
+    """La evaluación pasa a funded (conservando nombre, número e historial)."""
+    keep = {k: acc[k] for k in ("id", "plan", "comprada", "numero", "registrados", "historial") if k in acc}
+    funded = activate_funded(plan, fs, state, today, cfg)
+    acc.clear()
+    acc.update(keep | funded)
+    return (f"{acc['id']}: ¡evaluación aprobada! Activa la funded en la web de {plan.firm}. "
+            f"Modo {funded['modo']}: día gordo hasta ${funded['nivel_gordo']:,.0f}.")
+
+
 def record_result(acc, pnl, state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -> str:
     """Registra el P&L neto de hoy (mismas reglas que engine.eval_step / funded_step). Un día ya
     registrado no se vuelve a aplicar."""
@@ -293,12 +303,7 @@ def record_result(acc, pnl, state, today, strats=default_strats, cfg: rec.Config
         acc["dias"] = acc.get("dias", 0) + 1
         acc["mejor_dia"] = max(acc.get("mejor_dia", 0.0), pnl)
         if eval_need(acc, plan) <= 1e-9 and acc["dias"] >= plan.eval.min_days:
-            keep = {k: acc[k] for k in ("id", "plan", "comprada", "numero", "registrados", "historial") if k in acc}
-            funded = activate_funded(plan, fs, state, today, cfg)
-            acc.clear()
-            acc.update(keep | funded)
-            return (f"{acc['id']}: ¡evaluación aprobada! Activa la funded en la web de {plan.firm}. "
-                    f"Modo {funded['modo']}: día gordo hasta ${funded['nivel_gordo']:,.0f}.")
+            return _promote(acc, plan, fs, state, today, cfg)
         return f"{acc['id']}: balance ${acc['balance']:,.0f}, suelo ${acc['suelo']:,.0f}."
     po = plan.funded.payout
     acc["gordo_hecho"] = acc.get("gordo_hecho", False) or acc["balance"] >= acc["nivel_gordo"] - 1e-9
@@ -312,12 +317,23 @@ def record_result(acc, pnl, state, today, strats=default_strats, cfg: rec.Config
     return msg
 
 
-def record_close(acc, balance, state, today, floor=None, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -> str:
+def record_close(acc, balance, state, today, floor=None, strats=default_strats, cfg: rec.Config = rec.DEFAULT,
+                 firm_passed=False) -> str:
     """Cierre del día según el correo de la firma (balance y suelo de su web, la fuente de verdad).
 
     Si el día aún no está registrado, aplica el P&L (balance - balance anterior) con las reglas del
     motor. Si ya lo estaba (p. ej. lo registró el otro ordenador o el usuario a mano), solo corrige
-    balance y suelo a lo que dice la firma."""
+    balance y suelo a lo que dice la firma. `firm_passed`: la firma ya da el objetivo por cumplido (su
+    "Profit Target" alcanzado); manda sobre el cálculo propio, que puede diferir por redondeos."""
+    msg = _close(acc, balance, state, today, floor, strats, cfg)
+    if firm_passed and acc["fase"] == "eval":
+        plan, _, fs = strats(acc["plan"])
+        if acc.get("dias", 0) >= plan.eval.min_days:
+            msg = _promote(acc, plan, fs, state, today, cfg) + " (objetivo cumplido según la firma)"
+    return msg
+
+
+def _close(acc, balance, state, today, floor, strats, cfg) -> str:
     day = today.isoformat()
     if day in acc.get("registrados", []):
         if acc["fase"] not in ("eval", "funded") or abs(acc["balance"] - balance) < 1:
@@ -358,14 +374,18 @@ def parse_daily_wire(text: str) -> tuple[date, list[dict]]:
     accounts = []
     for num, block in re.findall(r"Account Number:\s*([A-Z0-9-]+)(.*?)(?=Account Number:|\Z)", text, re.S):
         days = re.search(r"Days Traded\s*(\d+)", block)
-        accounts.append({"numero": num, "balance": money("Account Balance", block),
-                         "pnl": money("Session PnL", block), "suelo": money("Minimum Balance", block),
-                         "dias": int(days.group(1)) if days else None})
+        acc = {"numero": num, "balance": money("Account Balance", block),
+               "pnl": money("Session PnL", block), "suelo": money("Minimum Balance", block),
+               "dias": int(days.group(1)) if days else None}
+        if "Profit Target" in block and "Total Profit" in block:   # objetivo de la firma (con su consistencia)
+            acc["objetivo"], acc["beneficio"] = money("Profit Target", block), money("Total Profit", block)
+        accounts.append(acc)
     return day, accounts
 
 
 def record_daily_wire(text, state, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -> list[str]:
-    """Registra todas las cuentas de un Daily Wire (las que no operaron ese día, Session PnL 0, se saltan)."""
+    """Registra todas las cuentas de un Daily Wire (las que no operaron ese día, Session PnL 0, se saltan).
+    Si la firma da el objetivo por cumplido (Total Profit >= Profit Target), la cuenta aprueba."""
     day, accounts = parse_daily_wire(text)
     out = []
     for a in accounts:
@@ -375,7 +395,9 @@ def record_daily_wire(text, state, strats=default_strats, cfg: rec.Config = rec.
         elif abs(a["pnl"]) < 0.5:
             out.append(f"{acc['id']}: no operó el {day.isoformat()}.")
         else:
-            out.append(record_close(acc, a["balance"], state, day, floor=a["suelo"], strats=strats, cfg=cfg))
+            passed = "objetivo" in a and a["beneficio"] >= a["objetivo"] > 0
+            out.append(record_close(acc, a["balance"], state, day, floor=a["suelo"], strats=strats, cfg=cfg,
+                                    firm_passed=passed))
     return out
 
 
