@@ -34,6 +34,7 @@ importe en $ y, si se indica, en € (lo que cargó el banco). Los tickets se co
 
 import argparse
 import csv
+import hashlib
 import math
 import os
 import platform
@@ -628,6 +629,14 @@ def label(acc, bold=False) -> str:
     return f"{f'**{short}**' if bold else short} ({acc['id']})"
 
 
+def direction(today: date, acc_id: str | None = None) -> str:
+    """Largo o corto al azar, sin depender del mercado ni de quien opera: sale de un hash de la fecha y la
+    cuenta, así que los dos ordenadores dan la misma. Sin cuenta, una dirección común para el día (las
+    cuentas que se operan a la vez deben ir en la misma dirección: lo contrario sería hedging)."""
+    key = today.isoformat() if acc_id is None else f"{today.isoformat()}:{acc_id}"
+    return "LARGO" if hashlib.sha256(key.encode()).digest()[0] % 2 == 0 else "CORTO"
+
+
 def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -> str:
     chosen, later, copying, waiting = day_plan(state, today, strats, cfg)
     active = [a for a in state["cuentas"] if a["fase"] in ("eval", "funded")]
@@ -674,16 +683,19 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
         L += ["## Antes de empezar", ""] + [f"- {x}" for x in todo] + [""]
 
     def table(ts):
-        rows = ["| Cuenta | Tipo | Tamaño | Busca | TP (pts) | Stop (pts) | P(ganar) |", "|---|---|---|---|---|---|---|"]
+        rows = ["| Cuenta | Dirección | Tipo | Tamaño | Busca | TP (pts) | Stop (pts) | P(ganar) |",
+                "|---|---|---|---|---|---|---|---|"]
         for t in ts:
+            side = direction(today, None if copying and t.kind == "eval" else t.acc["id"])
             if t.kind == "minimo":   # Lucid: la inactividad pide un trade con al menos $1 de P&L neto en 30 días
-                rows.append(f"| {label(t.acc, bold=True)} | trade mínimo | 1 MNQ | cerrar con ≥ $1 de ganancia o pérdida neta "
-                            "| — | — | — |")
+                rows.append(f"| {label(t.acc, bold=True)} | **{side}** | trade mínimo | 1 MNQ "
+                            "| cerrar con ≥ $1 de ganancia o pérdida neta | — | — | — |")
                 continue
             tipo = {"verde": "día verde", "eval": "evaluación", "gordo": "día gordo"}[t.kind]
             if t.conditional:
                 tipo += f" (solo si hoy han aprobado menos de {t.conditional})"
-            rows.append(f"| {label(t.acc, bold=True)} | {tipo} | {t.size} | +{_money(t.target)} / −{_money(t.risk + t.friction)} "
+            rows.append(f"| {label(t.acc, bold=True)} | **{side}** | {tipo} | {t.size} "
+                        f"| +{_money(t.target)} / −{_money(t.risk + t.friction)} "
                         f"| {t.tp_pts:g} | {t.sl_pts:g} | {t.p_win:.0%} |")
         return rows
 

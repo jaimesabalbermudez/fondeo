@@ -361,3 +361,12 @@ def test_plan_shows_purchases_and_closest_evaluations():
     assert any("Tradeify" in s and "6.000" in s for s in status)   # aún sin caja para Tradeify
     text = hoy.render(st, TODAY, strats)
     assert "## Más cerca de fondearse" in text and "## Compras de hoy" in text
+
+
+def test_direction_is_stable_and_balanced():
+    days = [TODAY + timedelta(days=i) for i in range(200)]
+    sides = [hoy.direction(d, "lucid-1") for d in days]
+    assert sides == [hoy.direction(d, "lucid-1") for d in days]          # misma en los dos ordenadores
+    assert 70 < sides.count("LARGO") < 130                               # ~mitad y mitad
+    assert {hoy.direction(TODAY, f"lucid-{k}") for k in range(1, 11)} == {"LARGO", "CORTO"}
+    assert hoy.direction(TODAY) in ("LARGO", "CORTO")                    # dirección común del día
