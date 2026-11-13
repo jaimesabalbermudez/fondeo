@@ -345,7 +345,45 @@ def test_account_missing_from_the_daily_wire_is_flagged():
     st = state(1000, a8, a2)
     hoy.record_daily_wire(WIRE, st, strats)                     # el resumen trae lucid-8, no lucid-2
     text = hoy.render(st, date(2026, 11, 5), strats)
-    assert "¿Perdida?** EVAL 002 (lucid-2)" in text and "(lucid-8) no sale" not in text
+    assert "¿Sin resumen?** EVAL 002 (lucid-2)" in text and "(lucid-8) no sale" not in text
+    a2["panel"] = "2026-11-04"                                 # comprobada en el panel: ya no se avisa
+    assert "(lucid-2) no sale" not in hoy.render(st, date(2026, 11, 5), strats)
+
+
+# texto del panel de Lucid (13-nov, tipo y estado en "All"), recortado
+PANEL = """LUCIDFLEX 50K | FUNDED | LFF05098099680004 | EOD DRAWDOWN | ACTIVE | DLL | ACCOUNT BALANCE | $50,000 | / | $48,000
+LUCIDFLEX 50K | FUNDED | LFF05098099680003 | EOD DRAWDOWN | ACTIVE | DLL | ACCOUNT BALANCE | $50,000 | / | $48,000
+LUCIDFLEX 50K | FUNDED | LFF05098099680001 | EOD DRAWDOWN | ACTIVE | DLL | ACCOUNT BALANCE | $48,783 | / | $48,000
+LUCIDFLEX 50K | EVAL | LFE05098099680009 | EOD DRAWDOWN | ACTIVE | DLL | ✓ | You've passed the evaluation! | C | $50,100 | MLL | Upgrade to Funded
+LUCIDFLEX 50K | EVAL | LFE05098099680013 | EOD DRAWDOWN | ACTIVE | DLL | ✓ | You've passed the evaluation! | C | $49,507
+LUCIDFLEX 50K | EVAL | LFE05098099680017 | EOD DRAWDOWN | ACTIVE | DLL | ACCOUNT BALANCE | $51,507 | / | $49,507 | PROFIT TARGET
+LUCIDFLEX 50K | EVAL | LFE05098099680014 | EOD DRAWDOWN | BREACHED | DLL | ACCOUNT BALANCE | $47,818 | / | $48,000
+LUCIDFLEX 50K | EVAL | LFE05098099680002 | EOD DRAWDOWN | BREACHED | DLL | ACCOUNT BALANCE | $47,918 | / | $48,000
+"""
+
+
+def test_panel_brings_what_the_daily_wire_misses():
+    """11-nov: el Daily Wire solo trajo EVAL 001; las aprobadas (009, 013) y la perdida (014) solo salen en el
+    panel. Las funded recién activadas se asocian por orden; la perdida de antes no se toca."""
+    p = hoy.parse_panel(PANEL)
+    assert [(a["numero"][-3:], a["estado"], a.get("balance")) for a in p] == [
+        ("004", "active", 50000), ("003", "active", 50000), ("001", "active", 48783), ("009", "passed", None),
+        ("013", "passed", None), ("017", "active", 51507), ("014", "breached", 47818), ("002", "breached", 47918)]
+    plan = rec.plan("lucid_flex_50k_dll_c50")
+    ev = lambda cid, num, **kw: {**hoy.new_eval(cid, plan, TODAY), "numero": f"LFE0509809968{num}", **kw}  # noqa: E731
+    a9, a13 = ev("lucid-9", "0009", balance=52122.0), ev("lucid-13", "0013", balance=51506.5)
+    a17 = ev("lucid-17", "0017", balance=51506.5, suelo=49506.5)
+    a14 = ev("lucid-14", "0014", balance=48806.5)
+    a2 = {**ev("lucid-2", "0002"), "fase": "perdida"}
+    a4 = {**hoy.activate_funded(plan, FUNDED, state(0), TODAY), "id": "lucid-4", "plan": plan.id,
+          "numero": "LFF05098099680001", "balance": 48783.0}
+    st = state(3000, a9, a13, a17, a14, a2, a4)
+    out = hoy.record_panel(PANEL, st, date(2026, 11, 11), strats, OLD)
+    assert a9["fase"] == a13["fase"] == "funded" and a14["fase"] == "perdida" and a2["fase"] == "perdida"
+    assert (a9["numero"], a13["numero"]) == ("LFF05098099680003", "LFF05098099680004")
+    assert a17["fase"] == "eval" and a17["balance"] == 51506.5 and a17["panel"] == "2026-11-11"   # < $1: igual
+    assert a4["balance"] == 48783 and not any("no está en fondeos-hoy" in m for m in out)
+    assert all("cuadra" in m or "ya" in m for m in hoy.record_panel(PANEL, st, date(2026, 11, 11), strats, OLD))
 
 
 def test_plan_shows_purchases_and_closest_evaluations():

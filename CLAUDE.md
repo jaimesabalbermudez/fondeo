@@ -63,7 +63,12 @@ de sincronizar antes de registrar nada, o OneDrive creará copias en conflicto.
   14:30, evaluaciones desde la apertura (15:30) y días gordos al final, con stop y TP puestos.
 - Cierres: el "Daily Wire" de Lucid trae VARIAS cuentas en un mismo correo (el 4-nov, 5 por correo).
   Se registra entero con `fondeos-hoy daily-wire <archivo con el texto del correo>`, nunca a mano
-  cuenta a cuenta (así se perdieron 8 cierres el 4-nov).
+  cuenta a cuenta (así se perdieron 8 cierres el 4-nov). El Daily Wire NO trae las cuentas que ese día
+  aprueban o se pierden (11-nov: 3 aprobadas y 1 perdida faltaban): después hay que cuadrar con el panel,
+  `fondeos-hoy --fecha <día> panel <archivo con el texto del panel, tipo y estado en "All">`, que marca
+  las BREACHED, pasa a funded las "You've passed the evaluation!", corrige balances y asocia por orden los
+  números LFF de las funded recién activadas. La consistencia del 50% tiene tolerancia: el 11-nov
+  aprobaron cuentas con el mejor día al 50,2% del total.
 - Panel de Lucid (https://dash.lucidtrading.com/#/account-summary, sesión iniciada por Lucas en el
   navegador integrado; nunca escribir credenciales): una tarjeta por cuenta con tipo (EVAL/FUNDED),
   número, estado ACTIVE o BREACHED (perdida: Lucid no lo avisa por correo), ACCOUNT BALANCE / suelo,

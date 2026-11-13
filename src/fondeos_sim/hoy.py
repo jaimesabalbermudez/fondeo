@@ -405,6 +405,85 @@ def record_daily_wire(text, state, strats=default_strats, cfg: rec.Config = rec.
     return out
 
 
+_MONEY = r"\$\s*([\d,]+(?:\.\d+)?)"
+
+
+def parse_panel(text: str) -> list[dict]:
+    """Panel de Lucid (dash.lucidtrading.com, texto de la página con tipo y estado en "All"): una tarjeta por
+    cuenta con su número (LFE = evaluación, LFF = funded), ACTIVE o BREACHED, "You've passed the evaluation!"
+    si aprobó (entonces no enseña el balance) y "ACCOUNT BALANCE $balance / $suelo"."""
+    parts = re.split(r"\b(LF[EF]\d{6,})\b", text)
+    out = []
+    for num, block in zip(parts[1::2], parts[2::2]):
+        block = re.split(r"LUCID[A-Z]* *\d+K", block, flags=re.I)[0]   # hasta la tarjeta siguiente
+        status = ("breached" if re.search(r"\bBREACHED\b", block)
+                  else "passed" if re.search(r"passed the evaluation", block, re.I) else "active")
+        acc = {"numero": num, "funded": num.startswith("LFF"), "estado": status}
+        m = re.search(r"ACCOUNT BALANCE[\s|]*" + _MONEY + r"[\s|]*/[\s|]*" + _MONEY, block)
+        if m:
+            acc["balance"], acc["suelo"] = (float(x.replace(",", "")) for x in m.groups())
+        out.append(acc)
+    return out
+
+
+def record_panel(text, state, day, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -> list[str]:
+    """Cuadra cuentas.yaml con el panel de Lucid (la fuente de verdad). Hace falta porque el Daily Wire no trae
+    las cuentas que ese día aprueban o se pierden. `day`: último día de mercado al que se refieren los balances.
+
+    - BREACHED → perdida (con el balance final de la firma). Aprobada → funded. Activa → balance y suelo de la
+      firma si difieren en $1 o más (registra `day` si no lo estaba).
+    - Funded del panel sin número asociado (las recién activadas) → se asignan por orden a las funded de
+      fondeos-hoy que aún llevan el número de la evaluación (si el número de unas y otras coincide)."""
+    out, new_funded = [], []
+    d = day.isoformat()
+    for a in parse_panel(text):
+        acc = next((x for x in state["cuentas"] if a["numero"] in (x["id"], x.get("numero"), x.get("numero_eval"))),
+                   None)
+        if acc is None:
+            if a["funded"] and a["estado"] == "active":
+                new_funded.append(a)
+            elif a["estado"] != "breached":
+                out.append(f"{a['numero']}: está en el panel ({a['estado']}) y no en fondeos-hoy; pregúntalo.")
+            continue
+        if acc["fase"] not in ("eval", "funded"):
+            if a["estado"] != "breached":
+                out.append(f"{acc['id']}: {acc['fase']} en fondeos-hoy pero {a['estado']} en el panel; revísalo.")
+            continue
+        if a["estado"] == "breached":
+            msg = (record_close(acc, a["balance"], state, day, floor=a.get("suelo"), strats=strats, cfg=cfg)
+                   if "balance" in a else f"{acc['id']}: perdida en el panel.")
+            if acc["fase"] in ("eval", "funded"):
+                acc["fase"], acc["perdida"] = "perdida", d
+                msg = f"{acc['id']}: perdida en el panel (BREACHED)."
+            out.append(msg)
+            continue
+        if a["estado"] == "passed" and acc["fase"] == "eval":
+            plan, _, fs = strats(acc["plan"])
+            out.append(_promote(acc, plan, fs, state, day, cfg) + " (aprobada según el panel)")
+        elif "balance" in a:
+            if abs(a["balance"] - acc["balance"]) >= 1:
+                out.append(record_close(acc, a["balance"], state, day, floor=a["suelo"], strats=strats, cfg=cfg)
+                           + " (dato del panel)")
+            elif abs(a["suelo"] - acc["suelo"]) >= 1:
+                out.append(f"{acc['id']}: suelo ${acc['suelo']:,.0f} → ${a['suelo']:,.0f} (dato del panel).")
+                acc["suelo"] = a["suelo"]
+        acc["panel"] = d
+    if new_funded:
+        waiting = sorted((x for x in state["cuentas"] if x["fase"] == "funded"
+                          and not str(x.get("numero", "")).startswith("LFF")),
+                         key=lambda x: (x.get("activada", ""), str(x.get("numero", "")), x["id"]))
+        new_funded.sort(key=lambda a: a["numero"])
+        if len(waiting) == len(new_funded):
+            for acc, a in zip(waiting, new_funded):
+                acc["numero_eval"] = acc.get("numero")   # la tarjeta "passed" de la evaluación puede seguir saliendo
+                acc["numero"], acc["panel"] = a["numero"], d
+                out.append(f"{acc['id']}: número de la funded {a['numero']} (asignado por orden de activación).")
+        else:
+            out.append(f"Funded nuevas en el panel ({', '.join(a['numero'] for a in new_funded)}) y "
+                       f"{len(waiting)} funded sin número en fondeos-hoy: asócialas con `fondeos-hoy numero`.")
+    return out
+
+
 def record_payout(acc, amount, state, today, strats=default_strats) -> str:
     plan, _, fs = strats(acc["plan"])
     r, po, start = plan.funded, plan.funded.payout, _start(acc, plan)
@@ -667,10 +746,11 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
     for acc in active:
         plan = strats(acc["plan"])[0]
         last = state.get("ultimo_resumen", {}).get(plan.firm)
-        if last and acc.get("en_resumen") != last and str(acc.get("comprada", "")) < last:
-            todo.append(f"**¿Perdida?** {label(acc)} no sale en el resumen de {plan.firm} del {last} y otras cuentas sí. "
-                        f"Si la operaste ese día, seguramente tocó el suelo ({plan.firm} no lo avisa): compruébalo y "
-                        f"márcala con `fondeos-hoy --fecha {last} perdida {acc['id']}`.")
+        if (last and acc.get("en_resumen") != last and str(acc.get("comprada", "")) < last
+                and str(acc.get("panel", "")) < last and str(acc.get("activada", "")) < last):
+            todo.append(f"**¿Sin resumen?** {label(acc)} no sale en el resumen de {plan.firm} del {last} y otras "
+                        f"cuentas sí: o no la operaste, o aprobó, o tocó el suelo ({plan.firm} no manda el resumen de "
+                        "las que aprueban o se pierden). Compruébalo en el panel y cuádralo con `fondeos-hoy panel`.")
     for acc, plan in near_live(state, strats):
         todo.append(f"**Cerca de live**: {label(acc)} lleva {acc.get('payouts', 0)} retiros de "
                     f"{plan.funded.payout.max_payouts}. Al pasar a live, {plan.firm} cierra todas tus cuentas simuladas "
@@ -943,6 +1023,8 @@ def main(argv=None):
     x.add_argument("--suelo", type=float, default=None, help="balance mínimo que da la firma")
     w = sub.add_parser("daily-wire", help="registra TODAS las cuentas de un Daily Wire de Lucid (texto del correo)")
     w.add_argument("archivo", help="archivo con el texto del correo ('-' = entrada estándar)")
+    pn = sub.add_parser("panel", help="cuadra con el panel de Lucid (texto de la página, tipo y estado en All)")
+    pn.add_argument("archivo")
     n = sub.add_parser("numero", help="asocia el número de cuenta de la firma")
     n.add_argument("cuenta")
     n.add_argument("numero")
@@ -1015,6 +1097,9 @@ def _apply(a, state, today):
         import sys
         text = sys.stdin.read() if a.archivo == "-" else Path(a.archivo).read_text(encoding="utf-8")
         for line in record_daily_wire(text, state):
+            print(line)
+    elif a.cmd == "panel":
+        for line in record_panel(Path(a.archivo).read_text(encoding="utf-8"), state, today):
             print(line)
     elif a.cmd == "numero":
         _find(state, a.cuenta)["numero"] = a.numero
