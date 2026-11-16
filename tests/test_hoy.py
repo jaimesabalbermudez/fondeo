@@ -408,3 +408,48 @@ def test_direction_is_stable_and_balanced():
     assert 70 < sides.count("LARGO") < 130                               # ~mitad y mitad
     assert {hoy.direction(TODAY, f"lucid-{k}") for k in range(1, 11)} == {"LARGO", "CORTO"}
     assert hoy.direction(TODAY) in ("LARGO", "CORTO")                    # dirección común del día
+
+
+FUNDED_WIRE = """LucidFunded
+
+Your Daily Snapshot · 11/13/2026
+
+Funded Account Snapshot — LFF05098099680002
+
+Account Balance
+$56,018
+
+Total Profit
+$6,018
+
+Minimum Balance
+$50,100
+
+Max Single Day PnL
+$7,073
+
+Session Profit
+$7,073
+
+Funded Account Snapshot — LFF05098099680001
+
+Account Balance
+$48,046
+
+Total Profit
+-$1,954
+
+Minimum Balance
+$48,000
+
+Session Profit
+-$737
+"""
+
+
+def test_parse_funded_daily_wire():
+    day, accs = hoy.parse_daily_wire(FUNDED_WIRE)
+    assert day == date(2026, 11, 13)
+    assert [(a["numero"], a["balance"], a["suelo"], a["pnl"]) for a in accs] == [
+        ("LFF05098099680002", 56018, 50100, 7073), ("LFF05098099680001", 48046, 48000, -737)]
+    assert all("objetivo" not in a for a in accs)

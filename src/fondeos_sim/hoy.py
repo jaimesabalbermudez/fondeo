@@ -358,9 +358,11 @@ def _close(acc, balance, state, today, floor, strats, cfg) -> str:
 
 
 def parse_daily_wire(text: str) -> tuple[date, list[dict]]:
-    """Resumen diario de Lucid ("LucidEval Daily Wire"). Un correo trae VARIAS cuentas, cada una con su
-    Account Number, Account Balance, Session PnL, Days Traded y Minimum Balance."""
-    m = re.search(r"DAILY SNAPSHOT\s+(\d{1,2})/(\d{1,2})/(\d{4})", text)
+    """Resumen diario de Lucid. Un correo trae VARIAS cuentas. "LucidEval Daily Wire": cada una con su
+    Account Number, Account Balance, Session PnL, Days Traded y Minimum Balance. "LucidFunded Daily Wire"
+    (otro formato): "Your Daily Snapshot · MM/DD/AAAA" y por cuenta "Funded Account Snapshot — LFF…" con
+    Account Balance, Minimum Balance y Session Profit."""
+    m = re.search(r"DAILY SNAPSHOT\W+(\d{1,2})/(\d{1,2})/(\d{4})", text, re.I)
     if not m:
         raise ValueError("No es un Daily Wire: falta 'YOUR DAILY SNAPSHOT MM/DD/AAAA'")
     day = date(int(m.group(3)), int(m.group(1)), int(m.group(2)))
@@ -373,10 +375,12 @@ def parse_daily_wire(text: str) -> tuple[date, list[dict]]:
         return -abs(x) if v.group(1) == "-" or v.group(2).startswith("-") else x
 
     accounts = []
-    for num, block in re.findall(r"Account Number:\s*([A-Z0-9-]+)(.*?)(?=Account Number:|\Z)", text, re.S):
+    head = r"(?:Account Number:|Account Snapshot\s*[—–-])"
+    for num, block in re.findall(head + r"\s*([A-Z0-9-]+)(.*?)(?=" + head + r"|\Z)", text, re.S):
         days = re.search(r"Days Traded\s*(\d+)", block)
+        pnl = "Session PnL" if "Session PnL" in block else "Session Profit"
         acc = {"numero": num, "balance": money("Account Balance", block),
-               "pnl": money("Session PnL", block), "suelo": money("Minimum Balance", block),
+               "pnl": money(pnl, block), "suelo": money("Minimum Balance", block),
                "dias": int(days.group(1)) if days else None}
         if "Profit Target" in block and "Total Profit" in block:   # objetivo de la firma (con su consistencia)
             acc["objetivo"], acc["beneficio"] = money("Profit Target", block), money("Total Profit", block)
