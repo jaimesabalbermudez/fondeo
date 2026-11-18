@@ -1,0 +1,75 @@
+# lucid_flex_50k_dll_c50: día gordo tras cada payout frente a solo días verdes
+
+Estrategia del optimizador: FundedStrategy(gordo_target=6000.0, gordo_risk=None, grind_target=150, grind_risk=inf, friction_gordo=10.0, friction_grind=8.0, grind_contracts=0.5, edge=0.0, cycle_gordo=1000.0)
+Edge 0, retiros pagados. Neto = bruto x split.
+
+## 1. Desde justo después de un payout (quedan 4 payouts como máximo)
+
+   colchón  gordo  payouts    neto  P(>=1)   P(4)  días
+       500      0     0.53     312     33%     2%     5
+       500    500     0.41     311     25%     2%     4
+       500  1,000     0.34     312     21%     2%     3
+       500  2,000     0.22     301     14%     1%     2
+       500  3,000     0.17     281     11%     1%     2
+
+     1,000      0     0.98     726     54%     6%     8
+     1,000    500     0.81     699     48%     4%     6
+     1,000  1,000     0.68     718     40%     3%     5
+     1,000  2,000     0.47     706     28%     2%     4
+     1,000  3,000     0.36     618     21%     2%     3
+
+     2,000      0     1.54   1,545     74%    12%    12
+     2,000    500     1.27   1,523     65%     9%    10
+     2,000  1,000     1.07   1,527     57%     7%     8
+     2,000  2,000     0.84   1,419     45%     6%     6
+     2,000  3,000     0.70   1,222     37%     6%     6
+
+     3,000      0     1.87   2,387     81%    18%    14
+     3,000    500     1.59   2,344     74%    13%    12
+     3,000  1,000     1.39   2,324     66%    11%    10
+     3,000  2,000     1.16   2,055     55%    11%     9
+     3,000  3,000     0.99   1,759     47%    10%     8
+
+     4,000      0     2.20   3,195     85%    25%    17
+     4,000    500     1.91   3,116     79%    20%    14
+     4,000  1,000     1.73   3,028     73%    19%    13
+     4,000  2,000     1.44   2,580     62%    17%    11
+     4,000  3,000     1.23   2,218     54%    15%     9
+
+     5,000      0     2.50   3,954     88%    35%    20
+     5,000    500     2.23   3,827     82%    29%    17
+     5,000  1,000     2.01   3,600     77%    27%    15
+     5,000  2,000     1.68   3,029     68%    23%    13
+     5,000  3,000     1.44   2,598     60%    19%    11
+
+     6,000      0     2.75   4,626     89%    45%    24
+     6,000    500     2.48   4,393     85%    39%    20
+     6,000  1,000     2.25   4,038     80%    34%    18
+     6,000  2,000     1.89   3,401     72%    28%    14
+     6,000  3,000     1.63   2,928     64%    23%    12
+
+     8,000      0     3.10   5,553     92%    61%    32
+     8,000    500     2.83   5,088     88%    53%    26
+     8,000  1,000     2.58   4,637     84%    46%    23
+     8,000  2,000     2.22   3,987     77%    37%    18
+     8,000  3,000     1.92   3,463     71%    30%    15
+
+## 2. Funded nueva, de principio a fin
+
+  gordo tras payout 1,000: valor por funded 1,135 $ · payouts 0.65 · P(>=1) 24% · días 6 · por evaluación +265 $
+  gordo tras payout     0: valor por funded 1,190 $ · payouts 0.76 · P(>=1) 24% · días 7 · por evaluación +282 $
+
+## 3. Cartera recomendada, 12 meses
+
+### Modelo base
+  bankroll  3,000 · gordo 1,000: ruina 1.2% · mediana +224,452 · p10 +144,451 · p90 +304,338
+  bankroll  3,000 · gordo     0: ruina 1.6% · mediana +222,657 · p10 +146,054 · p90 +297,852
+  bankroll  5,000 · gordo 1,000: ruina 0.1% · mediana +231,883 · p10 +154,900 · p90 +314,149
+  bankroll  5,000 · gordo     0: ruina 0.4% · mediana +233,663 · p10 +163,111 · p90 +309,714
+
+### Estrés (20% denegados, 30%/año firma deja de pagar)
+  bankroll  3,000 · gordo 1,000: ruina 16.2% · mediana +113,552 · p10 +58 · p90 +190,620
+  bankroll  3,000 · gordo     0: ruina 15.4% · mediana +116,480 · p10 +584 · p90 +189,400
+  bankroll  5,000 · gordo 1,000: ruina 10.5% · mediana +127,209 · p10 +27,529 · p90 +209,430
+  bankroll  5,000 · gordo     0: ruina 10.4% · mediana +131,818 · p10 +26,150 · p90 +208,055
+
