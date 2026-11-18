@@ -75,6 +75,16 @@ def test_funded_gordo_then_green_days_then_payout():
     assert acc["suelo"] == 50100 and acc["dias_verdes"] == 0 and st["por_cobrar"] == pytest.approx(1800)
 
 
+def test_lucid_goes_straight_to_green_days_after_payout():
+    plan, _, fs = hoy.default_strats("lucid_flex_50k_dll_c50")
+    assert fs.cycle_gordo == 0 and fs.gordo_target > 0      # el primer día gordo se mantiene
+    st = state(10000)
+    acc = {"id": "lucid-1", "plan": plan.id, **hoy.activate_funded(plan, fs, st, TODAY)}
+    acc.update(balance=57121.5, suelo=50100.0, gordo_hecho=True, dias_verdes=5, dias_ciclo=5)
+    hoy.record_payout(acc, 2000, st, TODAY, hoy.default_strats)
+    assert acc["gordo_hecho"] and hoy.funded_trade(acc, plan, fs).kind == "verde"
+
+
 def test_copying_evals_takes_one_slot():
     cfg = rec.Config(trades_per_day=2, copy_evals_from=10000)
     plan = rec.plan("lucid_flex_50k_dll")

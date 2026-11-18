@@ -56,7 +56,9 @@ de sincronizar antes de registrar nada, o OneDrive creará copias en conflicto.
   (5) con ≥ 10.000 $. Con cuatro firmas la ruina con estrés baja de ~27% a ~10% (simulación 2026-11-04).
 - Evaluación: 1 NQ, objetivo diario recortado por la consistencia (Lucid/Tradeify: +1.200, 3 días),
   stop = DLL o todo el margen. Funded: un día gordo (prudente de +2.000 con caja < 3.000) y luego
-  días verdes (+150, 5 MNQ) hasta el payout.
+  días verdes (+150, 5 MNQ) hasta el payout. Tras cada payout, en Lucid se vuelve directamente a los
+  días verdes, sin día gordo de ciclo (`hoy.GREENS_AFTER_PAYOUT`, simulación del 2026-11-18: más retiros
+  y más dinero con cualquier colchón, solo tarda más). `recommended`/el dashboard aún suponen +1.000 $.
 - Cada cuenta su trade, uno detrás de otro; con caja libre ≥ 10.000, evaluaciones a la vez (misma
   dirección, brackets distintos, ρ≈0,7). Las funded siempre de una en una. ~14 trades por día.
 - Horario por defecto, 13:00–17:00 (España): días verdes en premercado, nada abierto en el dato de las

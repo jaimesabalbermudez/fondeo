@@ -42,7 +42,7 @@ import re
 import shutil
 import time
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime
 from pathlib import Path
 
@@ -74,9 +74,20 @@ MINUTES = {"verde": 18, "eval": 15, "gordo": 28}
 PREMARKET_MIN, OPEN_MIN = 140, 90   # 13:00-15:25 sin el dato de las 14:30 / 15:30-17:00
 
 
+# Firmas en las que, tras cada payout, se vuelve directamente a los días verdes (sin día gordo de ciclo).
+# Lucid Flex 50K, simulación del 2026-11-18: con cualquier colchón tras el retiro (500-8.000 $) da más
+# retiros y más dinero que el gordo de +1.000 $ que elegía el optimizador (con 5.000 $ de colchón:
+# 2,5 retiros más frente a 2,0, y 3.954 $ frente a 3.600 $ netos; una funded nueva, 1.192 $ frente a
+# 1.133 $). Solo cuesta tiempo (~20 días frente a 15), que importa si las 5 funded están ocupadas.
+GREENS_AFTER_PAYOUT = ("lucid",)
+
+
 def default_strats(plan_id: str):
     r = rec.optimized(plan_id)
-    return r.plan, r.eval_strat, r.funded_strat
+    fs = r.funded_strat
+    if fs is not None and plan_id.startswith(GREENS_AFTER_PAYOUT):
+        fs = replace(fs, cycle_gordo=0.0)
+    return r.plan, r.eval_strat, fs
 
 
 def resolve_plan(name: str, cfg: rec.Config = rec.DEFAULT) -> str:
