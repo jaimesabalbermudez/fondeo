@@ -778,7 +778,8 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
         L += ["## Antes de empezar", ""] + [f"- {x}" for x in todo] + [""]
 
     def table(ts):
-        rows = ["| Cuenta | Dirección | Tipo | Tamaño | Busca | TP (pts) | Stop (pts) | P(ganar) |",
+        # TP y stop en ticks (lo que se pone en el bracket de Tradovate; NQ y MNQ: 1 punto = 4 ticks)
+        rows = ["| Cuenta | Dirección | Tipo | Tamaño | Busca | TP (ticks) | Stop (ticks) | P(ganar) |",
                 "|---|---|---|---|---|---|---|---|"]
         for t in ts:
             side = direction(today, None if copying and t.kind == "eval" else t.acc["id"])
@@ -791,7 +792,7 @@ def render(state, today, strats=default_strats, cfg: rec.Config = rec.DEFAULT) -
                 tipo += f" (solo si hoy han aprobado menos de {t.conditional})"
             rows.append(f"| {label(t.acc, bold=True)} | **{side}** | {tipo} | {t.size} "
                         f"| +{_money(t.target)} / −{_money(t.risk + t.friction)} "
-                        f"| {t.tp_pts:g} | {t.sl_pts:g} | {t.p_win:.0%} |")
+                        f"| {round(t.tp_pts * 4)} | {round(t.sl_pts * 4)} | {t.p_win:.0%} |")
         return rows
 
     greens = [t for t in chosen if t.kind == "verde"]

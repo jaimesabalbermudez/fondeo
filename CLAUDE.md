@@ -104,6 +104,9 @@ de sincronizar antes de registrar nada, o OneDrive creará copias en conflicto.
 
 ## Convenciones
 
+- TP y stop de cada trade SIEMPRE en ticks (lo que se pone en el bracket de Tradovate; NQ y MNQ:
+  1 punto = 4 ticks), como los da `fondeos-hoy`. Nunca en puntos: Lucas confundió 1.668 ticks con 426 pts.
+
 - Al nombrar una cuenta para operarla, di su fase y los últimos 3 dígitos del número de la firma
   ("EVAL 009", "FUNDED 001"), como hace `fondeos-hoy` (`hoy.label`), no solo el id interno (lucid-9):
   es lo que se ve en la plataforma y varias cuentas acaban igual (LFE…001 evaluación y LFF…001 funded).
